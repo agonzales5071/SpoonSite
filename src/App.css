@@ -1,38 +1,67 @@
-.App {
-  text-align: center;
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+*{
+	overflow-x: hidden;
+    overflow-y: hidden;
 }
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+body{
+	background-origin: border-box;
+	background-image: linear-gradient(180deg, #4d78fc 50%, #5c4604 50%);
+	background-size: 100% 300%;
+/*	background-image: 
+	  url("images/qps/grass.png"), url("images/qps/hills.png"),
+	  url("images/qps/trees.png"), url("images/qps/mountains.png"), 
+	  url("images/qps/sky.png"), linear-gradient(180deg, #4d78fc 50%, #5c4604 50%);
+	background-position:  50% 140%, 50% 110%, 50% 85%, 50% 70%, 50% 35%, 50% 50%;
+	background-repeat: repeat-x;
+	background-size: auto 30%, auto 50%, auto 50%, auto 50%, auto 40%, 100% 200%;*/
+	/*background-color: powderblue;*/
+	text-align: center;
+	align-content: center;
+	overflow-x: hidden;
+    overflow-y: hidden;
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.content{
+	text-align: center;
+	align-content: center;
+	z-index: 100;
 }
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.container{
+	position: static;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+    height:120%;
+    width:120%;
+    overflow-x: hidden;
+    overflow-y: hidden;
 }
-
-.App-link {
-  color: #61dafb;
+.container img{
+	position: absolute;
+	width: 130%;
+	height: 120%;
+	top: -15%;
+	left: -15%;
+	object-fit: cover;
+	z-index: -10;
+	overflow-x: hidden;
+	overflow-y: hidden;
 }
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+#videoplayer{
+	border: none;
+	width: 420px;
+	height: 345px;
+}
+#title{
+	font-family: "Patrick Hand";
+	font-size: 64px;
+	color:  floralwhite;
+	text-shadow: -2px 2px 8px grey,
+				  2px 2px 8px grey,
+				  2px -2px 0 grey,
+				  -2px -2px 0 grey;
+	z-index: 2;
+}
+p{
+	font-family: courier;
 }
