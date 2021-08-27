@@ -6,12 +6,12 @@ class App extends React.Component {
   render(){
     return (
       <div className="App">
-        <div class="container">
-          <img src="images/sky.png" class="object" data-value="1" alt="rip"/>      
-          <img src="images/mountains.png" class="object" data-value="2" alt="the"/>
-          <img src="images/trees.png" class="object" data-value="4" alt="whole"/>
-          <img src="images/hills.png" class="object" data-value="5" alt="aesthetic"/>
-          <img src="images/grass.png" class="object" data-value="6" alt="dude"/>
+        <div className="paralax">
+          <img src="images/sky.png" className="object" data-value="1" alt="rip"/>      
+          <img src="images/mountains.png" className="object" data-value="2" alt="the"/>
+          <img src="images/trees.png" className="object" data-value="4" alt="whole"/>
+          <img src="images/hills.png" className="object" data-value="5" alt="aesthetic"/>
+          <img src="images/grass.png" className="object" data-value="6" alt="dude"/>
         </div>
 
         <div className="content">
@@ -19,9 +19,9 @@ class App extends React.Component {
           <h1 id="title" title="&#x1f944;">Alexander <q>DroppedSpoon</q> Gonzales</h1>
 
           <nav>
-            <a href="resume/">Resume</a> |
+            <a href="resume/">Resume</a> | 
             <a href="spoondrop/">Spoon Drop</a>
-          </nav>
+            </nav>
 
           <p>lorem ipsum or whatever</p>
           <iframe id="videoplayer" title="Some of My Videos" src="https://www.youtube.com/embed/d9mLhZtSwSs" allowfullscreen="true">
