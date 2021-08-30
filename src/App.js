@@ -1,10 +1,30 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
-import togglevid from "./scripts/togglevid"
-import getlocation from "./scripts/locationgag"
+import VidButton from './scripts/togglevid';
+import Portfolio from "./portfolio.js";
+import SpoonDrop from "./spoondrop.js"
 import react from 'react';
+import { BrowserRouter as Router, Route, Switch} from 'react-router-dom';
+
 class App extends React.Component {
+  render(){
+    return(
+      <Router>
+        <div className="App">
+          <Switch>
+            <Route path="/" exact component={Home} />
+            <Route path="/portfolio" exact component={Portfolio} />
+            <Route path="/spoondrop" exact component={SpoonDrop} />
+          </Switch>
+        </div>
+      </Router>
+    );
+  }
+}
+
+
+class Home extends React.Component {
   render(){
     return (
       <div className="App">
@@ -32,49 +52,81 @@ class App extends React.Component {
           <br></br>
           <VidButton className="butt" id="next" ></VidButton>
 
-          <button id="location" type="button" onClick={getlocation}>
-            click this button to see what happens when you talk trash about me
-          </button>
-          <p id="locationtext"></p>
+          {/* <LocationButton id="location" type="button"></LocationButton>
+          <p id="locationtext"></p> */}
         </div>
       </div>
       );
     }
 }
-class VidButton extends React.Component {
-  constructor(props){
-    super(props);
-    this.state = {
-      //these are videos suffixes that I want to append to youtube url
-      vids: ['d9mLhZtSwSs', 't4l5JIRyx6Q', 'HZCxGwv6jIw', 'PD-g54MVZlc'],
-      vidnum: 0,
-    };
-  }
-  handleClick(){
-    let vl = this.state.vids;
-    let place = this.state.vidnum;
-    if(place == 0){
-      place = vl.length - 1;
-    }
-    else{
-      place--;
-    }
-    var vidId = vl[place];
-    var url = "https://www.youtube.com/embed/" + vidId;
-    document.getElementById('videoplayer').src = url;
-    this.setState({
-      vidnum: place,
-    });
-      // console.log("vl1:", vl1 );
-      // console.log("vl2:", vl2 );
 
-  }
+// class LocationButton extends React.Component{
+//   constructor(props){
+//     super(props);
+//     this.state = {
+//       count: 0,
+//       textID: "locationtext",
+//       text: document.getElementById("locationtext"),
+//     };
+//   }
   
-  render(){
-    return(
-      <button onClick={() => this.handleClick()}>next video</button>
-    );
-  }
+//   handleClick(){
+//     var flag = 0;
+//     const text = document.getElementById("locationtext");
+//     if(flag == 0){
+//       if (navigator.geolocation) {
+//       navigator.geolocation.getCurrentPosition(this.showPosition);
+//       } else {
+//         text.innerHTML = "Geolocation is not supported by this browser.";
+//       }
+//     }
+    
 
-}
+
+//   }
+
+//   render(){
+//     return(
+//       <button onClick={() => this.handleClick()}>insult me</button>
+//     )
+//   }
+
+//   getlocation(){
+//     const text = document.getElementById("locationtext");
+//     if (navigator.geolocation) {
+//     navigator.geolocation.getCurrentPosition(this.showPosition);
+//     } else {
+//       text.innerHTML = "Geolocation is not supported by this browser.";
+//     }
+//   }
+//   showPosition(position) {
+//     const text = document.getElementById("locationtext");
+//     let i = this.state.count;
+//     if(i==0){
+//       text.innerHTML = "That wasn't very nice of you to insult me but tbh idk what to do with your location like I did not think I would get this far... Here they are I guess?"
+//       +"<br>Latitude: " + position.coords.latitude +
+//       "<br>Longitude: " + position.coords.longitude;
+//     }
+//     else if(i==1){
+//       text.innerHTML = "well don't press it again! let me think of something- hold on";
+//     }
+//     else if(i==2){
+//       text.innerHTML = "umm...";
+//     }
+//     else if((i>=3 && i<=6) || i>8){
+//       text.innerHTML = "...";
+//     }  	
+//     else if(i==7){
+//       text.innerHTML = "I got nothing okay? Now leave me alone.";
+//     }
+//     else if(i==8){
+//       text.innerHTML = "for realsies";
+//     }
+//     i++;
+//     this.setState({
+//       count: i,
+//     });
+//   }
+// }
+
 export default App;

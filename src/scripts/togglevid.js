@@ -1,18 +1,39 @@
 //this should toggle the video in the player when pressed
-// eslint-disable-next-line no-unused-vars
-var vids1 = ['d9mLhZtSwSs'];
-var vids2 = ['t4l5JIRyx6Q', 'HZCxGwv6jIw', 'PD-g54MVZlc'];
-function togglevid(){
-	if(vids2.length > 0){
-		let move = vids2.shift;
-		vids1.push(move);
-	}
-	else{
-		vids2 = vids1;
-		vids1 = [];
-	}
-		var vidId = vids2[0];
-		var url = "https://www.youtube.com/embed/" + vidId;
-		document.getElementById('videoplayer').src = url;
+import React from 'react';
+
+class VidButton extends React.Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      //these are videos suffixes that I want to append to youtube url
+      vids: ['d9mLhZtSwSs', 't4l5JIRyx6Q', 'HZCxGwv6jIw', 'PD-g54MVZlc'],
+      vidnum: 0,
+    };
+  }
+  handleClick(){
+    let vl = this.state.vids;
+    let place = this.state.vidnum;
+    if(place == 0){
+      place = vl.length - 1;
+    }
+    else{
+      place--;
+    }
+    var vidId = vl[place];
+    var url = "https://www.youtube.com/embed/" + vidId;
+    document.getElementById('videoplayer').src = url;
+    this.setState({
+      vidnum: place,
+    });
+      // console.log("vl1:", vl1 );
+      // console.log("vl2:", vl2 );
+  }
+  
+  render(){
+    return(
+      <button onClick={() => this.handleClick()}>next video</button>
+    );
+  }
+
 }
-export default togglevid;
+export default VidButton;
