@@ -3,7 +3,7 @@ var i = 0;
 
 const text = document.getElementById("locationtext");
 
- function getlocation(){
+function getlocation(){
  	if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(showPosition);
     } else {
@@ -18,7 +18,7 @@ function showPosition(position) {
     "<br>Longitude: " + position.coords.longitude;
   }
   else if(i==1){
-    text.innerHTML = "well don\'t press it again! let me think of something- hold on";
+    text.innerHTML = "well don't press it again! let me think of something- hold on";
   }
   else if(i==2){
   	text.innerHTML = "umm...";
@@ -35,4 +35,4 @@ function showPosition(position) {
   i++;
  }
 
-
+export default getlocation;
