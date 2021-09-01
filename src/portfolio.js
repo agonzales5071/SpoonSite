@@ -28,4 +28,4 @@ class Portfolio extends React.Component {
       );
     }
 }
-export default SpoonDrop;
+export default Portfolio;
