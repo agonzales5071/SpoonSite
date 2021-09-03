@@ -21,7 +21,7 @@ class VidButton extends React.Component {
     }
     var vidId = vl[place];
     var url = "https://www.youtube.com/embed/" + vidId;
-    document.getElementById('videoplayer').src = url;
+    document.getElementById('ds').src = url;
     this.setState({
       vidnum: place,
     });
@@ -31,7 +31,7 @@ class VidButton extends React.Component {
   
   render(){
     return(
-      <button onClick={() => this.handleClick()}>next video</button>
+      <button className="vidButton" onClick={() => this.handleClick()}>next video</button>
     );
   }
 

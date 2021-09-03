@@ -1,12 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
-*{
-	overflow-x: hidden;
-    overflow-y: hidden;
-}
 body{
 	background-origin: border-box;
 	background-image: linear-gradient(180deg, #4d78fc 50%, #5c4604 50%);
-	background-size: 100% 300%;
+	background-size: 100% 350%;
 /*	background-image: 
 	  url("images/qps/grass.png"), url("images/qps/hills.png"),
 	  url("images/qps/trees.png"), url("images/qps/mountains.png"), 
@@ -18,7 +14,7 @@ body{
 	text-align: center;
 	align-content: center;
 	overflow-x: hidden;
-    overflow-y: hidden;
+  overflow-y: hidden;
 }
 .content{
 	text-align: center;

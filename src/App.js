@@ -28,7 +28,7 @@ class Home extends React.Component {
   render(){
     return (
       <div className="App">
-        <div className="container">
+        <div className="paralax">
           <img src="images/sky.png" className="object" data-value="1" alt="rip"/>      
           <img src="images/mountains.png" className="object" data-value="2" alt="the"/>
           <img src="images/trees.png" className="object" data-value="4" alt="whole"/>
@@ -40,17 +40,9 @@ class Home extends React.Component {
           <title>Dropped Spoon</title>
           <h1 id="title" title="&#x1f944;">Alexander <q>DroppedSpoon</q> Gonzales</h1>
 
-          <nav>
-            <a href="resume/">Resume</a> |
-            <a href="spoondrop/">Spoon Drop</a>
-          </nav>
 
-          <p>lorem ipsum or whatever</p>
-          <iframe id="videoplayer" title="Some of My Videos" src="https://www.youtube.com/embed/d9mLhZtSwSs" allowFullScreen={true}>
-          </iframe>
 
-          <br></br>
-          <VidButton className="butt" id="next" ></VidButton>
+          <p>currently under construction</p>
 
           {/* <LocationButton id="location" type="button"></LocationButton>
           <p id="locationtext"></p> */}

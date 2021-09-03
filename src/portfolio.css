@@ -1,0 +1,58 @@
+.body-component-a{
+  background-color: rgb(18, 15, 20);
+  background-image: none;
+  overflow-y: scroll;
+}
+.vidButton{
+  display:inline-block;
+  padding:0.35em 1.2em;
+  border:0.1em solid #FFFFFF;
+  margin:0 0.3em 0.3em 0;
+  border-radius:0.12em;
+  box-sizing: border-box;
+  text-decoration:none;
+  font-family:'Courier',sans-serif;
+  font-weight:300;
+  background-color:#ffffff00;
+  color: #FFFFFF;
+  text-align:center;
+  transition: all 0.2s;
+  }
+.vidButton:hover{
+  color:#000000;
+  background-color:#FFFFFF;
+}
+.block{
+  margin-left: 10%;
+  margin-right: 10%;
+  background-color: rgba(54, 54, 54, 0.253);
+  /* border: 3px solid deeppink; */
+  padding: 1%;
+  overflow: hidden;
+}
+.vidplayer{
+  float: left;
+  border: none;
+	width: 350px;
+	height: 250px;
+}
+.head{
+  font-family: "Patrick Hand";
+	font-size: 32px;
+	color:  floralwhite;
+	/* text-shadow: -2px 2px 8px grey,
+				  2px 2px 8px grey,
+				  2px -2px 0 grey,
+				  -2px -2px 0 grey; */
+}
+.explan{
+  font-size: 18px;
+  color: floralwhite;
+  font-family: courier;
+}
+.partition{
+  margin-left: 10%;
+  text-align: left;
+  font-size: 40px;
+  color: whitesmoke;
+}
