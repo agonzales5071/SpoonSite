@@ -3,6 +3,85 @@
   background-image: none;
   overflow-y: scroll;
 }
+#shapegroup {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  z-index: -1;
+  overflow-y: visible;
+  overflow-x: visible;
+}
+.shapes {
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  background: transparent url("./img/foggyshapes.png") center center;
+  opacity: 50%;
+  overflow-y: visible;
+  overflow-x: visible;
+}
+
+#horizontalshape {
+  x-transition: all 2s ease-in-out;
+  animation: leftright 45s infinite;
+}
+#verticalshape {
+  y-transition: all 2s ease-in-out;
+  animation: updown 32s infinite;
+}
+#rotateleftshape {
+  animation: spinl 96s linear infinite;
+  transform-origin: center center;
+}
+#rotaterightshape {
+  animation: spinr 83s linear infinite;
+  transform-origin: center center;
+}
+@keyframes spinr {
+  from {
+    transform: rotate(0deg)
+  }
+
+  to {
+    transform: rotate(360deg)
+  }
+}
+@keyframes spinl {
+  from {
+    transform: rotate(360deg)
+  }
+
+  to {
+    transform: rotate(0deg)
+  }
+}
+@keyframes leftright {
+  0% {
+    left: 0vw;
+  }
+
+  50% {
+    left: 10vw;
+  }
+
+  100% {
+    left: 0vw;
+  }
+}
+@keyframes updown {
+  0% {
+    bottom: 0vh;
+  }
+
+  50% {
+    bottom: 10vh;
+  }
+
+  100% {
+    bottom: 0vh;
+  }
+}
+
 .vidButton{
   display:inline-block;
   padding:0.35em 1.2em;
