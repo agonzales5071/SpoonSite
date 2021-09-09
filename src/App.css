@@ -1,4 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 body{
 	background-origin: border-box;
 	background-image: linear-gradient(180deg, #4d78fc 50%, #5c4604 50%);
@@ -34,10 +37,10 @@ body{
 }
 .paralax img{
 	position: absolute;
-	width: 130%;
-	height: 120%;
-	top: -15%;
-	left: -15%;
+	width: 130vw;
+	height: 120vh;
+	top: -15vh;
+	left: -15vw;
 	object-fit: cover;
 	z-index: -10;
 	overflow-x: hidden;
@@ -79,4 +82,21 @@ p{
 	color:#000000;
 	background-color:#FFFFFF;
 }
-	
+.balloon{
+	position: relative;
+  text-align: center;
+  color: white;
+}
+.balloontext{
+	font-family: "VT323";
+	font-size: 26px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -150%);
+}
+.balloonbutt{
+	background-color: transparent;
+	border:none;
+	cursor: pointer;
+}

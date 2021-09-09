@@ -1,7 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Righteous&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tourney:wght@200&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Text+Me+One&display=swap');
 .body-component-a{
-  background-color: rgb(18, 15, 20);
+  background-color: rgb(28, 0, 46);
   background-image: none;
   overflow-y: scroll;
+  overflow-x: visible;
+  font-family: "Major Mono Display";
+}
+#portfoliotitle{
+	font-family: "Righteous";
+	font-size: 90px;
+	color:  rgb(217, 255, 245);
+	/* text-shadow: -2px 2px 8px grey,
+				  2px 2px 8px grey,
+				  2px -2px 0 grey,
+				  -2px -2px 0 grey; */
+	z-index: 2;
+}
+.head{
+  font-family: "Righteous";
+	font-size: 32px;
+	color:  floralwhite;
+  text-align: right;
+  margin-right:2vw;
+	/* text-shadow: -2px 2px 8px grey,
+				  2px 2px 8px grey,
+				  2px -2px 0 grey,
+				  -2px -2px 0 grey; */
+}
+.explan{
+  font-size: 20px;
+  color: floralwhite;
+  font-family: "Text Me One";
+  text-align: justify;
+  margin-left: 30vw;
+  margin-right: 5vw;
+}
+.partition{
+  margin-left: 10%;
+  text-align: left;
+  font-size: 40px;
+  color: whitesmoke;
+  font-size:50px;
 }
 #shapegroup {
   width: 100vw;
@@ -16,48 +59,49 @@
   height: 100vh;
   position: absolute;
   background: transparent url("./img/foggyshapes.png") center center;
-  opacity: 50%;
+  background-clip:padding-box;
+  opacity: 0.4;
   overflow-y: visible;
   overflow-x: visible;
 }
 
 #horizontalshape {
   x-transition: all 2s ease-in-out;
-  animation: leftright 45s infinite;
+  animation: leftright 90s infinite;
 }
 #verticalshape {
   y-transition: all 2s ease-in-out;
-  animation: updown 32s infinite;
+  animation: updown 64s infinite;
 }
 #rotateleftshape {
   animation: spinl 96s linear infinite;
   transform-origin: center center;
 }
 #rotaterightshape {
-  animation: spinr 83s linear infinite;
+  animation: spinr 103s linear infinite;
   transform-origin: center center;
 }
 @keyframes spinr {
   from {
-    transform: rotate(0deg)
+    transform: rotate(50deg)
   }
 
   to {
-    transform: rotate(360deg)
+    transform: rotate(410deg)
   }
 }
 @keyframes spinl {
   from {
-    transform: rotate(360deg)
+    transform: rotate(382deg)
   }
 
   to {
-    transform: rotate(0deg)
+    transform: rotate(22deg)
   }
 }
 @keyframes leftright {
   0% {
-    left: 0vw;
+    left: -10vw;
   }
 
   50% {
@@ -65,12 +109,12 @@
   }
 
   100% {
-    left: 0vw;
+    left: -10vw;
   }
 }
 @keyframes updown {
   0% {
-    bottom: 0vh;
+    bottom: -10vh;
   }
 
   50% {
@@ -78,9 +122,10 @@
   }
 
   100% {
-    bottom: 0vh;
+    bottom: -10vh;
   }
 }
+
 
 .vidButton{
   display:inline-block;
@@ -90,7 +135,7 @@
   border-radius:0.12em;
   box-sizing: border-box;
   text-decoration:none;
-  font-family:'Courier',sans-serif;
+  font-family:'Text Me One';
   font-weight:300;
   background-color:#ffffff00;
   color: #FFFFFF;
@@ -104,7 +149,7 @@
 .block{
   margin-left: 10%;
   margin-right: 10%;
-  background-color: rgba(54, 54, 54, 0.253);
+  background-color: rgba(54, 54, 54, 0.274);
   /* border: 3px solid deeppink; */
   padding: 1%;
   overflow: hidden;
@@ -115,23 +160,4 @@
 	width: 350px;
 	height: 250px;
 }
-.head{
-  font-family: "Patrick Hand";
-	font-size: 32px;
-	color:  floralwhite;
-	/* text-shadow: -2px 2px 8px grey,
-				  2px 2px 8px grey,
-				  2px -2px 0 grey,
-				  -2px -2px 0 grey; */
-}
-.explan{
-  font-size: 18px;
-  color: floralwhite;
-  font-family: courier;
-}
-.partition{
-  margin-left: 10%;
-  text-align: left;
-  font-size: 40px;
-  color: whitesmoke;
-}
+

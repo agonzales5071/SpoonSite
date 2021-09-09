@@ -5,7 +5,8 @@ import VidButton from './scripts/togglevid';
 import Portfolio from "./portfolio.js";
 import SpoonDrop from "./spoondrop.js"
 import react from 'react';
-import { BrowserRouter as Router, Route, Switch} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch, Link} from 'react-router-dom';
+// import RandomObjectMover from "./scripts/float"
 
 class App extends React.Component {
   render(){
@@ -25,6 +26,12 @@ class App extends React.Component {
 
 
 class Home extends React.Component {
+  // componentDidMount(){
+  //   RandomObjectMover.init()
+  //   console.log("portfolio mounted")
+  // }
+  // componentWillUnmount(){
+  // }
   render(){
     return (
       <div className="App">
@@ -39,11 +46,8 @@ class Home extends React.Component {
         <div className="content">
           <title>Dropped Spoon</title>
           <h1 id="title" title="&#x1f944;">Alexander <q>DroppedSpoon</q> Gonzales</h1>
-
-
-
           <p>currently under construction</p>
-
+          <HotAir id="pb" className="balloon" link="/portfolio" cls="balloonbutt" text="portfolio" img="images/portfolioballoon.png"></HotAir>
           {/* <LocationButton id="location" type="button"></LocationButton>
           <p id="locationtext"></p> */}
         </div>
@@ -52,6 +56,15 @@ class Home extends React.Component {
     }
 }
 
+function HotAir(props){
+  return(<div className="balloon">
+  <Link to={props.link}><button className={props.cls}>
+    <img src={props.img} alt="portfolio"></img>
+    <div className="balloontext">{props.text}</div></button>
+  </Link>
+  </div>
+  );
+}
 // class LocationButton extends React.Component{
 //   constructor(props){
 //     super(props);

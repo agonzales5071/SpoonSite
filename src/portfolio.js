@@ -25,26 +25,34 @@ class Portfolio extends React.Component {
 
         <div className="content">
           <title>Dropped Spoon</title>
-          <h1 id="title" title="&#x1f944;">Alexander <q>DroppedSpoon</q> Gonzales</h1>
+          <h1 id="portfoliotitle" title="&#x1f944;">Portfolio</h1>
 
-          <h2 className="partition">Projects</h2>
-          <Block header="Test"
-          vidtitle="vidtitle"
-          text="Lorem ipsum or whatever 2"
-            link="https://www.youtube.com/embed/mmKnJ4VrQtM"/>
-
-          <h2 className="partition">Games</h2>
+          <h2 className="partition">pRoJecTs</h2>
+          <Block header="Embedded Mario Game"
+          vidtitle="Embedded Mario Game Demo"
+          text="Working with a partner, I recreated a classic mario game using a microcontroller, two buttons, a sliding potentiometer, and an lcd screen. The game has multiple levels with scaling difficulty."
+          link="https://www.youtube.com/embed/dEKImjohaoI"/>
+          <Block header="Our Green Routine"
+          vidtitle="Green Routine Demo"
+          text="A team and I created an Android application with the purpose of informing users recycling habits. The app was coded in Java using Android Studio and utilized various API calls along with Google Firebase for data storage. The main idea of the app is to guide users recycling habits, ie if the user does not know whether or not an item is recyclable, they can check the app."
+          link="https://www.youtube.com/embed/MZ_kZLQo5pk"/>
+          <Block header="Nokia Site Deployment App"
+          vidtitle="Deployment Demo"
+          text="A team and I created an Android application for Nokia meant to assist in the deployment process of new cell towers. The app allows the user to visualize available map data in on an area map as well as in an Augmented reality view. This allows the on-site engineer to reconcile the differences between the (sometimes incomplete) available building data and existing stuctures."
+          link="https://www.youtube.com/embed/8lv1UL6npek"/>
+            
+          <h2 className="partition">GaMes</h2>
           <Block header="The Goo Game"
           vidtitle="Goo Game Demo"
           text="The Goo Game was created for a UT Austin run game jam. I worked on this game in a team of five and in the end we were awarded Best Game Design. You play as a heart in a pile of goo that must reach the pipe to exit each level, traversing the terrain by throwing goo that the heart can land on safely."
-            link="https://www.youtube.com/embed/mmKnJ4VrQtM"/>
+          link="https://www.youtube.com/embed/_uCsK6URmqc"/>
           <br></br>
           <Block header="Office Simulator"
           vidtitle="Office Simulator Demo"
           text="This game was my final project in my Unreal course at UT. In it the player must traverse a soulless office building looking for the memos that are scattered throughout. During this venture, the player must avoid the gaze of wandering coworkers, in need of a partner for small talk, that will drain the players motivation."
           link="https://www.youtube.com/embed/mmKnJ4VrQtM"/>
           
-          <h2 className="partition">Other Media</h2>
+          <h2 className="partition">OTheR MedIA</h2>
           <ButtonBlock header="Sketch Comedy"
           vidtitle="My Youtube Channel"
           text="In my free time I enjoy writing, directing, and acting in comedy sketches that I upload to my youtube. I think they're funny... click the button to see more!"

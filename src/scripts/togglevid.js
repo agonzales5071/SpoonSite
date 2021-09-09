@@ -6,7 +6,7 @@ class VidButton extends React.Component {
     super(props);
     this.state = {
       //these are videos suffixes that I want to append to youtube url
-      vids: ['d9mLhZtSwSs', 't4l5JIRyx6Q', 'HZCxGwv6jIw', 'PD-g54MVZlc'],
+      vids: ['d9mLhZtSwSs', 't4l5JIRyx6Q', 'HZCxGwv6jIw', 'PD-g54MVZlc', 'w4i1hxabOmc'],
       vidnum: 0,
     };
   }
