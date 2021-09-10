@@ -83,9 +83,16 @@ p{
 	background-color:#FFFFFF;
 }
 .balloon{
-	position: relative;
+	--animation-time: 60s;
+	--x-float-start: 10vw;
+	--y-float-start: 10vh;
+	--x-float-end: 20vw;
+	--y-float-end: 20vh;
+	position: absolute;
   text-align: center;
   color: white;
+	animation: float var(--animation-time) ease infinite ;
+	transform-origin: top left;
 }
 .balloontext{
 	font-family: "VT323";
@@ -99,4 +106,14 @@ p{
 	background-color: transparent;
 	border:none;
 	cursor: pointer;
+}
+@keyframes float{
+	0%{
+		left: var(--x-float-start);
+		top: var(--y-float-start);
+	}
+	100%{
+		left: var(--x-float-end);
+		top: var(--y-float-end);
+	}
 }

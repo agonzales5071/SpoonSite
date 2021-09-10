@@ -26,10 +26,9 @@ class App extends React.Component {
 
 
 class Home extends React.Component {
-  // componentDidMount(){
-  //   RandomObjectMover.init()
-  //   console.log("portfolio mounted")
-  // }
+  componentDidMount(){
+    console.log("home mounted")
+  }
   // componentWillUnmount(){
   // }
   render(){
@@ -47,7 +46,7 @@ class Home extends React.Component {
           <title>Dropped Spoon</title>
           <h1 id="title" title="&#x1f944;">Alexander <q>DroppedSpoon</q> Gonzales</h1>
           <p>currently under construction</p>
-          <HotAir id="pb" className="balloon" link="/portfolio" cls="balloonbutt" text="portfolio" img="images/portfolioballoon.png"></HotAir>
+          <HotAir id="pb" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
           {/* <LocationButton id="location" type="button"></LocationButton>
           <p id="locationtext"></p> */}
         </div>
@@ -56,15 +55,60 @@ class Home extends React.Component {
     }
 }
 
-function HotAir(props){
-  return(<div className="balloon">
-  <Link to={props.link}><button className={props.cls}>
-    <img src={props.img} alt="portfolio"></img>
-    <div className="balloontext">{props.text}</div></button>
-  </Link>
-  </div>
-  );
+// function HotAir(props){
+//   return(
+//     <div className="balloon">
+//       <Link to={props.link}><button className={props.cls}>
+//         <img src={props.img} alt="portfolio"></img>
+//         <div className="balloontext">{props.text}</div></button>
+//       </Link>
+//     </div>
+//   );
+// }
+class HotAir extends React.Component{
+  constructor(props){  
+    super(props);  
+    this.state = {
+      link: props.link,
+      cls: props.cls,
+      img: props.img,
+      text: props.text,
+      cssProperties: { '--animation-time': Math.trunc(Math.random() * 3) + 10 + 's',
+        '--x-float-start': 0 + 'px', '--x-float-end': 0 + 'px',
+        '--y-float-start': 0 + 'px', '--y-float-end': 0 + 'px' }
+    }  
+    //initial animation tim must be as long or longer than new time?
+  }  
+
+  render(){
+    return(
+      <div 
+        className="balloon" 
+        style={this.state.cssProperties}  
+        onAnimationIteration={()=> {
+          console.log(this.state.cssProperties);
+          this.setState({
+            ...this.state,
+            cssProperties: { '--animation-time': '10s', 
+            '--x-float-start': this.state.cssProperties['--x-float-end'],
+            '--y-float-start': this.state.cssProperties['--y-float-end'],
+            '--x-float-end': Math.trunc(Math.random()*200) - 10 + 'px',
+            '--y-float-end': Math.trunc(Math.random()*200) - 10 + 'px'}
+          });
+        }}
+      >
+        <Link to={this.state.link}><button className="balloonbutt">
+          <img src={this.state.img} alt=""></img>
+          <div className="balloontext">{this.state.text}</div></button>
+        </Link>
+      </div>
+    );
+  }
 }
+
+
+
+
 // class LocationButton extends React.Component{
 //   constructor(props){
 //     super(props);
