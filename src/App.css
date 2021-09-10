@@ -91,7 +91,7 @@ p{
 	position: absolute;
   text-align: center;
   color: white;
-	animation: float var(--animation-time) ease infinite ;
+	animation: float var(--animation-time) ease-in-out infinite ;
 	transform-origin: top left;
 }
 .balloontext{
