@@ -45,7 +45,7 @@ class Home extends React.Component {
         <div className="content">
           <title>Dropped Spoon</title>
           <h1 id="title" title="&#x1f944;">Alexander <q>DroppedSpoon</q> Gonzales</h1>
-          <p>currently under construction</p>
+          <p id="construction">currently under construction</p>
           <HotAir id="pb" num="0" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
           {/* <LocationButton id="location" type="button"></LocationButton>
           <p id="locationtext"></p> */}

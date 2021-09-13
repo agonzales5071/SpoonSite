@@ -11,3 +11,11 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+@font-face {
+  font-family:"Alphasmoke";
+  src: local("Alphasmoke"), url("./fonts/Alphasmoke-OOX6.ttf") format("truetype");
+}
+@font-face {
+  font-family: "MckloudBlack-32p";
+  src: local("MckloudBlack-32p"), url("./fonts/MckloudBlack-32p.ttf") format("truetype");
+}

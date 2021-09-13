@@ -51,15 +51,17 @@ body{
 	width: 420px;
 	height: 345px;
 }
-#title{
-	font-family: "Patrick Hand";
-	font-size: 64px;
-	color:  floralwhite;
-	text-shadow: -2px 2px 8px grey,
-				  2px 2px 8px grey,
-				  2px -2px 0 grey,
-				  -2px -2px 0 grey;
-	z-index: 2;
+#title {
+  font-family: "MckloudBlack-32p";
+  font-size: 64px;
+  color: floralwhite;
+  text-fill-color: floralwhite;
+  z-index: 2;
+}
+#construction {
+  font-family: "Alphasmoke";
+  font-size: 30px;
+  color:floralwhite;
 }
 p{
 	font-family: courier;
