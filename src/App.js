@@ -95,7 +95,7 @@ class HotAir extends React.Component{
             '--x-float-start': this.state.cssProperties['--x-float-end'],
             '--y-float-start': this.state.cssProperties['--y-float-end'],
             '--x-float-end': Math.trunc(Math.random()*(80/this.state.total)) + 10 + (this.state.num*(80/this.state.total)) + 'vw',
-            '--y-float-end': Math.trunc(Math.random()*70) + 10 + 'vh'}
+            '--y-float-end': Math.trunc(Math.random()*50) + 10 + 'vh'}
           });
         }}
       >
