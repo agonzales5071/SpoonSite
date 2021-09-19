@@ -86,7 +86,8 @@ function ButtonBlock(props){
 
   return(
     <div className="block">
-      <iframe className="vidplayer" id="ds" title ={props.vidtitle} src={props.link}></iframe>
+      <iframe key={props.link} className="vidplayer" id="ds" title ={props.vidtitle} src={props.link} 
+      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
       <h1 className="head">{props.header}</h1>
       <p className="explan">{props.text}</p>
       <VidButton></VidButton>

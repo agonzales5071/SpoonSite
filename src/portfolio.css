@@ -36,8 +36,13 @@
   color: floralwhite;
   font-family: "Text Me One";
   text-align: justify;
-  margin-left: 30vw;
+  margin-left: 5vw;
   margin-right: 5vw;
+}
+@media only screen and (min-width: 768px) {
+.explan{
+  margin-left:30vw;
+}
 }
 .partition{
   margin-left: 10%;
@@ -59,6 +64,7 @@
   height: 100vh;
   position: absolute;
   background: transparent url("./img/foggyshapes.png") center center;
+  -webkit-background-clip:padding-box;
   background-clip:padding-box;
   opacity: 0.4;
   overflow-y: visible;
@@ -67,18 +73,22 @@
 
 #horizontalshape {
   x-transition: all 2s ease-in-out;
-  animation: leftright 90s infinite;
+  animation: leftright infinite;
+  animation-duration: 90s;
 }
 #verticalshape {
   y-transition: all 2s ease-in-out;
-  animation: updown 64s infinite;
+  animation: updown infinite;
+  animation-duration: 64s;
 }
 #rotateleftshape {
-  animation: spinl 96s linear infinite;
+  animation: spinl linear infinite;
+  animation-duration: 96s;
   transform-origin: center center;
 }
 #rotaterightshape {
-  animation: spinr 103s linear infinite;
+  animation: spinr linear infinite;
+  animation-duration: 103s;
   transform-origin: center center;
 }
 @keyframes spinr {

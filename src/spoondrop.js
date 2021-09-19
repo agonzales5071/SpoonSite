@@ -1,13 +1,10 @@
-import React, {useRef, useEffect} from "react";
-import ReactDOM from "react-dom";
+import React from "react";
 import Matter from "matter-js";
 
 
 
 class SpoonDrop extends React.Component {
-  constructor(props) {
-    super(props);
-  }
+
 
   componentDidMount() {
     var Engine = Matter.Engine,
@@ -34,7 +31,6 @@ class SpoonDrop extends React.Component {
   
     var ballA = Bodies.circle(210, 100, 30, { restitution: 0.5 });
     var ballB = Bodies.circle(110, 50, 30, { restitution: 0.5 });
-    var poly = Bodies.polygon(200, 200, 100, 10);
     var size = 200,
     x = 200,
     y = 200,

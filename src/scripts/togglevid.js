@@ -13,7 +13,7 @@ class VidButton extends React.Component {
   handleClick(){
     let vl = this.state.vids;
     let place = this.state.vidnum;
-    if(place == 0){
+    if(place === 0){
       place = vl.length - 1;
     }
     else{
@@ -21,12 +21,12 @@ class VidButton extends React.Component {
     }
     var vidId = vl[place];
     var url = "https://www.youtube.com/embed/" + vidId;
-    document.getElementById('ds').src = url;
+    var frame = document.getElementById('ds').cloneNode();
+    frame.src = url;
+    document.getElementById('ds').parentNode.replaceChild(frame, document.getElementById('ds'));
     this.setState({
       vidnum: place,
     });
-      // console.log("vl1:", vl1 );
-      // console.log("vl2:", vl2 );
   }
   
   render(){
