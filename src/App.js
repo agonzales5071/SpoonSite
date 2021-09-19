@@ -46,9 +46,8 @@ class Home extends React.Component {
           <title>Dropped Spoon</title>
           <h1 id="title" title="&#x1f944;">Alexander <q>DroppedSpoon</q> Gonzales</h1>
           <p id="construction">currently under construction</p>
-          <HotAir id="pb" num="0" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
-          {/* <LocationButton id="location" type="button"></LocationButton>
-          <p id="locationtext"></p> */}
+          <HotAir id="pb" textid="pbtext" num="0" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
+          <HotAir id="sd" textid="sdtext" num="1" className="hotair" link="/spoondrop" text="spoon drop" img="images/spoondropballoon2.png"></HotAir>
         </div>
       </div>
       );
@@ -73,11 +72,14 @@ class HotAir extends React.Component{
       cls: props.cls,
       img: props.img,
       text: props.text,
-      total: 1,
+      total: 2,
+      textid: props.textid,
       num: props.num,//indexed starting at 0
-      cssProperties: { '--animation-time': 20 + 's',
-        '--x-float-start': 40 + 'vw', '--x-float-end': 40 + 'vw',
-        '--y-float-start': 60 + 'vh', '--y-float-end': 40 + 'vh' }
+      cssProperties: { '--animation-time': (Math.trunc(Math.random()*10) +15) + 's',
+        '--x-float-start': (((80/4) * ((props.num*1) + 1)) + 10) + 'vw', 
+        '--x-float-end':(((80/4) * ((props.num*1) + 1)) + 10 + (Math.trunc(Math.random()*6) - 2)) + 'vw',
+        '--y-float-start': 60 + 'vh',
+        '--y-float-end': 30 + Math.trunc(Math.random()*15) + 'vh' }
     }  
     //initial animation tim must be as long or longer than new time?
   }  
@@ -91,7 +93,7 @@ class HotAir extends React.Component{
           console.log(this.state.cssProperties);
           this.setState({
             ...this.state,
-            cssProperties: { '--animation-time': '20s', 
+            cssProperties: { '--animation-time': this.state.cssProperties["--animation-time"], 
             '--x-float-start': this.state.cssProperties['--x-float-end'],
             '--y-float-start': this.state.cssProperties['--y-float-end'],
             '--x-float-end': Math.trunc(Math.random()*(80/this.state.total)) + 10 + (this.state.num*(80/this.state.total)) + 'vw',
@@ -101,7 +103,7 @@ class HotAir extends React.Component{
       >
         <Link to={this.state.link}><button className="balloonbutt">
           <img src={this.state.img} alt=""></img>
-          <div className="balloontext">{this.state.text}</div></button>
+          <div className="balloontext" id={this.state.textid} >{this.state.text}</div></button>
         </Link>
       </div>
     );

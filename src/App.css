@@ -102,12 +102,19 @@ p{
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -150%);
+	transform: translate(-100%, -150%);
 }
 .balloonbutt{
 	background-color: transparent;
 	border:none;
 	cursor: pointer;
+}
+#sdtext{
+	transform: translate(-50%, -100%);
+}
+#pbtext{
+
+	transform: translate(-50%, -150%);
 }
 @keyframes float{
 	0%{
