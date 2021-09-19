@@ -72,12 +72,10 @@
 }
 
 #horizontalshape {
-  x-transition: all 2s ease-in-out;
   animation: leftright infinite;
   animation-duration: 90s;
 }
 #verticalshape {
-  y-transition: all 2s ease-in-out;
   animation: updown infinite;
   animation-duration: 64s;
 }

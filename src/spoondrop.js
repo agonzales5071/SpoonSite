@@ -82,7 +82,7 @@ class SpoonDrop extends React.Component {
       Composite.add(engine.world, compoundBodyA);
     });
 
-    Engine.run(engine);
+    Matter.Runner.run(engine);
 
     Render.run(render);
   }
