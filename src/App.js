@@ -31,11 +31,11 @@ class Home extends React.Component {
     return (
       <div className="App">
         <div className="paralax">
-          <img src="images/sky.png" className="object" data-value="1" alt="rip"/>      
-          <img src="images/mountains.png" className="object" data-value="2" alt="the"/>
-          <img src="images/trees.png" className="object" data-value="4" alt="whole"/>
-          <img src="images/hills.png" className="object" data-value="5" alt="aesthetic"/>
-          <img src="images/grass.png" className="object" data-value="6" alt="dude"/>
+          <img src="images/sky.png" className="paralaximage" data-value="1" alt="rip"/>      
+          <img src="images/mountains.png" className="paralaximage" data-value="2" alt="the"/>
+          <img src="images/trees.png" className="paralaximage" data-value="4" alt="whole"/>
+          <img src="images/hills.png" className="paralaximage" data-value="5" alt="aesthetic"/>
+          <img src="images/grass.png" className="paralaximage" data-value="6" alt="dude"/>
         </div>
 
         <div className="content">
@@ -98,7 +98,7 @@ class HotAir extends React.Component{
         }}
       >
         <Link to={this.state.link}><button className="balloonbutt">
-          <img src={this.state.img} alt=""></img>
+          <img className="balloonimg" src={this.state.img} alt=""></img>
           <div className="balloontext" id={this.state.textid} >{this.state.text}</div></button>
         </Link>
       </div>
