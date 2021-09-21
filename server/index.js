@@ -9,7 +9,20 @@ const router = require('./router');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketio(server);
+const io = socketio(server, {
+    cors:{
+      origins: ["*"],
+  
+  handlePreflightRequest: (req, res) => {
+    res.writeHead(200, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST",
+      "Access-Control-Allow-Headers": "my-custom-header",
+      "Access-Control-Allow-Credentials": true,
+    });
+    res.end();
+  }}
+});
 
 io.on('connection', (socket) => {
   console.log('we have a connection!');
