@@ -30,6 +30,14 @@ class Home extends React.Component {
   render(){
     return (
       <div className="App">
+        <div className="paralaxmobile">
+          <img src="images/sky.png" className="paralaximagemobile" data-value="1" alt="rip"/>      
+          <img src="images/mountains.png" className="paralaximagemobile" data-value="2" alt="the"/>
+          <img src="images/trees.png" className="paralaximagemobile" data-value="4" alt="whole"/>
+          <img src="images/hills.png" className="paralaximagemobile" data-value="5" alt="aesthetic"/>
+          <img src="images/grass.png" className="paralaximagemobile" data-value="6" alt="dude"/>
+        </div>
+
         <div className="paralax">
           <img src="images/sky.png" className="paralaximage" data-value="1" alt="rip"/>      
           <img src="images/mountains.png" className="paralaximage" data-value="2" alt="the"/>
