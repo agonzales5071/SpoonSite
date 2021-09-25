@@ -56,6 +56,7 @@ class Home extends React.Component {
           <p id="construction">currently under construction</p>
           <HotAir id="pb" textid="pbtext" num="0" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
           <HotAir id="sd" textid="sdtext" num="1" className="hotair" link="/spoondrop" text="spoon drop" img="images/spoondropballoon2.png"></HotAir>
+          <HotAir id="cr" textid="crtext" num="2" className="hotair" link="/join" text="chat room" img="images/chatballoon.png"></HotAir>
         </div>
       </div>
       );
@@ -80,7 +81,7 @@ class HotAir extends React.Component{
       cls: props.cls,
       img: props.img,
       text: props.text,
-      total: 2,
+      total: 3,
       textid: props.textid,
       num: props.num,//indexed starting at 0
       cssProperties: { '--animation-time': (Math.trunc(Math.random()*10) +15) + 's',

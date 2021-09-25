@@ -172,6 +172,9 @@ p{
 #sdtext{
 	transform: translate(-50%, -100%);
 }
+#crtext{
+	transform: translate(-50%, -100%);
+}
 #pbtext{
 	transform: translate(-50%, -150%);
 }

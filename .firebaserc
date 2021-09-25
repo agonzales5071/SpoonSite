@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "my-website-droppedspoon"
+  },
+  "targets": {
+    "my-website-droppedspoon": {
+      "hosting": {
+        "site": [
+          "my-website-droppedspoon"
+        ]
+      }
+    }
   }
 }
