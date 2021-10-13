@@ -4,17 +4,21 @@ import io from 'socket.io-client';
 
 import './Chat.css';
 
+import UserContainer from '../UserContainer/UserContainer';
 import InfoBar from '../InfoBar/InfoBar'
 import Input from '../Input/Input'
 import Messages from '../Messages/Messages'
+import SyncPlayer from '../Player/SyncPlayer';
 
 let socket;
 
 const Chat = ({ location }) => {
   const [name, setName] = useState('');
   const [room, setRoom] = useState('');
+  const [users, setUsers] = useState('');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [playerURL, setPlayerURL]= useState('');
   //const ENDPOINT = 'localhost:5000'; //local testing
   const ENDPOINT = 'https://spoonchathost.herokuapp.com/';
 
@@ -39,10 +43,19 @@ const Chat = ({ location }) => {
 }, [ENDPOINT, location.search]);
 
   useEffect(() => {
-    socket.on('message', (message) => {
-      setMessages([...messages, message]);
+    socket.on('message', message => {
+      setMessages(messages => [ ...messages, message ]);
+    });
+    
+    socket.on("roomData", ({ users }) => {
+      setUsers(users);
+    });
+
+    socket.on('playerURL', playerURL => {
+      setPlayerURL(playerURL);
     })
-  }, [messages]);
+}, []);
+  
 
   //function to send messages
   const sendMessage =(event) => {
@@ -53,15 +66,26 @@ const Chat = ({ location }) => {
     }
   }
 
+  const sendURL =(event) =>{
+    event.preventDefault();
+
+    if(playerURL){
+      socket.emit('sendURL', playerURL);
+    }
+  }
+
   console.log(message, messages);
 
   return (
     <div className="outerContainer">
+      <SyncPlayer setPlayerURL={setPlayerURL} sendURL={sendURL}/>
       <div className="container">
+        
         <InfoBar room={room}/>
         <Messages messages={messages} name={name} />
         <Input message={message} setMessage={setMessage} sendMessage={sendMessage}/>
       </div>
+      <UserContainer users={users}/>
     </div>
   )
 }
