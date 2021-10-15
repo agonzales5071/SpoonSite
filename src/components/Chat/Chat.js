@@ -19,8 +19,10 @@ const Chat = ({ location }) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [playerURL, setPlayerURL]= useState('');
-  //const ENDPOINT = 'localhost:5000'; //local testing
-  const ENDPOINT = 'https://spoonchathost.herokuapp.com/';
+  const [videoCode, setVideoCode] = useState('');
+  const [playerState, setPlayerState] = useState('');
+  const ENDPOINT = 'localhost:5000'; //local testing
+  //const ENDPOINT = 'https://spoonchathost.herokuapp.com/';
 
   useEffect(() => {
     const { name, room } = queryString.parse(location.search);
@@ -51,10 +53,19 @@ const Chat = ({ location }) => {
       setUsers(users);
     });
 
-    socket.on('playerURL', playerURL => {
-      setPlayerURL(playerURL);
-    })
+    socket.on('videoCode', videoCode => {
+      setVideoCode(videoCode);
+      console.log('video id= ', videoCode);
+    });
+
+    socket.on('playerState', ({ newState, username }) => {
+        setPlayerState(newState);
+        console.log("state changed to ", newState, " by ", username);
+        
+    });
+
 }, []);
+  
   
 
   //function to send messages
@@ -65,20 +76,33 @@ const Chat = ({ location }) => {
       socket.emit('sendMessage', message, () => setMessage(''));
     }
   }
-
-  const sendURL =(event) =>{
+//code to send youtube url to room
+  const sendCode =(event) =>{
     event.preventDefault();
-
+    console.log("pls send code")
     if(playerURL){
-      socket.emit('sendURL', playerURL);
+      if(playerURL.split("v=").length === 1){
+        event.preventDefault();
+        console.log("playerURL=", playerURL);
+      }
+      else{
+      var code = playerURL.split("v=")[1].split("&")[0];
+      console.log("pls emit-- code:", code);
+      socket.emit('sendCode', code);
+      }
     }
   }
 
-  console.log(message, messages);
+  //code to change state of players in room
+  const onPlayerStateChange = (event) => {
+    
+    socket.emit('playerStateChange', event.data);
+    console.log("state has changed locally to ", event.data);
+  }
 
   return (
     <div className="outerContainer">
-      <SyncPlayer setPlayerURL={setPlayerURL} sendURL={sendURL}/>
+      <SyncPlayer code={videoCode} setPlayerURL={setPlayerURL} sendCode={sendCode} onPlayerStateChange={onPlayerStateChange} playerState={playerState}/>
       <div className="container">
         
         <InfoBar room={room}/>
