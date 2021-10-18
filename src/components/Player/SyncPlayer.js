@@ -2,19 +2,19 @@ import React, { useEffect } from "react";
 import YouTube from "react-youtube";
 var cElement = null;
 
-function SyncPlayer({ code, setPlayerURL, sendCode, onPlayerStateChange, playerState} ) {
+function SyncPlayer({ code, setPlayerURL, sendCode, globalState, onPlayerStateChange, playerState} ) {
   
   useEffect(() => {
-    if(cElement){
+    if(cElement && globalState && globalState !== playerState){
       var player = cElement.target;
-      if(playerState === 1){
+      if(globalState === 1){
         player.playVideo();//not valid reference to player player
       }
-      if(playerState === 2){
+      if(globalState === 2){
         player.pauseVideo();
       }
     }
-  }, [playerState]);
+  }, [globalState]);
 
   const storeEvent = event =>{
     cElement = event;

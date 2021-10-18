@@ -21,6 +21,7 @@ const Chat = ({ location }) => {
   const [playerURL, setPlayerURL]= useState('');
   const [videoCode, setVideoCode] = useState('');
   const [playerState, setPlayerState] = useState('');
+  const [globalState, setGlobalState] = useState('');
   const ENDPOINT = 'localhost:5000'; //local testing
   //const ENDPOINT = 'https://spoonchathost.herokuapp.com/';
 
@@ -59,7 +60,7 @@ const Chat = ({ location }) => {
     });
 
     socket.on('playerState', ({ newState, username }) => {
-        setPlayerState(newState);
+        setGlobalState(newState);
         console.log("state changed to ", newState, " by ", username);
         
     });
@@ -83,26 +84,32 @@ const Chat = ({ location }) => {
     if(playerURL){
       if(playerURL.split("v=").length === 1){
         event.preventDefault();
-        console.log("playerURL=", playerURL);
+        //console.log("playerURL=", playerURL);
       }
       else{
-      var code = playerURL.split("v=")[1].split("&")[0];
-      console.log("pls emit-- code:", code);
-      socket.emit('sendCode', code);
+        var code = playerURL.split("v=")[1].split("&")[0];
+        //console.log("pls emit-- code:", code);
+        socket.emit('sendCode', code);
       }
     }
   }
 
   //code to change state of players in room
   const onPlayerStateChange = (event) => {
-    
-    socket.emit('playerStateChange', event.data);
-    console.log("state has changed locally to ", event.data);
+    setPlayerState(event.data);
+    if(globalState === event.data){
+      console.log("player is in global state, state= ", event.data)
+    }
+    else{
+      socket.emit('playerStateChange', event.data);
+      console.log("state has changed locally to ", event.data, "and emitted to room");
+    }
   }
 
   return (
     <div className="outerContainer">
-      <SyncPlayer code={videoCode} setPlayerURL={setPlayerURL} sendCode={sendCode} onPlayerStateChange={onPlayerStateChange} playerState={playerState}/>
+      <SyncPlayer code={videoCode} setPlayerURL={setPlayerURL} sendCode={sendCode} 
+      globalState={globalState} onPlayerStateChange={onPlayerStateChange} playerState={playerState}/>
       <div className="container">
         
         <InfoBar room={room}/>
