@@ -5,16 +5,24 @@ var cElement = null;
 function SyncPlayer({ code, setPlayerURL, sendCode, globalState, onPlayerStateChange, playerState} ) {
   
   useEffect(() => {
-    if(cElement && globalState && globalState !== playerState){
+    if(cElement && globalState && globalState !== cElement.data){
       var player = cElement.target;
-      if(globalState === 1){
-        player.playVideo();//not valid reference to player player
+      if(globalState === 1 || globalState === 3){
+        player.playVideo();//not valid reference to player 
       }
-      if(globalState === 2){
+      if(globalState === 2 ){
         player.pauseVideo();
       }
     }
   }, [globalState]);
+
+  useEffect(() => {
+    if(cElement){
+      var player = cElement.target;
+      player.loadVideoById(code, 0);
+    }
+  }, [code]);
+
 
   const storeEvent = event =>{
     cElement = event;

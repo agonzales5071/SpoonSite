@@ -22,8 +22,8 @@ const Chat = ({ location }) => {
   const [videoCode, setVideoCode] = useState('');
   const [playerState, setPlayerState] = useState('');
   const [globalState, setGlobalState] = useState('');
-  const ENDPOINT = 'localhost:5000'; //local testing
-  //const ENDPOINT = 'https://spoonchathost.herokuapp.com/';
+  //const ENDPOINT = 'localhost:5000'; //local testing
+  const ENDPOINT = 'https://spoonchathost.herokuapp.com/';
 
   useEffect(() => {
     const { name, room } = queryString.parse(location.search);
@@ -97,6 +97,9 @@ const Chat = ({ location }) => {
   //code to change state of players in room
   const onPlayerStateChange = (event) => {
     setPlayerState(event.data);
+    if(event.data === -1){
+      return;
+    }
     if(globalState === event.data){
       console.log("player is in global state, state= ", event.data)
     }

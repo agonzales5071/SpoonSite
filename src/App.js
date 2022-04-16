@@ -1,10 +1,11 @@
 import React from 'react';
 import './App.css';
 import Portfolio from "./portfolio.js";
-import SpoonDrop from "./spoondrop.js"
+import SpoonDrop from "./Physics/spoondrop.js"
 import { BrowserRouter as Router, Route, Switch, Link} from 'react-router-dom';
 import Chat from "./components/Chat/Chat.js"
 import Join from "./components/Join/Join.js"
+import SpoonDropGame from './Physics/spoondropGame';
 
 class App extends React.Component {
   render(){
@@ -15,6 +16,7 @@ class App extends React.Component {
             <Route path="/" exact component={Home} />
             <Route path="/portfolio" component={Portfolio} />
             <Route path="/spoondrop" component={SpoonDrop} />
+            <Route path="/spoondropgame" component={SpoonDropGame} />
             <Route path="/join" component={Join} />
             <Route path="/chat" component={Chat} />
           </Switch>
