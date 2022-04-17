@@ -3,7 +3,7 @@ import Matter, { Bounds, Vertices } from "matter-js";
 
 
 
-class SpoonDropGame extends React.Component {
+class SpoonDropGameSpeed extends React.Component {
 
 
   componentDidMount() {
@@ -65,7 +65,8 @@ class SpoonDropGame extends React.Component {
     var hatch = Bodies.rectangle(width/2, height*4/5, width/2, 50, {isStatic: true} ),
         sideL = Bodies.rectangle(width*3/4, height*1/20, 50, height*3/2, {isStatic: true}),
         sideR = Bodies.rectangle(width*1/4, height*1/20, 50, height*3/2, {isStatic: true});
-    
+
+    //hatch.axes = Matter.Axes.fromVertices({x: width/4, y: height*4/5})
 
     //Composite.add(engine.world, [ballB]);
     Composite.add(engine.world, [ hatch, sideL, sideR
@@ -159,8 +160,8 @@ class SpoonDropGame extends React.Component {
   render() {
 
     return <div ref="scene">
-      <p id="demo">Endurance test! How many spoons can you drop in 30s</p>
+      <p id="demo">Endurance test! How many spoons can you drop in 15s</p>
     </div>;
   }
 }
-export default SpoonDropGame;
+export default SpoonDropGameSpeed;

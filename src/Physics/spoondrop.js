@@ -73,11 +73,23 @@ class SpoonDrop extends React.Component {
       var size = 100,
       x = mouse.position.x,
       y = mouse.position.y,
+      r = Math.random()*255,
+      g = Math.random()*255,
+      b = Math.random()*255,
       //poly = Bodies.polygon(200, 200, 100, 50),
-      partA = Bodies.circle(x, y-(3*size/5), size/5),
-      partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA.render });
+      partA1 = Bodies.circle(x, y-(3*size/5), size/5),
+      partA2 = Bodies.circle(x, y-(3*size/5)-2, size/5,
+      { render: partA1.render }
+      ),
+      partA3 = Bodies.circle(x, y-(3*size/5)-4, size/5,
+      { render: partA1.render }
+      ),
+      partA4 = Bodies.circle(x, y-(3*size/5)-6, size/5,
+      { render: partA1.render }
+      ),
+      partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA1.render });
       var compoundBodyA = Body.create({
-        parts: [partA, partB]
+        parts: [partA1, partA2, partA3, partA4, partB]
       });
       Composite.add(engine.world, compoundBodyA);
     });
