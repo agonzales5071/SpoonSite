@@ -3,7 +3,7 @@ import Matter from "matter-js";
 
 
 
-class SpoonDrop extends React.Component {
+class SpoonDropMenu extends React.Component {
 
 
   componentDidMount() {
@@ -31,20 +31,24 @@ class SpoonDrop extends React.Component {
       }
     });
 
-    //random bodies
-    var ballA = Bodies.circle(210, 100, 30, { restitution: 0.5 });
-    var ballB = Bodies.circle(110, 50, 30, { restitution: 0.5 });
-    var size = 200,
-    x = 200,
-    y = 200,
-    partA = Bodies.rectangle(x, y, size, size / 5),
-    partB = Bodies.rectangle(x, y, size / 5, size, { render: partA.render });
+    var routes = 6;
 
-    var compoundBodyA = Body.create({
-      parts: [partA, partB]
-    });
+    //need to make at least width of spoon top
+    //returns array of bodies that make up route number buckets
+    function buckets(){
+      var h = height/3,
+      w = width/(routes*2),
+      result = [];
+      for(let x = 0; x < routes; x++){
+        var xpos = w*((2*x)+1);
+        result.push(Bodies.rectangle(xpos, height*2/3 + height/5, w, 50, {isStatic: true})); //bottom
+        result.push(Bodies.rectangle(xpos+(w/2), height/2 + height/5, 30, h, {isStatic: true})); //right
+        result.push(Bodies.rectangle(xpos-(w/2), height/2 + height/5, 30, h, {isStatic: true})); //left
+      }
+      return result;
+    }
 
-
+    Composite.add(engine.world, buckets());
 
     Composite.add(engine.world, [
       // walls
@@ -54,7 +58,6 @@ class SpoonDrop extends React.Component {
       Bodies.rectangle(width/3, 0, 50, height/2, { isStatic: true })
     ]);
 
-    Composite.add(engine.world, [ballA, ballB, compoundBodyA]);
 
     // add mouse control
     var mouse = Mouse.create(render.canvas),
@@ -96,8 +99,9 @@ class SpoonDrop extends React.Component {
     Render.run(render);
   }
 
+
   render() {
     return <div ref="scene" />;
   }
 }
-export default SpoonDrop;
+export default SpoonDropMenu;

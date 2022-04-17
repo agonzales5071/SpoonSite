@@ -32,7 +32,7 @@ class SpoonDropHomerun extends React.Component {
     var width = window.innerWidth;
     var height = window.innerHeight;
 
-  
+    //second circle rendered
     var ballB = Bodies.circle(width/5, height*3/4, 500, {
       restitution: 0.5,
       isStatic: true,
@@ -45,7 +45,7 @@ class SpoonDropHomerun extends React.Component {
         spoons = 0x0002,
         spoonContainer = 0x0004;
 
-    
+    //first circle rendered
     var ballA = Bodies.circle(width/5, height*3/4, 600, { 
       restitution: 0.5,
       isStatic: true ,
@@ -54,12 +54,8 @@ class SpoonDropHomerun extends React.Component {
         mask: backgroundCircle 
       }
     });
-  
-
     var ground = Bodies.rectangle(0, height*8/9, 1000*width, 50, {isStatic: true});
   
-
-    //Composite.add(engine.world, [ballB]);
     Composite.add(engine.world, [ground, ballA, ballB]);
 
     // add mouse control
@@ -77,7 +73,7 @@ class SpoonDropHomerun extends React.Component {
     Composite.add(engine.world, mouseConstraint);
 
     var curSpoon;
-    var text = "";
+    //Spoon creation
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
       //var poly = Bodies.polygon(200, 200, 100, 10);
       var size = 100,
@@ -96,39 +92,22 @@ class SpoonDropHomerun extends React.Component {
       Composite.add(engine.world, curSpoon);
     });
 
-    Matter.Events.on(mouseConstraint, "mouseup", function(event){
 
+    //distance display and calc
+    Matter.Events.on(mouseConstraint, "mouseup", function(event){
+      //checks distance every .1 seconds
       var x = setInterval(function() {
         if(curSpoon.position.y < height*8/9){
           var display = (Math.round(100*(curSpoon.position.x-width/2))/100).toFixed(2);
-          document.getElementById("demo").innerHTML = "Nice! You dropped the spoon " + display + "m away";
+          //commentary
+          if(Math.abs(display) > 20000){document.getElementById("demo").innerHTML = "WHOA! You dropped the spoon " + display + "m away";}
+          else{document.getElementById("demo").innerHTML = "Nice! You dropped the spoon " + display + "m away";}
         }
       }, 100);
 
     });
 
-
-    //var detector = Matter.Detector.create();
-    //Matter.Detector.setBodies(detector, [curSpoon, ground]);
-
-    //TODO: replace the damage calc with a simulation that skips ahead using Matter.Engine.update
-    //pass in current spoon
-    function distanceCalc(spoon){
-      var ypos = height-spoon.position.y,
-          xpos = spoon.position.x,
-          yvel = spoon.velocity.y*-1,
-          xvel = spoon.velocity.x;
-      
-      var flightTime = (yvel + Math.sqrt(yvel^2 + (2*(9.8)*ypos)))/(9.8);
-      // if (yvel < 0){
-      //   flightTime = ypos/(yvel*10);
-      // }
-      var distance = xvel*flightTime;
-      return distance;
-    }
-
     Matter.Runner.run(engine);
-
     Render.run(render);
   }
 

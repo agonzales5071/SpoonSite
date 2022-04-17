@@ -7,6 +7,7 @@ import Chat from "./components/Chat/Chat.js"
 import Join from "./components/Join/Join.js"
 import SpoonDropGameSpeed from './Physics/spoondropGameSpeed';
 import SpoonDropHomerun from './Physics/spoondropHomerun';
+import SpoonDropMenu from './Physics/spoondropMenu';
 
 class App extends React.Component {
   render(){
@@ -19,6 +20,7 @@ class App extends React.Component {
             <Route path="/spoondrop" component={SpoonDrop} />
             <Route path="/spoondropgamespeed" component={SpoonDropGameSpeed} />
             <Route path="/spoondrophomerun" component={SpoonDropHomerun} />
+            <Route path="/spoondropMenu" component={SpoonDropMenu} />
             <Route path="/join" component={Join} />
             <Route path="/chat" component={Chat} />
           </Switch>
@@ -67,16 +69,7 @@ class Home extends React.Component {
     }
 }
 
-// function HotAir(props){
-//   return(
-//     <div className="balloon">
-//       <Link to={props.link}><button className={props.cls}>
-//         <img src={props.img} alt="portfolio"></img>
-//         <div className="balloontext">{props.text}</div></button>
-//       </Link>
-//     </div>
-//   );
-// }
+
 class HotAir extends React.Component{
   constructor(props){  
     super(props);  
