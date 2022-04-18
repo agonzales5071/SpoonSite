@@ -143,6 +143,10 @@ p{
   top: 50%;
   left: 50%;
 	transform: translate(-100%, -150%);
+	color:#000000;
+}
+.balloontext:hover{
+	color: whitesmoke;
 }
 .balloonbutt{
 	background-color: transparent;
@@ -162,6 +166,16 @@ p{
 @media only screen and (min-width: 768px) {
 	.balloontext{
 		font-size: 26px;
+		color: #000000;
+	}
+	.balloontext:link{
+		color: #000000;
+	}
+	.balloontext:active{
+		color: #000000;
+	}
+	.balloontext:visited{
+		color: #000000;
 	}
 	.balloonimg{
 		width: 100%;

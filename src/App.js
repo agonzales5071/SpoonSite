@@ -1,3 +1,12 @@
+/*
+to start development server:
+npm start
+to deploy:
+npm run-script build 
+in terminal-
+firebase deploy --only hosting 
+*/
+
 import React from 'react';
 import './App.css';
 import Portfolio from "./portfolio.js";
@@ -34,6 +43,12 @@ class App extends React.Component {
 class Home extends React.Component {
   componentDidMount(){
     console.log("home mounted")
+    if(getOS() === "iOS"){
+      const balloons = document.querySelectorAll('.balloon')
+      balloons.forEach(balloon =>{
+        balloon.style.animationDirection =  "alternate";
+      });
+    }
   }
   // componentWillUnmount(){
   // }
@@ -69,6 +84,28 @@ class Home extends React.Component {
     }
 }
 
+function getOS() {
+  var userAgent = window.navigator.userAgent,
+      platform = window.navigator?.userAgentData?.platform ?? window.navigator.platform,
+      macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'],
+      windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'],
+      iosPlatforms = ['iPhone', 'iPad', 'iPod'],
+      os = null;
+
+  if (macosPlatforms.indexOf(platform) !== -1) {
+    os = 'Mac OS';
+  } else if (iosPlatforms.indexOf(platform) !== -1) {
+    os = 'iOS';
+  } else if (windowsPlatforms.indexOf(platform) !== -1) {
+    os = 'Windows';
+  } else if (/Android/.test(userAgent)) {
+    os = 'Android';
+  } else if (!os && /Linux/.test(platform)) {
+    os = 'Linux';
+  }
+
+  return os;
+}
 
 class HotAir extends React.Component{
   constructor(props){  
