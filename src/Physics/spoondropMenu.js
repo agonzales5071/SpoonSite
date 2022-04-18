@@ -15,8 +15,7 @@ class SpoonDropMenu extends React.Component {
       Bodies = Matter.Bodies,
       Body = Matter.Body,
       Mouse = Matter.Mouse,
-      MouseConstraint = Matter.MouseConstraint,
-      collision = Matter.Collision;
+      MouseConstraint = Matter.MouseConstraint;
 
     var engine = Engine.create({
       // positionIterations: 20
@@ -32,24 +31,27 @@ class SpoonDropMenu extends React.Component {
       }
     });
     var size = 100; //size var for spoon
-    
+    if(width < 800){
+      size = 50;
+    }
     const links = ["/spoondrop", "/spoondropGameSpeed", "/spoondropHomerun", "/"]
     var routes = links.length;
     var hatches  = []; //list of bodies that need to be checked for collision
-
+    var spoons = [];
     //need to make at least width of spoon top
     //returns array of bodies that make up route number buckets
     function buckets(){
-      var h = height/3,
+      var h = height/6,
       w = width/(routes*2),
       result = [];
       for(let x = 0; x < routes; x++){
-        let xpos = w*((2*x)+1);
-        let hatch = Bodies.rectangle(xpos, height*2/3 + height/5, w, 50, {isStatic: true}) //bottom
+        let xpos = w*((2*x)+1),
+        ypos = height*2/3 + height/5;
+        let hatch = Bodies.rectangle(xpos, ypos, w, size/2, {isStatic: true}) //bottom
         hatches.push(hatch);
         result.push(hatch);
-        result.push(Bodies.rectangle(xpos+(w/2), height/2 + height/5, 30, h, {isStatic: true})); //right
-        result.push(Bodies.rectangle(xpos-(w/2), height/2 + height/5, 30, h, {isStatic: true})); //left\
+        result.push(Bodies.rectangle(xpos+(w/2), ypos - h/2, size/5, h, {isStatic: true})); //right
+        result.push(Bodies.rectangle(xpos-(w/2), ypos - h/2, size/5, h, {isStatic: true})); //left\
         if(x < routes-1){
           let x = xpos + w,
           y = height/3,
@@ -63,10 +65,10 @@ class SpoonDropMenu extends React.Component {
           partA4 = Bodies.circle(x, y-(3*size/5)-6, size/5,
           { render: partA1.render }
           ),
-          partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA1.render });
-          result.push(
-            Body.create({parts: [partA1, partA2, partA3, partA4, partB], angle: Math.PI})
-          )
+          partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA1.render }),
+          sidespoon = Body.create({parts: [partA1, partA2, partA3, partA4, partB]});
+          result.push(sidespoon);
+          spoons.push(sidespoon);
 
         }
       }
@@ -74,7 +76,9 @@ class SpoonDropMenu extends React.Component {
     }
 
     Composite.add(engine.world, buckets());
-
+    spoons.forEach(element => {
+      Body.setAngle(element, Math.PI);
+    });
     //drop two spoons
 
 
@@ -128,8 +132,8 @@ class SpoonDropMenu extends React.Component {
       Composite.add(engine.world, curSpoon);
     });
 
-    //distance display and calc
-    var hit;
+    //collision detection attempt
+    
     // Matter.Events.on(mouseConstraint, "mouseup", function(event){
     //   //checks distance every .1 seconds
     //   var x = setInterval(function() {
@@ -179,7 +183,10 @@ class SpoonDropMenu extends React.Component {
 
 
   render() {
-    return <div ref="scene" />;
+    return <div ref="scene">
+      <p id="explan">drop a spoon to navigate</p>
+      <p id="navs">1:Freeplay 2:SpeedTest 3:Homerun 4:Home </p>
+    </div>;
   }
 }
 export default SpoonDropMenu;

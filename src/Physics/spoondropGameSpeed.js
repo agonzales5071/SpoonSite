@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import Matter, { Bounds, Vertices } from "matter-js";
+import React from 'react';
+import Matter from "matter-js";
 
 
 
@@ -35,7 +35,6 @@ class SpoonDropGameSpeed extends React.Component {
 
     var backgroundCircle = 0x0001,
     spoons = 0x0002,
-    spoonContainer = 0x0004,
     plsCollide = 1;
   
     // var backBall = Bodies.rectangle(500, 700, 60, 20, {
@@ -92,12 +91,11 @@ class SpoonDropGameSpeed extends React.Component {
     var spoonCount = 0;
     var countingUp = false; 
     var curSpoon;
-    var x;
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
       //start timer
       if (spoonCount === 0){
         
-        x = setInterval(function() {
+        let timer = setInterval(function() {
 
           seconds--;
           if(seconds>0){
@@ -109,7 +107,7 @@ class SpoonDropGameSpeed extends React.Component {
             countingUp = true;
             var countUp = 0;
             //spoon tally
-            var y = setInterval(function(){
+            var counter = setInterval(function(){
               if(countUp < spoonCount && countingUp){
                 countUp++;
                 document.getElementById("demo").innerHTML = countUp;
@@ -117,8 +115,8 @@ class SpoonDropGameSpeed extends React.Component {
               if(countUp === spoonCount && countingUp){
                 countingUp = false;
                 document.getElementById("demo").innerHTML = "Nice! You dropped " + countUp + " spoons!";
-                
-              clearInterval(x);
+                clearInterval(counter);
+                clearInterval(timer);
               
               }
             }, 50);

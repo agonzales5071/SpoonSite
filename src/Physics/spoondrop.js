@@ -31,20 +31,10 @@ class SpoonDrop extends React.Component {
       }
     });
 
-    //random bodies
-    var ballA = Bodies.circle(210, 100, 30, { restitution: 0.5 });
-    var ballB = Bodies.circle(110, 50, 30, { restitution: 0.5 });
-    var size = 200,
-    x = 200,
-    y = 200,
-    partA = Bodies.rectangle(x, y, size, size / 5),
-    partB = Bodies.rectangle(x, y, size / 5, size, { render: partA.render });
-
-    var compoundBodyA = Body.create({
-      parts: [partA, partB]
-    });
-
-
+    var size = 100; //size var for spoon
+    if(width < 800){
+      size = 50;
+    }
 
     Composite.add(engine.world, [
       // walls
@@ -53,8 +43,6 @@ class SpoonDrop extends React.Component {
       Bodies.rectangle(2*width/3, 0, 50, height/2, { isStatic: true }),
       Bodies.rectangle(width/3, 0, 50, height/2, { isStatic: true })
     ]);
-
-    Composite.add(engine.world, [ballA, ballB, compoundBodyA]);
 
     // add mouse control
     var mouse = Mouse.create(render.canvas),
@@ -71,9 +59,9 @@ class SpoonDrop extends React.Component {
     Composite.add(engine.world, mouseConstraint);
 
     //create spoon
+    
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
-      var size = 100,
-      x = mouse.position.x,
+      let x = mouse.position.x,
       y = mouse.position.y,
       partA1 = Bodies.circle(x, y-(3*size/5), size/5),
       partA2 = Bodies.circle(x, y-(3*size/5)-2, size/5,

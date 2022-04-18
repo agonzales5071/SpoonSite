@@ -61,7 +61,7 @@ class Home extends React.Component {
           <h1 id="title" title="&#x1f944;">Alexander <q>DroppedSpoon</q> Gonzales</h1>
           <p id="construction">currently under construction</p>
           <HotAir id="pb" textid="pbtext" num="0" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
-          <HotAir id="sd" textid="sdtext" num="1" className="hotair" link="/spoondrop" text="spoon drop" img="images/spoondropballoon2.png"></HotAir>
+          <HotAir id="sd" textid="sdtext" num="1" className="hotair" link="/spoondropMenu" text="spoon drop" img="images/spoondropballoon2.png"></HotAir>
           <HotAir id="cr" textid="crtext" num="2" className="hotair" link="/join" text="chat room" img="images/chatballoon.png"></HotAir>
         </div>
       </div>
@@ -82,7 +82,7 @@ class HotAir extends React.Component{
       textid: props.textid,
       num: props.num,//indexed starting at 0
       cssProperties: { '--animation-time': (Math.trunc(Math.random()*10) +15) + 's',
-        '--x-float-start': (((80/4) * ((props.num*1) + 1)) + 10) + 'vw', 
+        '--x-float-start': (((80/4) * ((props.num*1) + 1)) ) + 'vw', 
         '--x-float-end':(((80/4) * ((props.num*1) + 1)) + 10 + (Math.trunc(Math.random()*6) - 2)) + 'vw',
         '--y-float-start': 60 + 'vh',
         '--y-float-end': 30 + Math.trunc(Math.random()*15) + 'vh' }
@@ -97,6 +97,10 @@ class HotAir extends React.Component{
         style={this.state.cssProperties}  
         onAnimationIteration={()=> {
           console.log(this.state.cssProperties);
+          let offsets = document.getElementById(this.state.textid).getBoundingClientRect();
+          let top = offsets.top*(100/document.documentElement.clientHeight);
+          let left = offsets.left;
+          console.log ("starting position of " + this.state.link + "is " + top);
           this.setState({
             ...this.state,
             cssProperties: { '--animation-time': this.state.cssProperties["--animation-time"], 

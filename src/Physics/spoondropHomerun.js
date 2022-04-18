@@ -1,5 +1,5 @@
 import React from "react";
-import Matter, { Bounds, Vertices } from "matter-js";
+import Matter from "matter-js";
 
 
 
@@ -29,11 +29,18 @@ class SpoonDropHomerun extends React.Component {
       }
     });
 
-    var width = window.innerWidth;
-    var height = window.innerHeight;
 
+    var width = window.innerWidth,
+    height = window.innerHeight,
+    size = 100,
+    backgroundCircle = 0x0001,
+    spoons = 0x0002,
+    spoonContainer = 0x0004;
+    if(width < 600){
+      size = 50;
+    }
     //second circle rendered
-    var ballB = Bodies.circle(width/5, height*3/4, 500, {
+    var ballB = Bodies.circle(width/5, height*3/4, size*5, {
       restitution: 0.5,
       isStatic: true,
       collisionFilter: {
@@ -41,12 +48,10 @@ class SpoonDropHomerun extends React.Component {
         mask: spoons 
       }});
     
-    var backgroundCircle = 0x0001,
-        spoons = 0x0002,
-        spoonContainer = 0x0004;
+
 
     //first circle rendered
-    var ballA = Bodies.circle(width/5, height*3/4, 600, { 
+    var ballA = Bodies.circle(width/5, height*3/4, size*6, { 
       restitution: 0.5,
       isStatic: true ,
       collisionFilter: {
@@ -77,8 +82,7 @@ class SpoonDropHomerun extends React.Component {
     //Spoon creation
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
       //var poly = Bodies.polygon(200, 200, 100, 10);
-      var size = 100,
-      x = mouse.position.x,
+      let x = mouse.position.x,
       y = mouse.position.y,
       partA1 = Bodies.circle(x, y-(3*size/5), size/5),
       partA2 = Bodies.circle(x, y-(3*size/5)-2, size/5,
@@ -104,7 +108,7 @@ class SpoonDropHomerun extends React.Component {
     Matter.Events.on(mouseConstraint, "mouseup", function(event){
       //checks distance every .1 seconds
       if(spoonCount > 0){
-        var x = setInterval(function() {
+        var counter = setInterval(function() {
           if(curSpoon.position.y < height*8/9){
             //maybe makes the score smoother when it lands???
             let score = (Math.round(10000000*(curSpoon.position.x-width/2))/10000000).toFixed(7);
@@ -114,6 +118,9 @@ class SpoonDropHomerun extends React.Component {
               lastScore = score;
               if(Math.abs(display) > 20000){document.getElementById("demo").innerHTML = "WHOA! You dropped the spoon " + display + "m away";}
               else{document.getElementById("demo").innerHTML = "Nice! You dropped the spoon " + display + "m away";}
+            }
+            else{
+              clearInterval(counter);
             }
           }
         }, 100);
