@@ -15,7 +15,8 @@ class SpoonDropMenu extends React.Component {
       Bodies = Matter.Bodies,
       Body = Matter.Body,
       Mouse = Matter.Mouse,
-      MouseConstraint = Matter.MouseConstraint;
+      MouseConstraint = Matter.MouseConstraint,
+      collision = Matter.Collision;
 
     var engine = Engine.create({
       // positionIterations: 20
@@ -30,8 +31,11 @@ class SpoonDropMenu extends React.Component {
         wireframes: false
       }
     });
-
-    var routes = 6;
+    var size = 100; //size var for spoon
+    
+    const links = ["/spoondrop", "/spoondropGameSpeed", "/spoondropHomerun", "/"]
+    var routes = links.length;
+    var hatches  = []; //list of bodies that need to be checked for collision
 
     //need to make at least width of spoon top
     //returns array of bodies that make up route number buckets
@@ -40,16 +44,41 @@ class SpoonDropMenu extends React.Component {
       w = width/(routes*2),
       result = [];
       for(let x = 0; x < routes; x++){
-        var xpos = w*((2*x)+1);
-        result.push(Bodies.rectangle(xpos, height*2/3 + height/5, w, 50, {isStatic: true})); //bottom
+        let xpos = w*((2*x)+1);
+        let hatch = Bodies.rectangle(xpos, height*2/3 + height/5, w, 50, {isStatic: true}) //bottom
+        hatches.push(hatch);
+        result.push(hatch);
         result.push(Bodies.rectangle(xpos+(w/2), height/2 + height/5, 30, h, {isStatic: true})); //right
-        result.push(Bodies.rectangle(xpos-(w/2), height/2 + height/5, 30, h, {isStatic: true})); //left
+        result.push(Bodies.rectangle(xpos-(w/2), height/2 + height/5, 30, h, {isStatic: true})); //left\
+        if(x < routes-1){
+          let x = xpos + w,
+          y = height/3,
+          partA1 = Bodies.circle(x, y-(3*size/5), size/5),
+          partA2 = Bodies.circle(x, y-(3*size/5)-2, size/5,
+          { render: partA1.render }
+          ),
+          partA3 = Bodies.circle(x, y-(3*size/5)-4, size/5,
+          { render: partA1.render }
+          ),
+          partA4 = Bodies.circle(x, y-(3*size/5)-6, size/5,
+          { render: partA1.render }
+          ),
+          partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA1.render });
+          result.push(
+            Body.create({parts: [partA1, partA2, partA3, partA4, partB], angle: Math.PI})
+          )
+
+        }
       }
       return result;
     }
 
     Composite.add(engine.world, buckets());
 
+    //drop two spoons
+
+
+    console.log(hatches);
     Composite.add(engine.world, [
       // walls
       Bodies.rectangle(width/6, height, width/2, 50, { isStatic: true }),
@@ -73,10 +102,12 @@ class SpoonDropMenu extends React.Component {
     
     Composite.add(engine.world, mouseConstraint);
 
+    var curSpoon;
+    var trapBody;
     //create spoon
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
-      var size = 100,
-      x = mouse.position.x,
+      
+      let x = mouse.position.x,
       y = mouse.position.y,
       partA1 = Bodies.circle(x, y-(3*size/5), size/5),
       partA2 = Bodies.circle(x, y-(3*size/5)-2, size/5,
@@ -89,10 +120,57 @@ class SpoonDropMenu extends React.Component {
       { render: partA1.render }
       ),
       partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA1.render });
-      var compoundBodyA = Body.create({
+      trapBody = partB.id;
+      curSpoon = Body.create({
         parts: [partA1, partA2, partA3, partA4, partB]
       });
-      Composite.add(engine.world, compoundBodyA);
+
+      Composite.add(engine.world, curSpoon);
+    });
+
+    //distance display and calc
+    var hit;
+    // Matter.Events.on(mouseConstraint, "mouseup", function(event){
+    //   //checks distance every .1 seconds
+    //   var x = setInterval(function() {
+    //     if(curSpoon.position.y < height*8/9){
+    //       hatches.forEach(function(element, index){
+    //         hit = collision.collides(element, curSpoon);
+    //         console.log(hit);
+    //         if(null == hit){}
+    //         else{
+    //           let goto = links[index];
+    //           window.location.href = goto;
+    //         }
+    //       });
+    //     }
+    //   }, 1000);
+
+    // });
+    Matter.Events.on(engine, "collisionStart", function(event) {
+      let collisionArray = event.source.pairs.collisionActive;
+      for(let j = 0; j < collisionArray.length; j++){
+        let bodyA = event.pairs[0].bodyA.id;
+        let bodyB = event.pairs[0].bodyB.id;
+        console.log(event);
+        if(bodyA === trapBody){
+          for(let i = 0; i < links.length; i++){
+            if(bodyB === hatches[i].id){
+              console.log(links[i])
+              window.location.href = links[i];
+            }
+          }
+        }
+        else{
+          if(bodyB === trapBody){
+            for(let i = 0; i < links.length; i++){
+              if(bodyA === hatches[i].id){
+                window.location.href = links[i];
+              }
+            }
+          }
+        }
+      }
     });
 
     Matter.Runner.run(engine);

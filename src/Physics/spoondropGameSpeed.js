@@ -91,11 +91,13 @@ class SpoonDropGameSpeed extends React.Component {
     var seconds = 15;
     var spoonCount = 0;
     var countingUp = false; 
+    var curSpoon;
+    var x;
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
       //start timer
       if (spoonCount === 0){
         
-        var x = setInterval(function() {
+        x = setInterval(function() {
 
           seconds--;
           if(seconds>0){
@@ -105,16 +107,19 @@ class SpoonDropGameSpeed extends React.Component {
           
           if (seconds < 0 && countingUp === false) {
             countingUp = true;
-            clearInterval(x);
             var countUp = 0;
             //spoon tally
             var y = setInterval(function(){
-              if(countUp < spoonCount){
+              if(countUp < spoonCount && countingUp){
                 countUp++;
                 document.getElementById("demo").innerHTML = countUp;
               }
-              if(countUp === spoonCount){
+              if(countUp === spoonCount && countingUp){
+                countingUp = false;
                 document.getElementById("demo").innerHTML = "Nice! You dropped " + countUp + " spoons!";
+                
+              clearInterval(x);
+              
               }
             }, 50);
             Matter.Body.setStatic(hatch, false);
@@ -126,11 +131,19 @@ class SpoonDropGameSpeed extends React.Component {
       var size = 100,
       x = mouse.position.x,
       y = mouse.position.y,
-      //poly = Bodies.polygon(200, 200, 100, 50),
-      partA = Bodies.circle(x, y-(3*size/5), size/5),
-      partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA.render });
-      var compoundBodyA = Body.create({
-        parts: [partA, partB],
+      partA1 = Bodies.circle(x, y-(3*size/5), size/5),
+      partA2 = Bodies.circle(x, y-(3*size/5)-2, size/5,
+      { render: partA1.render }
+      ),
+      partA3 = Bodies.circle(x, y-(3*size/5)-4, size/5,
+      { render: partA1.render }
+      ),
+      partA4 = Bodies.circle(x, y-(3*size/5)-6, size/5,
+      { render: partA1.render }
+      ),
+      partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA1.render });
+      curSpoon = Body.create({
+        parts: [partA1, partA2, partA3, partA4, partB],
         collisionFilter: {
           category: spoons,
           group: plsCollide,
@@ -139,7 +152,7 @@ class SpoonDropGameSpeed extends React.Component {
       });
       if(seconds>0){
         spoonCount++;
-        Composite.add(engine.world, compoundBodyA);
+        Composite.add(engine.world, curSpoon);
       }
     });
 

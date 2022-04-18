@@ -73,38 +73,51 @@ class SpoonDropHomerun extends React.Component {
     Composite.add(engine.world, mouseConstraint);
 
     var curSpoon;
+    var spoonCount = 0;
     //Spoon creation
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
       //var poly = Bodies.polygon(200, 200, 100, 10);
       var size = 100,
       x = mouse.position.x,
       y = mouse.position.y,
-      //poly = Bodies.polygon(200, 200, 100, 50),
-      partA = Bodies.circle(x, y-(3*size/5), size/5),
-      partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA.render });
+      partA1 = Bodies.circle(x, y-(3*size/5), size/5),
+      partA2 = Bodies.circle(x, y-(3*size/5)-2, size/5,
+      { render: partA1.render }
+      ),
+      partA3 = Bodies.circle(x, y-(3*size/5)-4, size/5,
+      { render: partA1.render }
+      ),
+      partA4 = Bodies.circle(x, y-(3*size/5)-6, size/5,
+      { render: partA1.render }
+      ),
+      partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA1.render });
       curSpoon = Body.create({
-        parts: [partA, partB],
-        collisionFilter: {
-          group: spoons,
-          mask: backgroundCircle
-        }
+        parts: [partA1, partA2, partA3, partA4, partB]
       });
+      spoonCount++;
       Composite.add(engine.world, curSpoon);
     });
 
 
     //distance display and calc
+    var lastScore = -100000;
     Matter.Events.on(mouseConstraint, "mouseup", function(event){
       //checks distance every .1 seconds
-      var x = setInterval(function() {
-        if(curSpoon.position.y < height*8/9){
-          var display = (Math.round(100*(curSpoon.position.x-width/2))/100).toFixed(2);
-          //commentary
-          if(Math.abs(display) > 20000){document.getElementById("demo").innerHTML = "WHOA! You dropped the spoon " + display + "m away";}
-          else{document.getElementById("demo").innerHTML = "Nice! You dropped the spoon " + display + "m away";}
-        }
-      }, 100);
-
+      if(spoonCount > 0){
+        var x = setInterval(function() {
+          if(curSpoon.position.y < height*8/9){
+            //maybe makes the score smoother when it lands???
+            let score = (Math.round(10000000*(curSpoon.position.x-width/2))/10000000).toFixed(7);
+            let display = (Math.round(100*(curSpoon.position.x-width/2))/100).toFixed(2);
+            if(score !== lastScore){//stops repeated refresh
+              //commentary
+              lastScore = score;
+              if(Math.abs(display) > 20000){document.getElementById("demo").innerHTML = "WHOA! You dropped the spoon " + display + "m away";}
+              else{document.getElementById("demo").innerHTML = "Nice! You dropped the spoon " + display + "m away";}
+            }
+          }
+        }, 100);
+      }
     });
 
     Matter.Runner.run(engine);
