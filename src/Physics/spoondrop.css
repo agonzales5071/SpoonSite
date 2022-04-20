@@ -1,0 +1,40 @@
+.locations{
+  position: absolute;
+  width: 100%;
+  margin-left: auto;
+  text-align: center;
+}
+#menudisplay{
+  color: whitesmoke;
+  position: absolute;
+  width: 100%;
+  margin-left: auto;
+  text-align: center;
+}
+#menunavs{
+  color: whitesmoke;
+  position: absolute;
+  left: 50%;
+}
+
+#speedclickdisplay{
+  color: whitesmoke;
+  position: absolute;
+  width: 100%;
+  margin-left: auto;
+  text-align: center;
+}
+
+#homerundisplay{
+  color: whitesmoke;
+  position: absolute;
+  left: 10%;
+  right: 10%;
+}
+#menutext{
+  color: whitesmoke;
+  position: absolute;
+  width: 100%;
+  margin-left: auto;
+  text-align: center;
+}

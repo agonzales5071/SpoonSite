@@ -8,6 +8,7 @@ import Join from "./components/Join/Join.js"
 import SpoonDropGameSpeed from './Physics/spoondropGameSpeed';
 import SpoonDropHomerun from './Physics/spoondropHomerun';
 import SpoonDropMenu from './Physics/spoondropMenu';
+import SpoonDropDescent from './Physics/spoondropDescent';
 
 class App extends React.Component {
   render(){
@@ -21,6 +22,7 @@ class App extends React.Component {
             <Route path="/spoondropgamespeed" component={SpoonDropGameSpeed} />
             <Route path="/spoondrophomerun" component={SpoonDropHomerun} />
             <Route path="/spoondropMenu" component={SpoonDropMenu} />
+            <Route path="/spoondropDescent" component={SpoonDropDescent} />
             <Route path="/join" component={Join} />
             <Route path="/chat" component={Chat} />
           </Switch>
@@ -96,11 +98,12 @@ class HotAir extends React.Component{
         className="balloon" 
         style={this.state.cssProperties}  
         onAnimationIteration={()=> {
-          console.log(this.state.cssProperties);
-          let offsets = document.getElementById(this.state.textid).getBoundingClientRect();
-          let top = offsets.top*(100/document.documentElement.clientHeight);
-          let left = offsets.left;
-          console.log ("starting position of " + this.state.link + "is " + top);
+          //position debugs
+          //console.log(this.state.cssProperties);
+          //let offsets = document.getElementById(this.state.textid).getBoundingClientRect();
+          //let top = offsets.top*(100/document.documentElement.clientHeight);
+          //let left = offsets.left;
+          //console.log ("starting position of " + this.state.link + "is " + top);
           this.setState({
             ...this.state,
             cssProperties: { '--animation-time': this.state.cssProperties["--animation-time"], 

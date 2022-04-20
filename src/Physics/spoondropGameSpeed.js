@@ -99,7 +99,7 @@ class SpoonDropGameSpeed extends React.Component {
 
           seconds--;
           if(seconds>0){
-            document.getElementById("demo").innerHTML = seconds;
+            document.getElementById("speedclickdisplay").innerHTML = seconds;
           }
           // If the count down is over, write some text
           
@@ -110,11 +110,11 @@ class SpoonDropGameSpeed extends React.Component {
             var counter = setInterval(function(){
               if(countUp < spoonCount && countingUp){
                 countUp++;
-                document.getElementById("demo").innerHTML = countUp;
+                document.getElementById("speedclickdisplay").innerHTML = countUp;
               }
               if(countUp === spoonCount && countingUp){
                 countingUp = false;
-                document.getElementById("demo").innerHTML = "Nice! You dropped " + countUp + " spoons!";
+                document.getElementById("speedclickdisplay").innerHTML = "Nice! You dropped " + countUp + " spoons!";
                 clearInterval(counter);
                 clearInterval(timer);
               
@@ -171,7 +171,7 @@ class SpoonDropGameSpeed extends React.Component {
   render() {
 
     return <div ref="scene">
-      <p id="demo">Endurance test! How many spoons can you drop in 15s</p>
+      <p id="speedclickdisplay">Endurance test! How many spoons can you drop in 15s</p>
     </div>;
   }
 }
