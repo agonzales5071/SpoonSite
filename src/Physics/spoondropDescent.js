@@ -1,40 +1,21 @@
 import React from "react";
-import Matter, { Composite } from "matter-js";
+import Matter from "matter-js";
 import './spoondrop.css';
 
 //bug fixes
 //same name chat room join, back buttons, 
 
 class SpoonDropDescent extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      resetting: false,
-      gameStarted: false,
-      composite: Matter.Composite
-        };
-  }
+
 
   componentDidMount() {
-    this.initializeGame(false);
+    this.initializeGame();
   }
-  componentDidUpdate() {
-    if(this.state.resetting === true){
-      this.setState({resetting: false});
-      this.initializeGame(true);
-      document.getElementById("dropper").innerHTML = "pooper";
-    }
-  }
-  initializeGame( reset ){
+
+  initializeGame(){
     
     var allWalls = []; 
-    console.log("reset value is " + reset);
-     if(reset){
-        allWalls.forEach(element =>{
-          Composite.remove(engine.world, element);
-        })
-
-      }
+    var isMobile = false;
     var width = window.innerWidth;
     var height = window.innerHeight;
     var Engine = Matter.Engine,
@@ -54,7 +35,7 @@ class SpoonDropDescent extends React.Component {
       engine: engine,
       options: {
         width: window.innerWidth,
-        height: window.innerHeight,
+        height: window.innerHeight+window.innerHeight,
         wireframes: false
       }
     });
@@ -66,6 +47,7 @@ class SpoonDropDescent extends React.Component {
     var size = 100; //size var for spoon
     //mobile augmentations
     if(width < 800){
+      isMobile = true;
       size = 50;
       force = 0.002;
       fric = 0.03
@@ -102,8 +84,8 @@ class SpoonDropDescent extends React.Component {
       { render: partA1.render }
       ),
       partB = Bodies.trapezoid(spoonstart[0], spoonstart[1], size / 5, size, 0.4, { render: partA1.render });
-      var spoonTop = partA1.id;
-      var trapBody = partB.id;
+      //var spoonTop = partA1.id;
+      //var trapBody = partB.id;
       curSpoon = Body.create({
         parts: [partA1, partA2, partA3, partA4, partB],
         collisionFilter: {
@@ -116,9 +98,9 @@ class SpoonDropDescent extends React.Component {
     Body.setCentre(curSpoon, Matter.Vector.create(spoonstart[0], spoonstart[1]-size/10), false);
     Composite.add(engine.world, curSpoon);
 
-
+    var allMovements = [];
     var movement;
-    var prevx = curSpoon.position.x;
+    //var prevx = curSpoon.position.x;
     var gameStarted = false;
     var resettable = false;
     //create spoon
@@ -159,24 +141,29 @@ class SpoonDropDescent extends React.Component {
         //console.log("spoon:" + spox + " mouse:" + mousex );
             //console.log(curSpoon.velocity);
       }, 10);
+      allMovements.push(movement);
     });
 
     //collision detection attempt
     
     Matter.Events.on(mouseConstraint, "mouseup", function(event){
-      clearInterval(movement);
+      allMovements.forEach(element => {
+        clearInterval(element);
+      })
+      // clearInterval(movement);
     });
     
     Matter.Events.on(engine, "collisionStart", function(event) {
-      allWalls.forEach(element => {
-        Body.setStatic(element, true);
-      });
-      gameStarted = false;
-      resettable = true;
-      //Body.setStatic(curSpoon, true);
-      ragdoll = true;
-      clearInterval(spawnwalls);
-      document.getElementById("descenttut").innerHTML = "Nice! Touch anywhere to try again!";
+      
+        allWalls.forEach(element => {
+          Body.setStatic(element, true);
+        });
+        gameStarted = false;
+        resettable = true;
+        //Body.setStatic(curSpoon, true);
+        ragdoll = true;
+        clearInterval(spawnwalls);
+        document.getElementById("descenttut").innerHTML = "Nice! Touch anywhere to try again!";
       
       // let collisionArray = event.source.pairs.collisionActive;
       // for(let j = 0; j < collisionArray.length; j++){
@@ -207,67 +194,266 @@ class SpoonDropDescent extends React.Component {
       //   }
       // }
     });
-    var initialSpeed = 15;
+    var initialSpeed = 20;
     var ragdoll = false;
     var spawnwalls;
     var points = 0;
     var wallTracker = 0;
     var speed = initialSpeed;
     var wallMoveSpeed = -5;
-    var simplified = false; 
+    //var simplified = false; 
+    var prevCenter = width/2;
+    var defaultWalls = true;
+    var closeWalls = false; //quickwalls
+    var spoonWalls = false;
+    var closeWallSet = 0;
+    var spoonWallSet = 1;
+    var speedChange = 0;
+    var oneType = false;//for obstacle set debugging
+    function getRandomInt(max) {
+      return Math.floor(Math.random() * max);
+    }
     function startGame() {
       if(gameStarted === false){
-        
-        gameStarted = true;
-        
+        gameStarted = true;     
         document.getElementById('descenttut').innerHTML = "";
 
-        //function to move spoon
-
-        //function to spawn walls based on time elapsed
         spawnwalls = setInterval(function() {
-          if(wallTracker%200 === 0){
-            speed--;
+          if(wallTracker%(10*speed) === 0){
+            speedChange++;
+            if(speedChange === 2){
+              speed--;
+              speedChange = 0;
+            }
             wallTracker = 0;
-          }
-          if(points%speed === 0){
-            let center = Math.random()*width
-            var walls = [
-              Bodies.rectangle(center-size-width/2, height, width, size/2, { isStatic: false, frictionAir: 0, 
-                collisionFilter: {
-                  group:2,
-                  category: 2, 
-                  mask: 4
-                }}),
-              Bodies.rectangle(center+size+width/2, height, width, size/2, { isStatic: false, frictionAir: 0, 
-                collisionFilter: {
-                  group:2,
-                  category: 2, 
-                  mask: 4
-                }}),
-                
-            ]
-            walls.forEach(element => {
-              allWalls.push(element);
-            })
-            allWalls.forEach(element =>{
-              if(element.position.y < -100){
-                Composite.remove(engine.world, element);
+            defaultWalls = true;
+            closeWalls = false;
+            spoonWalls = false;
+            if(points > 0){
+              //console.log("may switch here");
+              defaultWalls = false;
+              //spawn special obstacle sets
+              let spawnset = getRandomInt(4);
+              if(spawnset === closeWallSet){
+                closeWalls = true;
+                wallTracker++;
               }
-            })
-            
-            Composite.add(engine.world, walls);
-            walls.forEach(element => {
-              Body.setVelocity(element, Matter.Vector.create(0, wallMoveSpeed));
-            })
+              else{
+                if(spawnset === spoonWallSet){
+                  spoonWalls = true;
+                  wallTracker++;
+                }
+                else{
+                  defaultWalls = true;
+                }
+              }
+            }
+            if(oneType){
+              spoonWalls = false;
+              closeWalls = true;
+              defaultWalls = false;
+              wallTracker++;
+            }
           }
-          points++;
+          if(spoonWalls){
+            spawnSpoonWalls();
+          }
+          if(closeWalls){
+            //console.log("closewalls spawning");
+            //TODO:code new obstacle set
+            spawnCloseWalls();
+          }
+          if(defaultWalls){
+            spawnDefaultWalls();
+          }
           wallTracker++;
+          points++;
+          
           document.getElementById('dropper').innerHTML = points + "m fallen"
         }, 100);
+      }
 
+    }
+    // gets middle of obstacle
+    function getNewCenter(){
+      let pos;
+      let offset = Math.random()*(width/3) - width/6;
+        pos = prevCenter + offset;
+        if(pos < width/25){
+          pos = width/25;
+        }
+        if(pos > width-(width/25)){
+          pos = width-(width/25);
+        }
+      return pos;
+    }
+    function spawnDefaultWalls(){
+      if(wallTracker%speed === 0){
+        let center;
+        if(Math.random()*10 < 7 && points > 0){
+          center = getNewCenter();
+          prevCenter = center;
+        }
+        else{
+          center = (Math.random()*(width-width/50)) + width/25;
+          prevCenter = center;
+        }
+        let walls = [
+          Bodies.rectangle(center-size-width/2, height + size, width, size/2, { isStatic: false, frictionAir: 0, 
+            collisionFilter: {
+              group:2,
+              category: 2, 
+              mask: 4
+            }}),
+          Bodies.rectangle(center+size+width/2, height + size, width, size/2, { isStatic: false, frictionAir: 0, 
+            collisionFilter: {
+              group:2,
+              category: 2, 
+              mask: 4
+            }}),
+            
+        ]
+        walls.forEach(element => {
+          allWalls.push(element);
+        })
+        allWalls.forEach(element =>{
+          if(element.position.y < -100){
+            Composite.remove(engine.world, element);
+          }
+        })
+        
+        Composite.add(engine.world, walls);
+        walls.forEach(element => {
+          Body.setVelocity(element, Matter.Vector.create(0, wallMoveSpeed));
+        })
       }
     }
+    function getCloseWallsCenter(){
+      let pos;
+      let offsetFactor = width/15;
+      if (isMobile){
+        offsetFactor = width/6;
+      }
+      let offset = Math.random()*(offsetFactor) - offsetFactor/2;
+        pos = prevCenter + offset;
+        if(pos < width/25){
+          pos = width/25;
+        }
+        if(pos > width-(width/25)){
+          pos = width-(width/25);
+        }
+      return pos;
+    }
+    function spawnCloseWalls(){
+      if(wallTracker%3 === 0){
+        let center = getCloseWallsCenter();
+        prevCenter= center;
+        let thickness = 1.5;
+        let walls = [
+          Bodies.rectangle(center-size-width/2, height+size, width, size*thickness, { isStatic: false, frictionAir: 0, 
+            collisionFilter: {
+              group:-2,
+              category: 4, 
+              mask: 2
+            }}),
+          Bodies.rectangle(center+size+width/2, height+size, width, size*thickness, { isStatic: false, frictionAir: 0, 
+            collisionFilter: {
+              group:-2,
+              category: 4, 
+              mask: 2
+            }}),
+        ]
+
+        walls.forEach(element => {
+          allWalls.push(element);
+        })
+        allWalls.forEach(element =>{
+          if(element.position.y < -100){
+            Composite.remove(engine.world, element);
+          }
+        })
+        
+        Composite.add(engine.world, walls);
+        walls.forEach(element => {
+          Body.setVelocity(element, Matter.Vector.create(0, wallMoveSpeed));
+        })
+        //end obstacle
+        if(wallTracker === 0){
+          closeWalls = false;
+        }
+      }
+    }
+    function spawnSpoonWalls(){
+      if(wallTracker%5 === 0){
+        let obstacleSize = size*Math.random();
+        let spoonWallSpawn = [width*Math.random(), height, height-(3*obstacleSize)];
+        let spoonHeadOffset = obstacleSize/10; 
+
+        let partA1 = Bodies.circle(spoonWallSpawn[0], spoonWallSpawn[2], obstacleSize,
+          {collisionFilter: {
+            group:-2,
+            category: 4, 
+            mask: 2
+          }
+        }),
+          partA2 = Bodies.circle(spoonWallSpawn[0], spoonWallSpawn[2]-spoonHeadOffset, obstacleSize,
+          { render: partA1.render,
+            collisionFilter: partA1.collisionFilter}
+          ),
+          partA3 = Bodies.circle(spoonWallSpawn[0], spoonWallSpawn[2]-(2*spoonHeadOffset), obstacleSize,
+          { render: partA1.render,
+            collisionFilter: partA1.collisionFilter}
+          ),
+          partA4 = Bodies.circle(spoonWallSpawn[0], spoonWallSpawn[2]-(3*spoonHeadOffset), obstacleSize,
+          { render: partA1.render,
+            collisionFilter: partA1.collisionFilter}
+          ),
+          partB = Bodies.trapezoid(spoonWallSpawn[0], spoonWallSpawn[1], obstacleSize, obstacleSize*5, 0.4, { render: partA1.render });
+          //var spoonTop = partA1.id;
+          //var trapBody = partB.id;
+        let spoonObstacle = Body.create({
+          parts: [partA1, partA2, partA3, partA4, partB],
+          collisionFilter: partA1.collisionFilter
+        });
+        allWalls.push(spoonObstacle);
+        allWalls.forEach(element =>{
+          if(element.position.y < -100){
+            Composite.remove(engine.world, element);
+          }
+        })
+        Body.setCentre(spoonObstacle, Matter.Vector.create(spoonWallSpawn[0], spoonWallSpawn[1]-obstacleSize/10), false);
+        Body.setAngle(spoonObstacle, Math.random()*360);
+        //Body.setDensity(spoonObstacle, 10);
+        spoonObstacle.frictionAir = 0.001;
+        if(Math.random()*3 < 1){
+          Body.setAngularVelocity(spoonObstacle, (obstacleSize-Math.random()*obstacleSize)/600)
+        }
+        Composite.add(engine.world, spoonObstacle);
+          
+        //Body.setCentre(spoonObstacle, Matter.Vector.create(spoonWallSpawn[0], spoonWallSpawn[1]-size/10), false);
+      }
+      //move the spoons
+      allWalls.forEach(element =>{
+        Body.setVelocity(element, Matter.Vector.create(0, wallMoveSpeed));
+        })
+    }
+
+    // function isSpoonCollision(event){
+    //   let spoonCollided = false;
+    //   let collisionArray = event.source.pairs.collisionActive;
+    //   for(let j = 0; j < collisionArray.length; j++){
+    //     let bodyA = event.pairs[0].bodyA.id;
+    //     let bodyB = event.pairs[0].bodyB.id;
+    //     //console.log(event);
+    //     if(bodyA === trapBody || bodyA === spoonTop || bodyB === trapBody || bodyB === spoonTop){
+    //       spoonCollided = true;
+    //       }
+    //     }
+        
+    //   return spoonCollided;
+    //   }
+    
+
     function restartGame(){
       if (resettable === true){
         allWalls.forEach(element =>{
@@ -286,11 +472,7 @@ class SpoonDropDescent extends React.Component {
     Matter.Runner.run(engine);
     Render.run(render);
   }
-  resetGame = () => {
-    document.getElementById("dropper").innerHTML = "poop";
-    //this.state.composite.clear(this.state.composite, false)
-    this.setState({resetting: true});
-  };
+
 
 
   render() {
