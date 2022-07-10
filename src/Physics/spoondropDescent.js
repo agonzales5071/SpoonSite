@@ -1,5 +1,5 @@
 import React from "react";
-import Matter, { Composite } from "matter-js";
+import Matter from "matter-js";
 import './spoondrop.css';
 
 //bug fixes
@@ -102,8 +102,8 @@ class SpoonDropDescent extends React.Component {
       { render: partA1.render }
       ),
       partB = Bodies.trapezoid(spoonstart[0], spoonstart[1], size / 5, size, 0.4, { render: partA1.render });
-      var spoonTop = partA1.id;
-      var trapBody = partB.id;
+      //var spoonTop = partA1.id;
+      //var trapBody = partB.id;
       curSpoon = Body.create({
         parts: [partA1, partA2, partA3, partA4, partB],
         collisionFilter: {
@@ -118,7 +118,7 @@ class SpoonDropDescent extends React.Component {
 
 
     var movement;
-    var prevx = curSpoon.position.x;
+    //var prevx = curSpoon.position.x;
     var gameStarted = false;
     var resettable = false;
     //create spoon
@@ -214,7 +214,7 @@ class SpoonDropDescent extends React.Component {
     var wallTracker = 0;
     var speed = initialSpeed;
     var wallMoveSpeed = -5;
-    var simplified = false; 
+    //var simplified = false; 
     function startGame() {
       if(gameStarted === false){
         

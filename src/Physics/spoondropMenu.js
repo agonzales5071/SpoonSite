@@ -237,11 +237,11 @@ class SpoonDropMenu extends React.Component {
       }
     });
 
-    function clearSpoons(){
-      spoons.forEach(element => {
-        Composite.remove(engine.world, element);
-      });
-    }
+    // function clearSpoons(){
+    //   spoons.forEach(element => {
+    //     Composite.remove(engine.world, element);
+    //   });
+    // }
 
     //could be used to fill body with text
   //   function createImage($string){
