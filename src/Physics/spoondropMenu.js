@@ -38,8 +38,8 @@ class SpoonDropMenu extends React.Component {
     const links = [["/spoondrop", "Freeplay", "#FF9CEE", "#8C00FC"],
       ["/spoondropGameSpeed", "SpeedClick", "#FFF5BA", "#74EE15"], 
       ["/spoondropHomerun", "Homerun", "#AFCBFF", "#006FFF"], 
-      ["/", "Home", "#BFFCC6", "#FF6701"],
-      ["/spoondropDescent", "Descent",  "#FCBFC6"]];
+      ["/spoondropDescent", "Descent",  "#FCBFC6"],
+      ["/", "Home", "#BFFCC6", "#FF6701"]];
     const link = 0;
     const name = 1;
     var theme = 2;// value of 2 or greater
