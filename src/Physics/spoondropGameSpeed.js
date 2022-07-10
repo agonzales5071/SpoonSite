@@ -1,6 +1,6 @@
 import React from 'react';
 import Matter from "matter-js";
-
+import "./spoondrop.css";
 
 
 class SpoonDropGameSpeed extends React.Component {
@@ -33,31 +33,6 @@ class SpoonDropGameSpeed extends React.Component {
       }
     });
 
-    var backgroundCircle = 0x0001,
-    spoons = 0x0002,
-    plsCollide = 1;
-  
-    // var backBall = Bodies.rectangle(500, 700, 60, 20, {
-    //   restitution: 0.5,
-    //   isStatic: true,
-    //   collisionFilter: {
-    //     group: plsCollide,
-    //     category: backgroundCircle,
-    //     mask: spoons 
-    //   }});
-    
-
-
-    
-    // var frontBall = Bodies.circle(500, 500, 500, { 
-    //   restitution: 0.5,
-    //   isStatic: true ,
-    //   collisionFilter: {
-    //     category: spoonContainer,
-    //     mask: backgroundCircle 
-    //   }
-    // });
-  
 
     var width = window.innerWidth;
     var height = window.innerHeight;
@@ -67,10 +42,7 @@ class SpoonDropGameSpeed extends React.Component {
 
     //hatch.axes = Matter.Axes.fromVertices({x: width/4, y: height*4/5})
 
-    //Composite.add(engine.world, [ballB]);
-    Composite.add(engine.world, [ hatch, sideL, sideR
-      // backBall, frontBall, 
-    ]);
+    Composite.add(engine.world, [ hatch, sideL, sideR]);
 
     // add mouse control
     var mouse = Mouse.create(render.canvas),
@@ -87,14 +59,24 @@ class SpoonDropGameSpeed extends React.Component {
     Composite.add(engine.world, mouseConstraint);
     
  
-    var seconds = 15;
+    var seconds = 1;
     var spoonCount = 0;
     var countingUp = false; 
     var curSpoon;
+    var allSpoons = [];
+    var gameRunning = false;
+    var gameStartable = true;
+    var hatchPresent = true;
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
       //start timer
-      if (spoonCount === 0){
-        
+      console.log("spoon count = " + spoonCount);
+      console.log("game running = " + gameRunning);
+      if(!gameRunning){
+        resetGame();
+      }
+      if (gameStartable){
+        gameRunning = true;
+        gameStartable = false;
         let timer = setInterval(function() {
 
           seconds--;
@@ -105,7 +87,7 @@ class SpoonDropGameSpeed extends React.Component {
           
           if (seconds < 0 && countingUp === false) {
             countingUp = true;
-            var countUp = 0;
+            let countUp = 0;
             //spoon tally
             var counter = setInterval(function(){
               if(countUp < spoonCount && countingUp){
@@ -115,12 +97,15 @@ class SpoonDropGameSpeed extends React.Component {
               if(countUp === spoonCount && countingUp){
                 countingUp = false;
                 document.getElementById("speedclickdisplay").innerHTML = "Nice! You dropped " + countUp + " spoons!";
+                document.getElementById("restart").innerHTML = "click anywhere to restart";
                 clearInterval(counter);
                 clearInterval(timer);
+                gameRunning = false;
               
               }
             }, 50);
             Matter.Body.setStatic(hatch, false);
+            hatchPresent = false;
           }
         }, 1000);
       }
@@ -142,37 +127,44 @@ class SpoonDropGameSpeed extends React.Component {
       partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA1.render });
       curSpoon = Body.create({
         parts: [partA1, partA2, partA3, partA4, partB],
-        collisionFilter: {
-          category: spoons,
-          group: plsCollide,
-          mask: backgroundCircle
-        }
       });
       if(seconds>0){
         spoonCount++;
+        allSpoons.push(curSpoon);
         Composite.add(engine.world, curSpoon);
       }
+
     });
-
-
     
-      
+    function resetGame(){
+      spoonCount = 0;
+      seconds = 15;
+      countingUp = false;
+      gameStartable = true; 
+      allSpoons.forEach(element =>{
+        Composite.remove(engine.world, element);
+      })
+      document.getElementById("restart").innerHTML = "";
+      if(!hatchPresent){
+        hatch = Bodies.rectangle(width/2, height*4/5, width/2, 50, {isStatic: true} );
+        Composite.add(engine.world, hatch);
+      }
+    }
 
-    
-
-
-
-    
     Matter.Runner.run(engine);
 
     Render.run(render);
   }
 
   render() {
-
-    return <div ref="scene">
-      <p id="speedclickdisplay">Endurance test! How many spoons can you drop in 15s</p>
-    </div>;
+    return (
+      <div ref="scene">
+        <div id="menutext">
+          <p id="speedclickdisplay">Endurance test! How many spoons can you drop in 15s</p>
+          <p id="restart"></p>
+        </div>
+      </div>
+      );
   }
 }
 export default SpoonDropGameSpeed;
