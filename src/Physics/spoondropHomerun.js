@@ -1,6 +1,6 @@
 import React from "react";
 import Matter from "matter-js";
-
+import './spoondrop.css';
 
 
 class SpoonDropHomerun extends React.Component {
@@ -116,8 +116,8 @@ class SpoonDropHomerun extends React.Component {
             if(score !== lastScore){//stops repeated refresh
               //commentary
               lastScore = score;
-              if(Math.abs(display) > 20000){document.getElementById("demo").innerHTML = "WHOA! You dropped the spoon " + display + "m away";}
-              else{document.getElementById("demo").innerHTML = "Nice! You dropped the spoon " + display + "m away";}
+              if(Math.abs(display) > 20000){document.getElementById("homerundisplay").innerHTML = "WHOA! You dropped the spoon " + display + "m away";}
+              else{document.getElementById("homerundisplay").innerHTML = "Nice! You dropped the spoon " + display + "m away";}
             }
             else{
               clearInterval(counter);
@@ -133,7 +133,7 @@ class SpoonDropHomerun extends React.Component {
 
   render() {
     return <div ref="scene">
-    <p id="demo">Drag a spoon into the circle and let it fly! Or just toss it...</p>
+    <p id="homerundisplay">Drag a spoon into the circle and let it fly! Or just toss it...</p>
   </div>;
   }
 }
