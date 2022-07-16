@@ -44,6 +44,7 @@ class App extends React.Component {
 
 class Home extends React.Component {
   componentDidMount(){
+    document.body.className ="body";
     console.log("home mounted")
     if(getOS() === "iOS"){
       const balloons = document.querySelectorAll('.balloon')

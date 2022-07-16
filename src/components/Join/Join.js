@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 import './Join.css';
 
-const Join = () => {
+const Join = props => {
   const [name, setName] = useState('');
   const [room, setRoom] = useState('');
-
+  useEffect(() => {
+    document.body.className ="body-chat";
+    //console.log("body should change");
+  });
   return (
     <div className='joinOuterContainer'>
+      <Link to="/"><button className='back-button'></button></Link>
       <div className='joinInnerContainer'>
         <h1 className='heading'>Join</h1>
         <div><input placeholder='Username' className="joinInput" type="text" onChange={(event) => setName(event.target.value)} /></div>

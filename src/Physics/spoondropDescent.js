@@ -278,6 +278,9 @@ class SpoonDropDescent extends React.Component {
     function getNewCenter(){
       let pos;
       let offset = Math.random()*(width/3) - width/6;
+      if(Math.random()*10 < 7 && points > 0){
+        offset = Math.random()*(width/2) - width/4;
+      }
         pos = prevCenter + offset;
         if(pos < width/25){
           pos = width/25;
@@ -285,29 +288,23 @@ class SpoonDropDescent extends React.Component {
         if(pos > width-(width/25)){
           pos = width-(width/25);
         }
+        prevCenter = pos;
       return pos;
     }
     function spawnDefaultWalls(){
       if(wallTracker%speed === 0){
-        let center;
-        if(Math.random()*10 < 7 && points > 0){
-          center = getNewCenter();
-          prevCenter = center;
-        }
-        else{
-          center = (Math.random()*(width-width/50)) + width/25;
-          prevCenter = center;
-        }
+        let center = getNewCenter();
+
         let walls = [
           Bodies.rectangle(center-size-width/2, height + size, width, size/2, { isStatic: false, frictionAir: 0, 
             collisionFilter: {
-              group:2,
+              group:-2,
               category: 2, 
               mask: 4
             }}),
           Bodies.rectangle(center+size+width/2, height + size, width, size/2, { isStatic: false, frictionAir: 0, 
             collisionFilter: {
-              group:2,
+              group:-2,
               category: 2, 
               mask: 4
             }}),

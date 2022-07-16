@@ -1,20 +1,21 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './portfolio.css';
 import VidButton from './scripts/togglevid'
 
 class Portfolio extends React.Component {
   componentDidMount(){
     //document.body.style.backgroundColor = "darkslategrey"// Set the style
-    document.body.className="body-component-a" // Or set the class
-    console.log("portfolio mounted")
+    document.body.className="body-component-a"; // Or set the class
+    console.log("portfolio mounted");
   }
   componentWillUnmount(){
-    document.body.className ="body"
+    document.body.className ="body";
   }
   render(){
     return (
       <div className="App">
-
+        <Link to="/"><button className='back-button'></button></Link>
         <div id="shapegroup">
           <div className="shapes" id="rotateleftshape"></div>
           <div className="shapes" id="rotaterightshape"></div>
@@ -23,9 +24,10 @@ class Portfolio extends React.Component {
           <div className="shapes" id="verticalshape"></div>
         </div>
 
+        
         <div className="content">
           <title>Dropped Spoon</title>
-          <h1 id="portfoliotitle" title="&#x1f944;">Portfolio</h1>
+          <h1 id="portfoliotitle" >Portfolio</h1>
 
           <h2 className="partition">pRoJecTs</h2>
           <Block header="Embedded Mario Game"
