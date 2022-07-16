@@ -1,11 +1,11 @@
 import React from 'react';
 import Matter from "matter-js";
 import "./spoondrop.css";
-
+import { Link } from 'react-router-dom';
 
 class SpoonDropGameSpeed extends React.Component {
 
-
+  
   componentDidMount() {
     var Engine = Matter.Engine,
       Render = Matter.Render,
@@ -14,7 +14,7 @@ class SpoonDropGameSpeed extends React.Component {
       Body = Matter.Body,
       Mouse = Matter.Mouse,
       MouseConstraint = Matter.MouseConstraint;
-
+      document.getElementById("speedclickdisplay").innerText = "Endurance test:\nHow many spoons can you drop in \n15s";
 
 
 
@@ -69,8 +69,8 @@ class SpoonDropGameSpeed extends React.Component {
     var hatchPresent = true;
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
       //start timer
-      console.log("spoon count = " + spoonCount);
-      console.log("game running = " + gameRunning);
+      //console.log("spoon count = " + spoonCount);
+      //console.log("game running = " + gameRunning);
       if(!gameRunning){
         resetGame();
       }
@@ -78,34 +78,45 @@ class SpoonDropGameSpeed extends React.Component {
         gameRunning = true;
         gameStartable = false;
         let timer = setInterval(function() {
-
-          seconds--;
-          if(seconds>0){
-            document.getElementById("speedclickdisplay").innerHTML = seconds;
+          if(document.getElementById("speedclickdisplay") === null){
+            clearInterval(timer);
           }
-          // If the count down is over, write some text
-          
-          if (seconds < 0 && countingUp === false) {
-            countingUp = true;
-            let countUp = 0;
-            //spoon tally
-            var counter = setInterval(function(){
-              if(countUp < spoonCount && countingUp){
-                countUp++;
-                document.getElementById("speedclickdisplay").innerHTML = countUp;
-              }
-              if(countUp === spoonCount && countingUp){
-                countingUp = false;
-                document.getElementById("speedclickdisplay").innerHTML = "Nice! You dropped " + countUp + " spoons!";
-                document.getElementById("restart").innerHTML = "click anywhere to restart";
-                clearInterval(counter);
-                clearInterval(timer);
-                gameRunning = false;
+          else{
+            seconds--;
+            if(seconds>0){
               
-              }
-            }, 50);
-            Matter.Body.setStatic(hatch, false);
-            hatchPresent = false;
+                document.getElementById("speedclickdisplay").innerText = seconds;
+              
+            }
+            // If the count down is over, write some text
+            
+            if (seconds < 0 && countingUp === false) {
+              countingUp = true;
+              let countUp = 0;
+              //spoon tally
+              var counter = setInterval(function(){
+                if(document.getElementById("speedclickdisplay") === null){
+                  clearInterval(counter);
+                }
+                else{
+                  if(countUp < spoonCount && countingUp){
+                    countUp++;
+                    document.getElementById("speedclickdisplay").innerHTML = countUp;
+                  }
+                  if(countUp === spoonCount && countingUp){
+                    countingUp = false;
+                    document.getElementById("speedclickdisplay").innerHTML = "Nice! You dropped " + countUp + " spoons!";
+                    document.getElementById("restart").innerHTML = "click anywhere to restart";
+                    clearInterval(counter);
+                    clearInterval(timer);
+                    gameRunning = false;
+                  
+                  }
+                }
+              }, 50);
+              Matter.Body.setStatic(hatch, false);
+              hatchPresent = false;
+            }
           }
         }, 1000);
       }
@@ -158,9 +169,10 @@ class SpoonDropGameSpeed extends React.Component {
 
   render() {
     return (
-      <div ref="scene">
+      <div ref="scene" className="scene">
         <div id="menutext">
-          <p id="speedclickdisplay">Endurance test! How many spoons can you drop in 15s</p>
+        <Link to="/spoondropMenu"><button className='back-button'></button></Link>
+          <p id="speedclickdisplay">Endurance test: How many spoons can you drop in 15s</p>
           <p id="restart"></p>
         </div>
       </div>

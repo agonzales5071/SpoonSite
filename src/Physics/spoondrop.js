@@ -1,6 +1,6 @@
 import React from "react";
 import Matter from "matter-js";
-
+import { Link } from 'react-router-dom';
 
 
 class SpoonDrop extends React.Component {
@@ -85,7 +85,9 @@ class SpoonDrop extends React.Component {
   }
 
   render() {
-    return <div ref="scene" />;
+    return <div ref="scene" className="scene" >
+      <Link to="/spoondropMenu"><button className='back-button'></button></Link>
+      <p id="menudisplay">FREEPLAY!</p></div>;
   }
 }
 export default SpoonDrop;

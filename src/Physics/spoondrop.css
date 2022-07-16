@@ -1,3 +1,9 @@
+.scene{
+  touch-action: manipulation;
+}
+.notscene{
+  touch-action: unset;
+}
 .locations{
   position: absolute;
   width: 100%;
@@ -37,4 +43,37 @@
   width: 100%;
   margin-left: auto;
   text-align: center;
+}
+.back-button {
+  touch-action:  auto;
+  position: absolute;
+  left: 3%;
+  top: 3%;
+	width: 0;
+	height: 0;
+	border-top: 12px solid transparent;
+	border-right: 25px solid rgb(114, 133, 127);
+  border-left: transparent;
+	border-bottom: 12px solid transparent;
+  backface-visibility: hidden;
+  background-color: transparent;
+  padding: 0%;
+  stroke: none;
+  box-shadow: none;
+  visibility: hidden;
+}
+.back-button:hover{
+  border-right: 25px solid rgb(160, 201, 188);
+}
+@media only screen and (min-width: 768px) {
+  .back-button{
+    visibility: visible;
+    top: 5%;
+    border-top: 20px solid transparent;
+    border-right: 45px solid rgb(117, 153, 143);
+    border-bottom: 20px solid transparent;
+  }
+  .back-button:hover{
+    border-right: 45px solid rgb(160, 201, 188);
+  }
 }

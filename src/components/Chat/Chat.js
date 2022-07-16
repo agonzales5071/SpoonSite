@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import queryString from 'query-string';
 import io from 'socket.io-client';
-
+import { Link } from 'react-router-dom';
 import './Chat.css';
 
 import UserContainer from '../UserContainer/UserContainer';
@@ -39,7 +39,7 @@ const Chat = ({ location }) => {
     //console.log(socket);
 
     return () => {
-      socket.emit('disconnect');
+      socket.emit('disconnecting');
 
       socket.off();
     }
@@ -111,6 +111,7 @@ const Chat = ({ location }) => {
 
   return (
     <div className="outerContainer">
+      <Link to="/"><button className='back-button'></button></Link>
       <SyncPlayer code={videoCode} setPlayerURL={setPlayerURL} sendCode={sendCode} 
       globalState={globalState} onPlayerStateChange={onPlayerStateChange} playerState={playerState}/>
       <div className="container">

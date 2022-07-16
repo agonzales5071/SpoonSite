@@ -1,6 +1,7 @@
 import React from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
+import { Link } from 'react-router-dom';
 
 //bug fixes
 //same name chat room join, back buttons, 
@@ -174,7 +175,10 @@ class SpoonDropDescent extends React.Component {
         //Body.setStatic(curSpoon, true);
         ragdoll = true;
         clearInterval(spawnwalls);
-        document.getElementById("descenttut").innerHTML = "Nice! Touch anywhere to try again!";
+        if( document.getElementById('descenttut') !== null){
+          document.getElementById("descenttut").innerHTML = "Nice! Touch anywhere to try again!";
+        }
+        
       
       // let collisionArray = event.source.pairs.collisionActive;
       // for(let j = 0; j < collisionArray.length; j++){
@@ -230,7 +234,10 @@ class SpoonDropDescent extends React.Component {
         document.getElementById('descenttut').innerHTML = "";
 
         spawnwalls = setInterval(function() {
-          if(wallTracker%(10*speed) === 0){
+          if( document.getElementById('dropper') === null){
+            clearInterval(spawnwalls);
+          }
+          else if(wallTracker%(10*speed) === 0){
             speedChange++;
             if(speedChange === 2){
               speed--;
@@ -279,8 +286,12 @@ class SpoonDropDescent extends React.Component {
           }
           wallTracker++;
           points++;
-          
-          document.getElementById('dropper').innerHTML = points + "m fallen"
+          if( document.getElementById('dropper') === null){
+            clearInterval(spawnwalls);
+          }
+          else{
+            document.getElementById('dropper').innerHTML = points + "m fallen"
+          }
         }, 100);
       }
 
@@ -496,7 +507,8 @@ class SpoonDropDescent extends React.Component {
 
   render() {
     return (
-    <div ref="scene">
+    <div ref="scene" className="notscene">
+      <Link to="/spoondropMenu"><button className='back-button' onClick={console.log("button pressed")}></button></Link>
       <div id="menutext">
         <p id="dropper">click or tap to drop a spoon</p>
         <p id="descenttut"className="droppertext">guide its way down!</p>
