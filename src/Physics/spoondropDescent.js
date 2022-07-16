@@ -40,7 +40,9 @@ class SpoonDropDescent extends React.Component {
       }
     });
 
-    
+    var gameWidth = width;
+    var leftMargin = 0;
+
     var force = 0.02;
     var fric = 0.03;
     var turnaround = 0.8;
@@ -52,6 +54,15 @@ class SpoonDropDescent extends React.Component {
       force = 0.002;
       fric = 0.03
       turnaround = 0.8;
+    }
+    else if(width >= (4/3)*height){
+      
+      size = 100;
+      force = 0.03;
+      fric = 0.03
+      turnaround = 0.8;
+      gameWidth = width*2/3;
+      leftMargin = width*1/6;
     }
 
     // add mouse control
@@ -202,7 +213,7 @@ class SpoonDropDescent extends React.Component {
     var speed = initialSpeed;
     var wallMoveSpeed = -5;
     //var simplified = false; 
-    var prevCenter = width/2;
+    var prevCenter = gameWidth/2;
     var defaultWalls = true;
     var closeWalls = false; //quickwalls
     var spoonWalls = false;
@@ -250,7 +261,7 @@ class SpoonDropDescent extends React.Component {
             }
             if(oneType){
               spoonWalls = false;
-              closeWalls = true;
+              closeWalls = false;
               defaultWalls = false;
               wallTracker++;
             }
@@ -277,9 +288,9 @@ class SpoonDropDescent extends React.Component {
     // gets middle of obstacle
     function getNewCenter(){
       let pos;
-      let offset = Math.random()*(width/3) - width/6;
+      let offset = Math.random()*(gameWidth/3) - gameWidth/6 + leftMargin;
       if(Math.random()*10 < 7 && points > 0){
-        offset = Math.random()*(width/2) - width/4;
+        offset = Math.random()*(gameWidth/2) - gameWidth/4 + leftMargin;
       }
         pos = prevCenter + offset;
         if(pos < width/25){
@@ -296,17 +307,17 @@ class SpoonDropDescent extends React.Component {
         let center = getNewCenter();
 
         let walls = [
-          Bodies.rectangle(center-size-width/2, height + size, width, size/2, { isStatic: false, frictionAir: 0, 
+          Bodies.rectangle(center-size-width/2, height + size + 100, width, size/2, { isStatic: false, frictionAir: 0, 
             collisionFilter: {
               group:-2,
-              category: 2, 
-              mask: 4
+              category: 4, 
+              mask: 2
             }}),
-          Bodies.rectangle(center+size+width/2, height + size, width, size/2, { isStatic: false, frictionAir: 0, 
+          Bodies.rectangle(center+size+width/2, height + size + 100, width, size/2, { isStatic: false, frictionAir: 0, 
             collisionFilter: {
               group:-2,
-              category: 2, 
-              mask: 4
+              category: 4, 
+              mask: 2
             }}),
             
         ]
@@ -327,7 +338,7 @@ class SpoonDropDescent extends React.Component {
     }
     function getCloseWallsCenter(){
       let pos;
-      let offsetFactor = width/15;
+      let offsetFactor = gameWidth/15;
       if (isMobile){
         offsetFactor = width/6;
       }
@@ -344,16 +355,16 @@ class SpoonDropDescent extends React.Component {
     function spawnCloseWalls(){
       if(wallTracker%3 === 0){
         let center = getCloseWallsCenter();
-        prevCenter= center;
+        prevCenter = center;
         let thickness = 1.5;
         let walls = [
-          Bodies.rectangle(center-size-width/2, height+size, width, size*thickness, { isStatic: false, frictionAir: 0, 
+          Bodies.rectangle(center-size-width/2, height+size+100, width, size*thickness, { isStatic: false, frictionAir: 0, 
             collisionFilter: {
               group:-2,
               category: 4, 
               mask: 2
             }}),
-          Bodies.rectangle(center+size+width/2, height+size, width, size*thickness, { isStatic: false, frictionAir: 0, 
+          Bodies.rectangle(center+size+width/2, height+size+100, width, size*thickness, { isStatic: false, frictionAir: 0, 
             collisionFilter: {
               group:-2,
               category: 4, 
@@ -381,9 +392,16 @@ class SpoonDropDescent extends React.Component {
       }
     }
     function spawnSpoonWalls(){
-      if(wallTracker%5 === 0){
+      let wallFrequency = 5;
+      if(isMobile){
+        wallFrequency = 5;
+      }
+      if(wallTracker%wallFrequency === 0){
         let obstacleSize = size*Math.random();
-        let spoonWallSpawn = [width*Math.random(), height, height-(3*obstacleSize)];
+        if(obstacleSize > size*0.5){
+          obstacleSize = size*Math.random();
+        }
+        let spoonWallSpawn = [width*Math.random(), height+100, height-(3*obstacleSize)+100];
         let spoonHeadOffset = obstacleSize/10; 
 
         let partA1 = Bodies.circle(spoonWallSpawn[0], spoonWallSpawn[2], obstacleSize,
@@ -419,11 +437,15 @@ class SpoonDropDescent extends React.Component {
           }
         })
         Body.setCentre(spoonObstacle, Matter.Vector.create(spoonWallSpawn[0], spoonWallSpawn[1]-obstacleSize/10), false);
-        Body.setAngle(spoonObstacle, Math.random()*360);
+        let angle = Math.random(90)-45;
+        if(getRandomInt(2) === 0){
+          angle += 180;
+        }
+        Body.setAngle(spoonObstacle, angle);
         //Body.setDensity(spoonObstacle, 10);
         spoonObstacle.frictionAir = 0.001;
-        if(Math.random()*3 < 1){
-          Body.setAngularVelocity(spoonObstacle, (obstacleSize-Math.random()*obstacleSize)/600)
+        if(Math.random()*2 < 1){
+          Body.setAngularVelocity(spoonObstacle, ((obstacleSize-Math.random()*obstacleSize)/600)*(getRandomInt(3)-1))
         }
         Composite.add(engine.world, spoonObstacle);
           
