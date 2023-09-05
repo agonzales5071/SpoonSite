@@ -127,7 +127,7 @@ class HotAir extends React.Component{
         '--y-float-start': 60 + 'vh',
         '--y-float-end': 30 + Math.trunc(Math.random()*15) + 'vh' }
     }  
-    //initial animation tim must be as long or longer than new time?
+    //TODO:issue with float start is the start position doesnt account for the position being on the left of the balloon and not the middle
   }  
 
   render(){
