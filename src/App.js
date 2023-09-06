@@ -20,6 +20,7 @@ import SpoonDropMenu from './Physics/spoondropMenu';
 import SpoonDropDescent from './Physics/spoondropDescent';
 
 class App extends React.Component {
+  
   render(){
     return(
       <Router>
@@ -77,10 +78,10 @@ class Home extends React.Component {
         <div className="content">
           <title>Dropped Spoon</title>
           <h1 id="title" title="&#x1f944;">Alexander <q>DroppedSpoon</q> Gonzales</h1>
-          <p id="construction">currently under construction</p>
-          <HotAir id="pb" textid="pbtext" num="0" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
-          <HotAir id="sd" textid="sdtext" num="1" className="hotair" link="/spoondropMenu" text="spoon drop" img="images/spoondropballoon2.png"></HotAir>
-          {/* <HotAir id="cr" textid="crtext" num="2" className="hotair" link="/join" text="chat room" img="images/chatballoon.png"></HotAir> */}
+          {/* <p id="construction">currently under construction</p> */}
+          <HotAir id="pb" textid="pbtext" num="1" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
+          <HotAir id="sd" textid="sdtext" num="2" className="hotair" link="/spoondropMenu" text="spoon drop" img="images/spoondropballoon2.png"></HotAir>
+          {/* <HotAir id="cr" textid="crtext" num="3" className="hotair" link="/join" text="chat room" img="images/chatballoon.png"></HotAir> */}
         </div>
       </div>
       );
@@ -113,21 +114,28 @@ function getOS() {
 class HotAir extends React.Component{
   constructor(props){  
     super(props);  
+    let total = 2;
+    let validSpace = 80;
+    let balloonWidth = 114;
+    if (document.documentElement.clientWidth < 768){
+      balloonWidth = 57;
+    }
     this.state = {
       link: props.link,
       cls: props.cls,
       img: props.img,
       text: props.text,
-      total: 3,
       textid: props.textid,
-      num: props.num,//indexed starting at 0
+      total: total,
+      num: props.num,//indexed starting at 1
       cssProperties: { '--animation-time': (Math.trunc(Math.random()*10) +15) + 's',
-        '--x-float-start': (((80/4) * ((props.num*1) + 1)) ) + 'vw', 
-        '--x-float-end':(((80/4) * ((props.num*1) + 1)) + 10 + (Math.trunc(Math.random()*6) - 2)) + 'vw',
+        '--x-float-start': (((validSpace/(total+1)) * (props.num*1)) + (100-validSpace)/2 )/100 * 
+          (document.documentElement.clientWidth) - balloonWidth/2 + 'px', 
+        '--x-float-end':(((validSpace/(total+1)) * (props.num*1)) + (100-validSpace)/2 
+          + (Math.trunc(Math.random()*6) - 3)) + 'vw',
         '--y-float-start': 60 + 'vh',
         '--y-float-end': 30 + Math.trunc(Math.random()*15) + 'vh' }
     }  
-    //TODO:issue with float start is the start position doesnt account for the position being on the left of the balloon and not the middle
   }  
 
   render(){
@@ -147,7 +155,7 @@ class HotAir extends React.Component{
             cssProperties: { '--animation-time': this.state.cssProperties["--animation-time"], 
             '--x-float-start': this.state.cssProperties['--x-float-end'],
             '--y-float-start': this.state.cssProperties['--y-float-end'],
-            '--x-float-end': Math.trunc(Math.random()*(80/this.state.total)) + 10 + (this.state.num*(80/this.state.total)) + 'vw',
+            '--x-float-end': Math.trunc(Math.random()*(80/this.state.total)) + 10 + ((this.state.num-1)*(80/this.state.total)) + 'vw',
             '--y-float-end': Math.trunc(Math.random()*50) + 10 + 'vh'}
           });
         }}
