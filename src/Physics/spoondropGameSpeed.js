@@ -170,8 +170,9 @@ class SpoonDropGameSpeed extends React.Component {
   render() {
     return (
       <div ref="scene" className="scene">
-        <div id="menutext">
         <Link to="/spoondropMenu"><button className='back-button'></button></Link>
+        <div id="menutext">
+        
           <p id="speedclickdisplay">Endurance test: How many spoons can you drop in 15s</p>
           <p id="restart"></p>
         </div>

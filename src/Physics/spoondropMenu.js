@@ -277,9 +277,7 @@ class SpoonDropMenu extends React.Component {
 
   render() {
     return <div ref="scene" className="scene">
-      <div id="menutext">
         <p id="menudisplay">drop a spoon to navigate</p>
-      </div>
     </div>;
   }
 }
