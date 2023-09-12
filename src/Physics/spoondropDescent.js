@@ -304,17 +304,18 @@ class SpoonDropDescent extends React.Component {
         offset = Math.random()*(gameWidth/2) - gameWidth/4 + leftMargin;
       }
         pos = prevCenter + offset;
-        if(pos < width/25){
-          pos = width/25;
+        //console.log("pos = " + pos + " prevC = " + prevCenter + " offset = " + offset);
+        if(pos < gameWidth/25){
+          pos = gameWidth/25 + leftMargin;
         }
-        if(pos > width-(width/25)){
-          pos = width-(width/25);
+        if(pos > gameWidth-(width/25)){
+          pos = gameWidth-(gameWidth/25 + leftMargin);
         }
         prevCenter = pos;
       return pos;
     }
     function spawnDefaultWalls(){
-      if(wallTracker%speed === 0){
+      if(wallTracker%speed === 0 && wallTracker > 10){
         let center = getNewCenter();
 
         let walls = [
@@ -355,11 +356,11 @@ class SpoonDropDescent extends React.Component {
       }
       let offset = Math.random()*(offsetFactor) - offsetFactor/2;
         pos = prevCenter + offset;
-        if(pos < width/25){
-          pos = width/25;
+        if(pos < gameWidth/25){
+          pos = gameWidth/25 + leftMargin;
         }
-        if(pos > width-(width/25)){
-          pos = width-(width/25);
+        if(pos > gameWidth-(width/25)){
+          pos = gameWidth-(gameWidth/25 + leftMargin);
         }
       return pos;
     }
@@ -455,7 +456,7 @@ class SpoonDropDescent extends React.Component {
         Body.setAngle(spoonObstacle, angle);
         //Body.setDensity(spoonObstacle, 10);
         spoonObstacle.frictionAir = 0.001;
-        if(Math.random()*2 < 1){
+        if(Math.random()*2 < 1 && obstacleSize < size*0.4){
           Body.setAngularVelocity(spoonObstacle, ((obstacleSize-Math.random()*obstacleSize)/600)*(getRandomInt(3)-1))
         }
         Composite.add(engine.world, spoonObstacle);
