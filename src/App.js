@@ -10,6 +10,7 @@ firebase deploy --only hosting
 import React from 'react';
 import './App.css';
 import Portfolio from "./portfolio.js";
+import Socials from "./socials.js";
 import SpoonDrop from "./Physics/spoondrop.js"
 import { BrowserRouter as Router, Route, Switch, Link} from 'react-router-dom';
 import Chat from "./components/Chat/Chat.js"
@@ -29,6 +30,7 @@ class App extends React.Component {
             <Route path="/" exact component={Home} />
             <Route path="/portfolio" component={Portfolio} />
             <Route path="/spoondrop" component={SpoonDrop} />
+            <Route path="/findme" component={Socials} />
             <Route path="/spoondropgamespeed" component={SpoonDropGameSpeed} />
             <Route path="/spoondrophomerun" component={SpoonDropHomerun} />
             <Route path="/spoondropMenu" component={SpoonDropMenu} />
@@ -81,6 +83,7 @@ class Home extends React.Component {
           {/* <p id="construction">currently under construction</p> */}
           <HotAir id="pb" textid="pbtext" num="1" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
           <HotAir id="sd" textid="sdtext" num="2" className="hotair" link="/spoondropMenu" text="spoon drop" img="images/spoondropballoon2.png"></HotAir>
+          <HotAir id="fm" textid="fmtext" num="3" className="hotair" link="/findme" text="find me" img="images/findmeballoon.png"></HotAir>
           {/* <HotAir id="cr" textid="crtext" num="3" className="hotair" link="/join" text="chat room" img="images/chatballoon.png"></HotAir> */}
         </div>
       </div>
@@ -114,7 +117,7 @@ function getOS() {
 class HotAir extends React.Component{
   constructor(props){  
     super(props);  
-    let total = 2;
+    let total = 3;
     let validSpace = 80;
     let balloonWidth = 114;
     if (document.documentElement.clientWidth < 768){
@@ -129,7 +132,7 @@ class HotAir extends React.Component{
       total: total,
       num: props.num,//indexed starting at 1
       cssProperties: { '--animation-time': (Math.trunc(Math.random()*10) +15) + 's',
-        '--x-float-start': (((validSpace/(total+1)) * (props.num*1)) + (100-validSpace)/2 )/100 * 
+        '--x-float-start': (((validSpace/(total+1)) * (props.num)) + (100-validSpace)/2 )/100 * 
           (document.documentElement.clientWidth) - balloonWidth/2 + 'px', 
         '--x-float-end':(((validSpace/(total+1)) * (props.num*1)) + (100-validSpace)/2 
           + (Math.trunc(Math.random()*6) - 3)) + 'vw',

@@ -192,6 +192,11 @@ p{
 #pbtext{
 	transform: translate(-50%, -150%);
 }
+#fmtext{
+	transform: translate(-50%, -135%);
+	overflow: hidden;
+    white-space: nowrap;
+}
 @keyframes float{
 	0%{
 		left: var(--x-float-start);
