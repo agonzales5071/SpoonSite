@@ -172,7 +172,11 @@
     z-index: 10;
     padding: 2rem;
   }
-  
+  @media(max-width: 740px) {
+    .sixty-four-font {
+        opacity: 0;
+    }
+  }
   @media(max-height: 800px) {
     #modal-wrapper {
       height: 100vh;
@@ -257,7 +261,7 @@
     }
   }
   .modal-action {
-    width: 16rem;
+    width: 100%;
     padding: 0.85rem;
     position: relative;
     font-size: 1.25rem;
@@ -266,11 +270,11 @@
     outline: 0.2rem solid white;
     outline-offset: 0.2rem;
     overflow: hidden;
-    cursor: none;
   }
-  #instagram{
-    outline: 0.2rem solid rgb(var(--instagram-rgb));
+    .modal-link {
+    text-decoration: none;
   }
+
   @media(max-width: 1024px) {
     .modal-action {
       width: 100%;
@@ -281,7 +285,7 @@
   .modal-action:is(:hover, :focus-visible) {  
     background-color: rgb(253, 224, 71);
   }
-  
+
   .modal-action:is(:hover, :focus-visible) .modal-action-fade,
   .modal-action:is(:hover, :focus-visible) .modal-action-pattern {  
     display: block; 
@@ -306,7 +310,51 @@
     z-index: 1;
     background: linear-gradient(to left, rgb(253, 224, 71), transparent 60%);
   }
-  
+  #home-action{
+    width: fit-content;
+    padding: 0.85rem;
+    position: left;
+    font-size: 1.25rem;
+    border: none;
+    border-radius: 0.75rem;
+    outline: 0.2rem solid white;
+    outline-offset: 0.2rem;
+    overflow: hidden;
+  }
+
+  #instagram-action{
+    outline: 0.2rem solid rgb(var(--instagram-rgb));
+  }
+  #instagram-action-fade {  
+    z-index: 1;
+    background: linear-gradient(to left, rgb(var(--instagram-rgb)), transparent 60%);
+  }
+  #instagram-action:is(:hover, :focus-visible) {  
+    background-color: rgb(var(--instagram-2-rgb));
+  }
+
+  #youtube-action{
+    outline: 0.2rem solid rgb(var(--youtube-rgb));
+  }
+  #youtube-action-fade {  
+    z-index: 1;
+    background: linear-gradient(to left, white, transparent 60%);
+  }
+  #youtube-action:is(:hover, :focus-visible) {  
+    background-color: rgb(var(--youtube-rgb));
+  }
+
+  #facebook-action{
+    outline: 0.2rem solid rgb(var(--facebook-rgb));
+  }
+  #facebook-action-fade {  
+    z-index: 1;
+    background: linear-gradient(to left, white, transparent 60%);
+  }
+  #facebook-action:is(:hover, :focus-visible) {  
+    background-color: rgb(var(--facebook-rgb));
+  }
+
   .modal-action-pattern {
     background-image: radial-gradient(
       rgb(255 255 255 / 0.6) 30%, 

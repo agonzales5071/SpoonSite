@@ -24,43 +24,46 @@ class Socials extends React.Component {
                   <div id="modal">
                       <div id="modal-background"></div>
                       <div id="modal-content">
+                      <button type="button" class="modal-action" id="home-action">
+                              <Link to="/" class="modal-link">
+                                  <div class="modal-action-pattern"></div>
+                                  <div class="modal-action-fade" ></div>
+                                  <span class="modal-action-text inter-font">Home</span>
+                              </Link>
+                              </button>
                           <div id="modal-message">
                               <p class="sixty-four-font">Follow Me</p>
                           </div>
                           <div id="modal-actions">
-                              <button type="button" class="modal-action">
+                            
+                              <button type="button" class="modal-action" id="instagram-action">
+                              <a href="https://www.instagram.com/alex_gonzzzzz/" class="modal-link">
                                   <div class="modal-action-pattern"></div>
-                                  <div class="modal-action-fade"></div>
-                                  <span class="modal-action-text inter-font">Back</span>
-                              </button>
-                              <button type="button" class="modal-action" id="instagram">
-                                  <div class="modal-action-pattern"></div>
-                                  <div class="modal-action-fade"></div>
+                                  <div class="modal-action-fade" id="instagram-action-fade"></div>
                                   <span class="modal-action-text inter-font">Instagram</span>
+                              </a>
                               </button>
-                              <button type="button" class="modal-action" id="youtube">
+                              <button type="button" class="modal-action" id="youtube-action">
+                              <a href="https://www.youtube.com/@droppedspoon" class="modal-link">
                                   <div class="modal-action-pattern"></div>
-                                  <div class="modal-action-fade"></div>
+                                  <div class="modal-action-fade" id="youtube-action-fade"></div>
                                   <span class="modal-action-text inter-font">Youtube</span>
+                              </a>
                               </button>
-                              <button type="button" class="modal-action" id="facebook">
-                                  <div class="modal-action-pattern"></div>
-                                  <div class="modal-action-fade"></div>
+                              <button type="button" class="modal-action" id="facebook-action">
+                              <a href="https://www.facebook.com/alex.gonzzzzz/
+                              " class="modal-link">
+                              <div class="modal-action-pattern"></div>
+                                  <div class="modal-action-fade" id="facebook-action-fade"></div>
                                   <span class="modal-action-text inter-font">Facebook</span>
+                              </a>
                               </button>
                           </div>
                       </div>
                   </div>
               </div>
-          </div><div id="magic-mouse-container"></div><div id="cursor">
-                  <img
-                      src="https://assets.codepen.io/1468070/Arrow+-+Cursor.png"
-                      alt="Arrow Cursor" />
-                  <div id="cursor-eyes">
-                      <div class="cursor-eye"></div>
-                      <div class="cursor-eye"></div>
-                  </div>
-              </div></>
+          </div>
+          </>
         );
       }
   }

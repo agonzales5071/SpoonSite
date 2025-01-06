@@ -30,7 +30,7 @@ class App extends React.Component {
             <Route path="/" exact component={Home} />
             <Route path="/portfolio" component={Portfolio} />
             <Route path="/spoondrop" component={SpoonDrop} />
-            <Route path="/findme" component={Socials} />
+            <Route path="/socials" component={Socials} />
             <Route path="/spoondropgamespeed" component={SpoonDropGameSpeed} />
             <Route path="/spoondrophomerun" component={SpoonDropHomerun} />
             <Route path="/spoondropMenu" component={SpoonDropMenu} />
