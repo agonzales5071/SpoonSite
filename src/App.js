@@ -55,6 +55,7 @@ class Home extends React.Component {
         balloon.style.animationDirection =  "alternate";
       });
     }
+    console.log("OS = " + getOS())
   }
   // componentWillUnmount(){
   // }
