@@ -159,9 +159,9 @@ p{
 	overflow-x: hidden;
 }
 @media only screen and (max-width: 768px) {
-	.balloon{
+	/* .balloon{
 		animation-direction: alternate;
-	}
+	} */
 }
 @media only screen and (min-width: 768px) {
 	.balloontext{

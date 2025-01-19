@@ -51,9 +51,9 @@ class Home extends React.Component {
     console.log("home mounted")
     if(getOS() === "iOS"){
       const balloons = document.querySelectorAll('.balloon')
-      balloons.forEach(balloon =>{
-        balloon.style.animationDirection =  "alternate";
-      });
+      // balloons.forEach(balloon =>{
+      //   balloon.style.animationDirection =  "alternate";
+      // });
     }
     console.log("OS = " + getOS())
   }
