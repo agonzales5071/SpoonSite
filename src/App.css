@@ -160,7 +160,7 @@ p{
 }
 @media only screen and (max-width: 768px) {
 	.balloon{
-		/* animation-direction: alternate; */
+		animation-direction: alternate;
 	}
 }
 @media only screen and (min-width: 768px) {
