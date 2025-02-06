@@ -136,6 +136,21 @@ p{
 	transform-origin: top left;
 	overflow-x: hidden;
 }
+.truck{
+	--animation-time: 60s;
+	--x-drive-start: 10vw;
+	--y-drive-start: 10vh;
+	--x-drive-end: 20vw;
+	--y-drive-end: 20vh;
+	position: absolute;
+  text-align: center;
+  color: white;
+	animation: drive var(--animation-time) linear;
+	animation-iteration-count: infinite;
+	transform-origin: top left;
+	overflow-x: hidden;
+	overflow-y: hidden;
+}
 .balloontext{
 	font-family: "VT323";
 	font-size: 14px;
@@ -158,11 +173,7 @@ p{
 	height: 64px;
 	overflow-x: hidden;
 }
-@media only screen and (max-width: 768px) {
-	/* .balloon{
-		animation-direction: alternate;
-	} */
-}
+
 @media only screen and (min-width: 768px) {
 	.balloontext{
 		font-size: 26px;
@@ -205,5 +216,15 @@ p{
 	100%{
 		left: var(--x-float-end);
 		top: var(--y-float-end);
+	}
+}
+@keyframes drive{
+	0%{
+		left: var(--x-drive-start);
+		top: var(--y-drive-start);
+	}
+	100%{
+		left: var(--x-drive-end);
+		top: var(--y-drive-end);
 	}
 }

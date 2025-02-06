@@ -7,7 +7,7 @@ in terminal-
 firebase deploy --only hosting 
 */
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Portfolio from "./portfolio.js";
 import Socials from "./socials.js";
@@ -15,6 +15,7 @@ import SpoonDrop from "./Physics/spoondrop.js"
 import { BrowserRouter as Router, Route, Switch, Link} from 'react-router-dom';
 import Chat from "./components/Chat/Chat.js"
 import Join from "./components/Join/Join.js"
+import MovingBox from "./components/Home/Truck.js"
 import SpoonDropGameSpeed from './Physics/spoondropGameSpeed';
 import SpoonDropHomerun from './Physics/spoondropHomerun';
 import SpoonDropMenu from './Physics/spoondropMenu';
@@ -49,17 +50,12 @@ class Home extends React.Component {
   componentDidMount(){
     document.body.className ="body";
     console.log("home mounted")
-    // if(getOS() === "iOS"){
-    //   const balloons = document.querySelectorAll('.balloon')
-      // balloons.forEach(balloon =>{
-      //   balloon.style.animationDirection =  "alternate";
-      // });
-    // }
     console.log("OS = " + getOS())
   }
   // componentWillUnmount(){
   // }
   render(){
+
     return (
       <div className="App">
         <div className="paralaxmobile">
@@ -82,11 +78,14 @@ class Home extends React.Component {
           <title>Dropped Spoon</title>
           <h1 id="title" title="&#x1f944;">Alexander <q>DroppedSpoon</q> Gonzales</h1>
           {/* <p id="construction">currently under construction</p> */}
+          {/* <Truck id="lp" textid="lptext" className="truck" link="/portfolio" text="latest performance" img="images/truck.png"></Truck> */}
           <HotAir id="pb" textid="pbtext" num="1" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
           <HotAir id="sd" textid="sdtext" num="2" className="hotair" link="/spoondropMenu" text="spoon drop" img="images/spoondropballoon2.png"></HotAir>
           <HotAir id="fm" textid="fmtext" num="3" className="hotair" link="/socials" text="find me" img="images/findmeballoon.png"></HotAir>
           {/* <HotAir id="cr" textid="crtext" num="3" className="hotair" link="/join" text="chat room" img="images/chatballoon.png"></HotAir> */}
         </div>
+
+        <MovingBox/>
       </div>
       );
     }
@@ -173,4 +172,90 @@ class HotAir extends React.Component{
   }
 }
 
+class Truck extends React.Component{
+  constructor(props){  
+    super(props);  
+    var truckWidth = 125;
+    if (document.documentElement.clientWidth < 768){
+      truckWidth = 67;
+    }
+    let direction = this.getDirection();
+    this.state = {
+      link: props.link,
+      cls: props.cls,
+      img: props.img,
+      text: props.text,
+      textid: props.textid,
+      direction: 1,
+      num: props.num,//indexed starting at 1
+      cssProperties: { '--animation-time': (Math.trunc(Math.random()*1) +2) + 's',
+        '--x-drive-start': this.getEdge(direction) + 'px', 
+        '--x-drive-end': this.getEdge(direction*(-1)) + 'px',
+        '--y-drive-start': 60 + 'vh',
+        '--y-drive-end': 30 + Math.trunc(Math.random()*15) + 'vh' }
+    }  
+  }
+
+  getEdge(direction){
+    let result;
+    var truckWidth = 125;
+    if (document.documentElement.clientWidth < 768){
+      truckWidth = 67;
+    }
+    if(direction === 1){
+      result = (-1)*truckWidth * 3;
+    }
+    else{
+      result = document.documentElement.clientWidth + truckWidth; 
+    }
+    return result;
+  }
+  /**
+   * Returns -1 or 1
+   */
+  getDirection() {
+    let random = Math.floor(Math.random() * 2);
+    let direction;  
+    if(random === 0){
+      direction = -1;
+    }
+    else{
+      direction = 1;
+    }
+    return direction;
+  }
+  // getOpposite(offset){
+  //   return offset+(-1);
+  // }
+
+  render(){
+    return(
+      <div 
+        className="truck" 
+        style={this.state.cssProperties}  
+        onAnimationIteration={()=> {
+          //position debugs
+          //console.log(this.state.cssProperties);
+          //let offsets = document.getElementById(this.state.textid).getBoundingClientRect();
+          //let top = offsets.top*(100/document.documentElement.clientHeight);
+          //let left = offsets.left;
+          //console.log ("starting position of " + this.state.link + "is " + top);
+          this.setState({
+            ...this.state,
+            cssProperties: { '--animation-time': this.state.cssProperties["--animation-time"], 
+            '--x-drive-start': this.state.cssProperties['--x-drive-end'],
+            '--y-drive-start': this.state.cssProperties['--y-drive-end'],
+            '--x-drive-end': this.state.cssProperties['--x-drive-start'],
+            '--y-drive-end': Math.trunc(Math.random()*50) + 10 + 'vh'}
+          });
+        }}
+      >
+        <Link to={this.state.link}><button className="balloonbutt">
+          <img className="balloonimg" src={this.state.img} alt=""></img>
+          <div className="balloontext" id={this.state.textid} >{this.state.text}</div></button>
+        </Link>
+      </div>
+    );
+  }
+}
 export default App;
