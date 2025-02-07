@@ -3,7 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import {Link} from 'react-router-dom';
 
 // Keyframes for the animation
-const moveLeft = keyframes`
+const driveLeft = keyframes`
   0% {
     transform: translateX(100vw); /* Start from the right */
   }
@@ -12,7 +12,7 @@ const moveLeft = keyframes`
   }
 `;
 
-const moveRight = keyframes`
+const driveRight = keyframes`
   0% {
     transform: translateX(-100vw); /* Start from the left */
   }
@@ -22,59 +22,54 @@ const moveRight = keyframes`
 `;
 
 // Styled component for the black rectangle background
-const BackgroundRectangle = styled.div`
+const Road = styled.div`
   position: absolute;
   bottom: 0;
   left: 50%;
   width: 100vw; /* Width slightly larger than the image */
-  height: 10px; /* Height slightly larger than the image */
-  background-color: black;
+  height: 15px; /* Height slightly larger than the image */
+  background-image: url("images/road.png");
   transform: translateX(-50%); /* Center the rectangle horizontally */
   z-index: -1; /* Place it behind the image */
   display: flex;
   align-items: center; /* Vertically center the content */
   justify-content: center; /* Horizontally center the content */
-  
-  /* Create a dotted yellow line bisecting the rectangle */
-  &::before {
-    content: '';
-    width: 100%;
-    border-top: 2px dotted yellow; /* Dotted yellow line */
-  }
+  overflow: hidden;
+
 `;
 
 // Styled component for the image
-const MovingImage = styled.div`
-  width: 150px;
-  height: 72px;
-  position: absolute;
+const TruckImage = styled.div`
+  width: 200px;
+  height: 96px;
+  position: fixed;
   bottom: 0%; /* Position at the bottom of the screen */
   left: 50%; /* Center the image horizontally */
   transform: translateX(-50%) translateY(0); /* Center the image horizontally */
-  animation: ${({ direction }) => (direction === 'right' ? moveRight : moveLeft)} 20s linear infinite;
-
+  animation: ${({ direction }) => (direction === 'right' ? driveRight : driveLeft)} 20s linear infinite;
+  overflow: hidden;
   /* Media query for smaller screens */
   @media (max-width: 768px) {
-    width: 80px;  /* Smaller width for screens <= 768px */
-    height: 80px;  /* Smaller height for screens <= 768px */
+    width: 100px;  /* Smaller width for screens <= 768px */
+    height: 48px;  /* Smaller height for screens <= 768px */
   }
-
-  @media (max-width: 480px) {
-    width: 60px;  /* Even smaller width for screens <= 480px */
-    height: 60px;  /* Even smaller height for screens <= 480px */
-  }
+    max-width: 100%;
 `;
 
 // Styled component for the text on the moving image
-const MovingText = styled.span`
-  	font-family: "VT323";
-	font-size: 17px;
-  position: absolute;
+const TruckText = styled.span`
+  font-family: "VT323";
+	font-size: 22px;
+  position: fixed;
 	color:#000000;
-
-&:hover{
-	color: whitesmoke;
-}
+  overflow: hidden;
+    /* Media query for smaller screens */
+  @media (max-width: 768px) {
+  font-size: 12px;
+  } 
+  &:hover{
+    color: whitesmoke;
+  }
     top: 32%; /* Vertically center the text */
   transform: translateY(-50%); /* Adjust for perfect vertical centering */
 
@@ -86,7 +81,7 @@ const MovingText = styled.span`
   `}
 `;
 
-const MovingBox = () => {
+const Truck = () => {
   const [direction, setDirection] = useState('');
   const [flip, setFlip] = useState(false);
 
@@ -105,26 +100,26 @@ const MovingBox = () => {
   }, []);
 
   return (
-    <div style={{ position: 'flex', width: '100vw', height: '100vh', marginBottom: '25vh', display: 'inline' }}>
+    <div style={{ position: 'flex', width: '100vw', height: '100vh', marginBottom: '25vh', display: 'inline', overflow: 'hidden', maxWidth: '100%'}}>
         {/* Background Rectangle */}
-      <BackgroundRectangle />
+      <Road />
       <Link to="/portfolio">
-            {/* Moving Image with Text */}
-            <MovingImage direction={direction}>
+            {/* Moving Image of truck with Text */}
+            <TruckImage direction={direction}>
         {/* Image */}
         <img
-          src={flip ? "images/truckRight2.png" : "images/truckLeft2.png"}  // Flip image if moving right
-          alt="Moving Component"
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          src={flip ? "images/truckRight.png" : "images/truckLeft.png"}  // Flip image if moving right
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'cover',  overflow: 'hidden'}}
         />
         
         {/* Text on the Moving Object */}
-        <MovingText direction={direction}>Latest Mic</MovingText>
-      </MovingImage>
+        <TruckText direction={direction}>Latest Mic</TruckText>
+      </TruckImage>
     
       </Link>
     </div>
   );
 };
 
-export default MovingBox;
+export default Truck;

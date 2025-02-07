@@ -1,7 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-
+html{
+	overflow: hidden;
+}
 body{
 	background-origin: border-box;
 	background-image: linear-gradient(180deg, #4d78fc 50%, #5c4604 50%);
@@ -61,6 +63,7 @@ body{
   font-size: 32px;
   color: floralwhite;
   z-index: 2;
+  overflow:hidden
 }
 #construction {
   font-family: "Alphasmoke";
@@ -135,21 +138,6 @@ p{
 	animation-iteration-count: infinite;
 	transform-origin: top left;
 	overflow-x: hidden;
-}
-.truck{
-	--animation-time: 60s;
-	--x-drive-start: 10vw;
-	--y-drive-start: 10vh;
-	--x-drive-end: 20vw;
-	--y-drive-end: 20vh;
-	position: absolute;
-  text-align: center;
-  color: white;
-	animation: drive var(--animation-time) linear;
-	animation-iteration-count: infinite;
-	transform-origin: top left;
-	overflow-x: hidden;
-	overflow-y: hidden;
 }
 .balloontext{
 	font-family: "VT323";
