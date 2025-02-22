@@ -3,23 +3,25 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^5.14.1",
-    "@testing-library/react": "^11.2.7",
-    "@testing-library/user-event": "^12.8.3",
-    "latest-version": "^7.0.0",
-    "matter-js": "^0.17.1",
-    "query-string": "^7.0.1",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
+    "axios": "^1.7.9",
+    "latest-version": "^9.0.0",
+    "matter-js": "^0.20.0",
+    "npm-check": "^6.0.1",
+    "query-string": "^9.1.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-emoji": "^0.5.0",
-    "react-router-dom": "^5.2.1",
+    "react-router-dom": "^7.2.0",
     "react-scripts": "^5.0.1",
     "react-scroll-to-bottom": "^4.1.2",
-    "react-youtube": "^7.13.1",
+    "react-youtube": "^10.1.0",
     "socket.io": "^4.2.0",
     "socket.io-client": "^4.2.0",
     "styled-components": "^6.1.14",
-    "web-vitals": "^1.1.2"
+    "web-vitals": "^4.2.4"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -44,5 +46,15 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.9",
+    "@babel/preset-env": "^7.26.9",
+    "@babel/preset-react": "^7.26.3",
+    "babel-loader": "^9.2.1",
+    "html-webpack-plugin": "^5.6.3",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.0"
   }
 }

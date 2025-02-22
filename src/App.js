@@ -12,7 +12,8 @@ import './App.css';
 import Portfolio from "./portfolio.js";
 import Socials from "./socials.js";
 import SpoonDrop from "./Physics/spoondrop.js"
-import { BrowserRouter as Router, Route, Switch, Link} from 'react-router-dom';
+import LatestMic from "./latestMic.js"
+import { BrowserRouter as Router, Route, Routes, Link} from 'react-router-dom';
 import Chat from "./components/Chat/Chat.js"
 import Join from "./components/Join/Join.js"
 import Truck from "./components/Home/Truck.js"
@@ -21,24 +22,27 @@ import SpoonDropHomerun from './Physics/spoondropHomerun';
 import SpoonDropMenu from './Physics/spoondropMenu';
 import SpoonDropDescent from './Physics/spoondropDescent';
 
+
+
 class App extends React.Component {
   
   render(){
     return(
       <Router>
         <div className="App">
-          <Switch>
-            <Route path="/" exact component={Home} />
+          <Routes>
+            <Route path="/" element={<Home />}/>
             <Route path="/portfolio" component={Portfolio} />
             <Route path="/spoondrop" component={SpoonDrop} />
             <Route path="/socials" component={Socials} />
+            <Route path="/latest-mic" component={LatestMic} />
             <Route path="/spoondropgamespeed" component={SpoonDropGameSpeed} />
             <Route path="/spoondrophomerun" component={SpoonDropHomerun} />
             <Route path="/spoondropMenu" component={SpoonDropMenu} />
             <Route path="/spoondropDescent" component={SpoonDropDescent} />
             <Route path="/join" component={Join} />
             <Route path="/chat" component={Chat} />
-          </Switch>
+          </Routes>
         </div>
       </Router>
     );

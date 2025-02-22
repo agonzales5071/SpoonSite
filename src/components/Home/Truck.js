@@ -35,7 +35,6 @@ const Road = styled.div`
   align-items: center; /* Vertically center the content */
   justify-content: center; /* Horizontally center the content */
   overflow: hidden;
-
 `;
 
 // Styled component for the image
@@ -103,20 +102,18 @@ const Truck = () => {
     <div style={{ position: 'flex', width: '100vw', height: '100vh', marginBottom: '25vh', display: 'inline', overflow: 'hidden', maxWidth: '100%'}}>
         {/* Background Rectangle */}
       <Road />
-      <Link to="/portfolio">
+      <Link to="/latest-mic">
             {/* Moving Image of truck with Text */}
-            <TruckImage direction={direction}>
-        {/* Image */}
-        <img
-          src={flip ? "images/truckRight.png" : "images/truckLeft.png"}  // Flip image if moving right
-          alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'cover',  overflow: 'hidden'}}
-        />
-        
-        {/* Text on the Moving Object */}
-        <TruckText direction={direction}>Latest Mic</TruckText>
-      </TruckImage>
-    
+          <TruckImage direction={direction}>
+            {/* Image */}
+          <img
+            src={flip ? "images/truckRight.png" : "images/truckLeft.png"}  // Flip image if moving right
+            alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'cover',  overflow: 'hidden'}}
+          />
+          {/* Text on the Moving Object */}
+          <TruckText direction={direction}>Latest Mic</TruckText>
+        </TruckImage>
       </Link>
     </div>
   );

@@ -126,6 +126,7 @@ p{
 	background-color:#FFFFFF;
 }
 .balloon{
+	will-change: transform;
 	--animation-time: 60s;
 	--x-float-start: 10vw;
 	--y-float-start: 10vh;
