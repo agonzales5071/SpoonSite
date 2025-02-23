@@ -7,7 +7,7 @@ const YouTubePlaylistLatestVideo = ({ playlistId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_KEY = 'AIzaSyB9kQouYCN7l5SM9uUPejoQhLU6u5g4a1Y'; // Replace with your API key
+  const API_KEY = ''; // Replace with your API key
   const MAX_RESULTS = 1; // Limit to 1 latest video
 
   useEffect(() => {

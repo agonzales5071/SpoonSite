@@ -9,6 +9,7 @@ firebase deploy --only hosting
 
 import React from 'react';
 import './App.css';
+import FloatingComponent from './Balloon.js';
 import Portfolio from "./portfolio.js";
 import Socials from "./socials.js";
 import SpoonDrop from "./Physics/spoondrop.js"
@@ -32,14 +33,14 @@ class App extends React.Component {
         <div className="App">
           <Routes>
             <Route path="/" element={<Home />}/>
-            <Route path="/portfolio" component={Portfolio} />
-            <Route path="/spoondrop" component={SpoonDrop} />
-            <Route path="/socials" component={Socials} />
-            <Route path="/latest-mic" component={LatestMic} />
-            <Route path="/spoondropgamespeed" component={SpoonDropGameSpeed} />
-            <Route path="/spoondrophomerun" component={SpoonDropHomerun} />
-            <Route path="/spoondropMenu" component={SpoonDropMenu} />
-            <Route path="/spoondropDescent" component={SpoonDropDescent} />
+            <Route path="/portfolio" element={<Portfolio/>} />
+            <Route path="/spoondrop" element={<SpoonDrop/>} />
+            <Route path="/socials" element={<Socials/>} />
+            <Route path="/latest-mic" element={<LatestMic/>} />
+            <Route path="/spoondropgamespeed" element={<SpoonDropGameSpeed/>} />
+            <Route path="/spoondrophomerun" element={<SpoonDropHomerun/>} />
+            <Route path="/spoondropMenu" element={<SpoonDropMenu/>} />
+            <Route path="/spoondropDescent" element={<SpoonDropDescent/>} />
             <Route path="/join" component={Join} />
             <Route path="/chat" component={Chat} />
           </Routes>
@@ -48,18 +49,49 @@ class App extends React.Component {
     );
   }
 }
+const Balloons = () => {
+  // List of objects with multiple attributes (e.g., name, color, size)
+  const componentsData = [
+    { id: "pb", textid: "pbtext", className: "hotair", link: "/portfolio", text: "portfolio", img: "images/portfolioballoon.png" },
+    { id: "sd", textid: "sdtext", className: "hotair", link: "/spoondropMenu", text: "spoon drop", img: "images/spoondropballoon2.png"},
+    { id: "fm", textid: "fmtext", className: "hotair", link: "/socials", text: "find me", img: "images/findmeballoon.png"},
+     ];
+     return(
+      <div>
+      <h1>Floating Components</h1>
+      {/* Render multiple FloatingComponents with unique data passed as an object */}
+      {componentsData.map((component, index) => (
+        <FloatingComponent 
+          key={index} 
+          id={index} 
+          totalComponents={componentsData.length} 
+          componentData={component} // Passing the entire object with multiple attributes
+        />
+      ))}
+    </div>
+     );
+}
 
 
 class Home extends React.Component {
+  constructor(props) {
+    super(props);
+    this.componentsData = [
+      { id: "pb", textid: "pbtext", className: "hotair", link: "/portfolio", text: "portfolio", img: "images/portfolioballoon.png" },
+      { id: "sd", textid: "sdtext", className: "hotair", link: "/spoondropMenu", text: "spoon drop", img: "images/spoondropballoon2.png"},
+      { id: "fm", textid: "fmtext", className: "hotair", link: "/socials", text: "find me", img: "images/findmeballoon.png"},
+       ];
+  }
   componentDidMount(){
     document.body.className ="body";
     console.log("home mounted")
     console.log("OS = " + getOS())
   }
+  
   // componentWillUnmount(){
   // }
   render(){
-
+  
     return (
       <div className="App">
         <div className="paralaxmobile">
@@ -82,9 +114,17 @@ class Home extends React.Component {
           <title>Dropped Spoon</title>
           <h1 id="title" title="&#x1f944;">Alexander <q>DroppedSpoon</q> Gonzales</h1>
           {/* <p id="construction">currently under construction</p> */}
-          <HotAir id="pb" textid="pbtext" num="1" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
+          {this.componentsData.map((component, index) => (
+          <FloatingComponent
+            key={index}
+            id={index}
+            totalComponents={this.componentsData.length}
+            componentData={component} // Passing the entire object with multiple attributes
+          />
+        ))}
+          {/* <HotAir id="pb" textid="pbtext" num="1" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
           <HotAir id="sd" textid="sdtext" num="2" className="hotair" link="/spoondropMenu" text="spoon drop" img="images/spoondropballoon2.png"></HotAir>
-          <HotAir id="fm" textid="fmtext" num="3" className="hotair" link="/socials" text="find me" img="images/findmeballoon.png"></HotAir>
+          <HotAir id="fm" textid="fmtext" num="3" className="hotair" link="/socials" text="find me" img="images/findmeballoon.png"></HotAir> */}
           {/* <HotAir id="cr" textid="crtext" num="3" className="hotair" link="/join" text="chat room" img="images/chatballoon.png"></HotAir> */}
         </div>
 
