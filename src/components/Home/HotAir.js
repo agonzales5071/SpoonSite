@@ -7,7 +7,7 @@ if (document.documentElement.clientWidth < 768){
     balloonWidth = 57;
 }
 
-const FloatingComponent = ({ id, totalComponents, componentData }) => {
+const HotAir = ({ id, totalComponents, componentData }) => {
     const margin = 10; // 10vh margin for top/bottom, left/right
     const screenHeight = window.innerHeight;
     const screenWidth = window.innerWidth;
@@ -75,4 +75,4 @@ const FloatingComponent = ({ id, totalComponents, componentData }) => {
       </div>
     );
   };
-export default FloatingComponent;
+export default HotAir;

@@ -41,8 +41,10 @@
 #menutext{
   color: whitesmoke;
   position: absolute;
+  display: inline-block;
+  transform: translateX(-50%);
+  left: 50%;
   width: 100%;
-  margin: 0;
   text-align: center;
 }
 .back-button {

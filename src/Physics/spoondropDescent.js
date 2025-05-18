@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
@@ -6,34 +6,32 @@ import { Link } from 'react-router-dom';
 //bug fixes
 //same name chat room join, back buttons, 
 
-class SpoonDropDescent extends React.Component {
+const SpoonDropDescent = () => {
+  const boxRef = useRef(null);
+  const canvasRef = useRef(null);
 
-
-  componentDidMount() {
-    this.initializeGame();
-  }
-
-  initializeGame(){
+  useEffect( () => {
     
     var allWalls = []; 
     var isMobile = false;
     var width = window.innerWidth;
     var height = window.innerHeight;
-    var Engine = Matter.Engine,
-      Render = Matter.Render,
-      Composite = Matter.Composite,
-      Bodies = Matter.Bodies,
-      Body = Matter.Body,
-      Mouse = Matter.Mouse,
-      MouseConstraint = Matter.MouseConstraint;
-
-    var engine = Engine.create({
-      // positionIterations: 20
-    });
+    let Engine = Matter.Engine;
+    let Render = Matter.Render;
+    let Runner = Matter.Runner;
+    let Bodies = Matter.Bodies;
+    let Body = Matter.Body;
+    let Composite = Matter.Composite;
+    let Mouse = Matter.Mouse;
+    let MouseConstraint = Matter.MouseConstraint;
+  
+    let engine = Engine.create({});
+    let runner = Runner.create({});
 
     var render = Render.create({
-      element: this.refs.scene,
+      element: boxRef.current,
       engine: engine,
+      canvas: canvasRef.current,
       options: {
         width: window.innerWidth,
         height: window.innerHeight+window.innerHeight,
@@ -500,23 +498,25 @@ class SpoonDropDescent extends React.Component {
     }
 
 
-    Matter.Runner.run(engine);
+    Runner.run(runner, engine)
     Render.run(render);
-  }
+  }, []);
 
 
 
-  render() {
+  
     return (
-    <div ref="scene" className="notscene">
+      <div className="notscene">
+      <canvas ref={canvasRef} />
       <Link to="/spoondropMenu"><button className='back-button' onClick={console.log("button pressed")}></button></Link>
       <div id="menutext">
         <p id="dropper">click or tap to drop a spoon</p>
         <p id="descenttut"className="droppertext">guide its way down!</p>
       </div>
     </div>
-    );
-  }
-}
+  )
+  
+  
+};
 
 export default SpoonDropDescent;

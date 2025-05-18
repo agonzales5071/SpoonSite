@@ -5,11 +5,14 @@ to deploy:
 npm run-script build 
 in terminal-
 firebase deploy --only hosting 
+to reauthorize gh account:
+
+
 */
 
 import React from 'react';
 import './App.css';
-import FloatingComponent from './Balloon.js';
+import HotAir from './components/Home/HotAir.js';
 import Portfolio from "./portfolio.js";
 import Socials from "./socials.js";
 import SpoonDrop from "./Physics/spoondrop.js"
@@ -61,7 +64,7 @@ const Balloons = () => {
       <h1>Floating Components</h1>
       {/* Render multiple FloatingComponents with unique data passed as an object */}
       {componentsData.map((component, index) => (
-        <FloatingComponent 
+        <HotAir
           key={index} 
           id={index} 
           totalComponents={componentsData.length} 
@@ -115,7 +118,7 @@ class Home extends React.Component {
           <h1 id="title" title="&#x1f944;">Alexander <q>DroppedSpoon</q> Gonzales</h1>
           {/* <p id="construction">currently under construction</p> */}
           {this.componentsData.map((component, index) => (
-          <FloatingComponent
+          <HotAir
             key={index}
             id={index}
             totalComponents={this.componentsData.length}
@@ -155,64 +158,6 @@ function getOS() {
   }
 
   return os;
-}
-
-class HotAir extends React.Component{
-  constructor(props){  
-    super(props);  
-    let total = 3;
-    let validSpace = 80;
-    let balloonWidth = 114;
-    if (document.documentElement.clientWidth < 768){
-      balloonWidth = 57;
-    }
-    this.state = {
-      link: props.link,
-      cls: props.cls,
-      img: props.img,
-      text: props.text,
-      textid: props.textid,
-      total: total,
-      num: props.num,//indexed starting at 1
-      cssProperties: { '--animation-time': (Math.trunc(Math.random()*10) +15) + 's',
-        '--x-float-start': (((validSpace/(total+1)) * (props.num)) + (100-validSpace)/2 )/100 * 
-          (document.documentElement.clientWidth) - balloonWidth/2 + 'px', 
-        '--x-float-end':(((validSpace/(total+1)) * (props.num*1)) + (100-validSpace)/2 
-          + (Math.trunc(Math.random()*6) - 3)) + 'vw',
-        '--y-float-start': 60 + 'vh',
-        '--y-float-end': 30 + Math.trunc(Math.random()*15) + 'vh' }
-    }  
-  }  
-
-  render(){
-    return(
-      <div 
-        className="balloon" 
-        style={this.state.cssProperties}  
-        onAnimationIteration={()=> {
-          //position debugs
-          //console.log(this.state.cssProperties);
-          //let offsets = document.getElementById(this.state.textid).getBoundingClientRect();
-          //let top = offsets.top*(100/document.documentElement.clientHeight);
-          //let left = offsets.left;
-          //console.log ("starting position of " + this.state.link + "is " + top);
-          this.setState({
-            ...this.state,
-            cssProperties: { '--animation-time': this.state.cssProperties["--animation-time"], 
-            '--x-float-start': this.state.cssProperties['--x-float-end'],
-            '--y-float-start': this.state.cssProperties['--y-float-end'],
-            '--x-float-end': Math.trunc(Math.random()*(80/this.state.total)) + 10 + ((this.state.num-1)*(80/this.state.total)) + 'vw',
-            '--y-float-end': Math.trunc(Math.random()*50) + 10 + 'vh'}
-          });
-        }}
-      >
-        <Link to={this.state.link}><button className="balloonbutt">
-          <img className="balloonimg" src={this.state.img} alt=""></img>
-          <div className="balloontext" id={this.state.textid} >{this.state.text}</div></button>
-        </Link>
-      </div>
-    );
-  }
 }
 
 export default App;
