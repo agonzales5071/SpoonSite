@@ -1,11 +1,6 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import Matter from 'matter-js'
 import './spoondrop.css';
-
-
-
-const STATIC_DENSITY = 15
-
 
 const SpoonDropMenu = () => {
     const boxRef = useRef(null);

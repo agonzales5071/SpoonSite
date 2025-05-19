@@ -1,38 +1,40 @@
-import React from "react";
+import { useEffect, useRef } from 'react'
 import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 
-class SpoonDropHomerun extends React.Component {
+const SpoonDropHomerun = () => {
+  const boxRef = useRef(null);
+  const canvasRef = useRef(null);
 
+  useEffect(() => {
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    let Engine = Matter.Engine;
+    let Render = Matter.Render;
+    let Runner = Matter.Runner;
+    let Bodies = Matter.Bodies;
+    let Body = Matter.Body;
+    let Composite = Matter.Composite;
+    let Mouse = Matter.Mouse;
+    let MouseConstraint = Matter.MouseConstraint;
 
-  componentDidMount() {
-    var Engine = Matter.Engine,
-      Render = Matter.Render,
-      Composite = Matter.Composite,
-      Bodies = Matter.Bodies,
-      Body = Matter.Body,
-      Mouse = Matter.Mouse,
-      MouseConstraint = Matter.MouseConstraint;
+    let engine = Engine.create({});
+    let runner = Runner.create({});
 
-    var engine = Engine.create({
-      // positionIterations: 20
-    });
-
-    var render = Render.create({
-      element: this.refs.scene,
+    let render = Render.create({
+      element: boxRef.current,
       engine: engine,
+      canvas: canvasRef.current,
       options: {
         width: window.innerWidth,
         height: window.innerHeight,
-        wireframes: false
-      }
+        wireframes: false,
+      },
     });
 
 
-    var width = window.innerWidth,
-    height = window.innerHeight,
-    size = 100,
+    var size = 100,
     backgroundCircle = 0x0001,
     spoons = 0x0002,
     spoonContainer = 0x0004;
@@ -113,7 +115,7 @@ class SpoonDropHomerun extends React.Component {
             //maybe makes the score smoother when it lands???
             let score = (Math.round(10000000*(curSpoon.position.x-width/2))/10000000).toFixed(7);
             let display = (Math.round(100*(curSpoon.position.x-width/2))/100).toFixed(2);
-            if(score !== lastScore){//stops repeated refresh
+            if(score !== lastScore && document.getElementById("homerundisplay") !== null){//stops repeated refresh
               //commentary
               lastScore = score;
               if(Math.abs(display) > 20000){document.getElementById("homerundisplay").innerHTML = "WHOA! You dropped the spoon " + display + "m away";}
@@ -127,15 +129,20 @@ class SpoonDropHomerun extends React.Component {
       }
     });
 
-    Matter.Runner.run(engine);
+    Runner.run(runner, engine)
     Render.run(render);
-  }
+  });
 
-  render() {
-    return <div ref="scene" className="scene">
+  
+    return (
+    <div className="scene">
+      <canvas ref={canvasRef} />
       <Link to="/spoondropMenu"><button className='back-button'></button></Link>
-    <p id="homerundisplay">Drag a spoon into the circle and let it fly! Or just toss it...</p>
-  </div>;
-  }
+      <div id="menutext">
+        <p id="homerundisplay">Drag a spoon into the circle and let it fly! Or just toss it...</p>
+      </div>
+    </div>
+    );
+  
 }
 export default SpoonDropHomerun;

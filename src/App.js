@@ -17,7 +17,7 @@ import Portfolio from "./portfolio.js";
 import Socials from "./socials.js";
 import SpoonDrop from "./Physics/spoondrop.js"
 import LatestMic from "./latestMic.js"
-import { BrowserRouter as Router, Route, Routes, Link} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import Chat from "./components/Chat/Chat.js"
 import Join from "./components/Join/Join.js"
 import Truck from "./components/Home/Truck.js"
@@ -52,29 +52,6 @@ class App extends React.Component {
     );
   }
 }
-const Balloons = () => {
-  // List of objects with multiple attributes (e.g., name, color, size)
-  const componentsData = [
-    { id: "pb", textid: "pbtext", className: "hotair", link: "/portfolio", text: "portfolio", img: "images/portfolioballoon.png" },
-    { id: "sd", textid: "sdtext", className: "hotair", link: "/spoondropMenu", text: "spoon drop", img: "images/spoondropballoon2.png"},
-    { id: "fm", textid: "fmtext", className: "hotair", link: "/socials", text: "find me", img: "images/findmeballoon.png"},
-     ];
-     return(
-      <div>
-      <h1>Floating Components</h1>
-      {/* Render multiple FloatingComponents with unique data passed as an object */}
-      {componentsData.map((component, index) => (
-        <HotAir
-          key={index} 
-          id={index} 
-          totalComponents={componentsData.length} 
-          componentData={component} // Passing the entire object with multiple attributes
-        />
-      ))}
-    </div>
-     );
-}
-
 
 class Home extends React.Component {
   constructor(props) {

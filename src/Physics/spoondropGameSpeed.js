@@ -1,41 +1,39 @@
-import React from 'react';
+import { useEffect, useRef } from 'react'
 import Matter from "matter-js";
 import "./spoondrop.css";
 import { Link } from 'react-router-dom';
 
-class SpoonDropGameSpeed extends React.Component {
+const SpoonDropGameSpeed = () => {
+  const boxRef = useRef(null);
+  const canvasRef = useRef(null);
 
+  useEffect(() => {
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    let Engine = Matter.Engine;
+    let Render = Matter.Render;
+    let Runner = Matter.Runner;
+    let Bodies = Matter.Bodies;
+    let Body = Matter.Body;
+    let Composite = Matter.Composite;
+    let Mouse = Matter.Mouse;
+    let MouseConstraint = Matter.MouseConstraint;
   
-  componentDidMount() {
-    var Engine = Matter.Engine,
-      Render = Matter.Render,
-      Composite = Matter.Composite,
-      Bodies = Matter.Bodies,
-      Body = Matter.Body,
-      Mouse = Matter.Mouse,
-      MouseConstraint = Matter.MouseConstraint;
-      document.getElementById("speedclickdisplay").innerText = "Endurance test:\nHow many spoons can you drop in \n15s";
+    let engine = Engine.create({});
+    let runner = Runner.create({});
+    document.getElementById("speedclickdisplay").innerText = "Endurance test:\nHow many spoons can you drop in \n15s";
 
-
-
-
-    var engine = Engine.create({
-      // positionIterations: 20
-    });
-
-    var render = Render.create({
-      element: this.refs.scene,
+    let render = Render.create({
+      element: boxRef.current,
       engine: engine,
+      canvas: canvasRef.current,
       options: {
         width: window.innerWidth,
         height: window.innerHeight,
-        wireframes: false
-      }
+        wireframes: false,
+      },
     });
 
-
-    var width = window.innerWidth;
-    var height = window.innerHeight;
     var hatch = Bodies.rectangle(width/2, height*4/5, width/2, 50, {isStatic: true} ),
         sideL = Bodies.rectangle(width*3/4, height*1/20, 50, height*3/2, {isStatic: true}),
         sideR = Bodies.rectangle(width*1/4, height*1/20, 50, height*3/2, {isStatic: true});
@@ -162,22 +160,22 @@ class SpoonDropGameSpeed extends React.Component {
       }
     }
 
-    Matter.Runner.run(engine);
+    Runner.run(runner, engine);
 
     Render.run(render);
-  }
+  });
 
-  render() {
+  
     return (
-      <div ref="scene" className="scene">
+      <div className="scene">
+        <canvas ref={canvasRef} />
         <Link to="/spoondropMenu"><button className='back-button'></button></Link>
         <div id="menutext">
-        
           <p id="speedclickdisplay">Endurance test: How many spoons can you drop in 15s</p>
           <p id="restart"></p>
         </div>
       </div>
-      );
-  }
+      )
+  
 }
 export default SpoonDropGameSpeed;

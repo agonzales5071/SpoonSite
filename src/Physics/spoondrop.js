@@ -1,34 +1,36 @@
-import React from "react";
+import { useEffect, useRef } from 'react'
 import Matter from "matter-js";
 import { Link } from 'react-router-dom';
 
 
-class SpoonDrop extends React.Component {
+const SpoonDrop = () => {
+  const boxRef = useRef(null);
+  const canvasRef = useRef(null);
 
-
-  componentDidMount() {
+  useEffect(() => {
     var width = window.innerWidth;
     var height = window.innerHeight;
-    var Engine = Matter.Engine,
-      Render = Matter.Render,
-      Composite = Matter.Composite,
-      Bodies = Matter.Bodies,
-      Body = Matter.Body,
-      Mouse = Matter.Mouse,
-      MouseConstraint = Matter.MouseConstraint;
+    let Engine = Matter.Engine;
+    let Render = Matter.Render;
+    let Runner = Matter.Runner;
+    let Bodies = Matter.Bodies;
+    let Body = Matter.Body;
+    let Composite = Matter.Composite;
+    let Mouse = Matter.Mouse;
+    let MouseConstraint = Matter.MouseConstraint;
+  
+    let engine = Engine.create({});
+    let runner = Runner.create({});
 
-    var engine = Engine.create({
-      // positionIterations: 20
-    });
-
-    var render = Render.create({
-      element: this.refs.scene,
+    let render = Render.create({
+      element: boxRef.current,
       engine: engine,
+      canvas: canvasRef.current,
       options: {
         width: window.innerWidth,
         height: window.innerHeight,
-        wireframes: false
-      }
+        wireframes: false,
+      },
     });
 
     var size = 100; //size var for spoon
@@ -80,14 +82,16 @@ class SpoonDrop extends React.Component {
       Composite.add(engine.world, compoundBodyA);
     });
 
-    Matter.Runner.run(engine);
+    Runner.run(runner, engine);
     Render.run(render);
-  }
+  });
 
-  render() {
-    return <div ref="scene" className="scene" >
+  
+    return (
+    <div className="scene" >
+      <canvas ref={canvasRef} />
       <Link to="/spoondropMenu"><button className='back-button'></button></Link>
-      <p id="menudisplay">FREEPLAY!</p></div>;
-  }
+      <p id="menudisplay">FREEPLAY!</p></div>
+    )
 }
 export default SpoonDrop;
