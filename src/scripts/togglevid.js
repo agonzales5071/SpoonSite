@@ -19,11 +19,18 @@ class VidButton extends React.Component {
     else{
       place--;
     }
-    var vidId = vl[place];
-    var url = "https://www.youtube.com/embed/" + vidId;
-    var frame = document.getElementById('ds').cloneNode();
+    let newVidId = vl[place];
+    let frame = null;
+    let replaceId = 'ds';
+    let url = "https://www.youtube.com/embed/" + newVidId;
+    if( document.getElementById(replaceId) === null){
+      replaceId = 'dsi'
+      url = "https://img.youtube.com/vi/" + newVidId + "/hqdefault.jpg"
+    }
+    
+    frame = document.getElementById(replaceId).cloneNode();
     frame.src = url;
-    document.getElementById('ds').parentNode.replaceChild(frame, document.getElementById('ds'));
+    document.getElementById(replaceId).parentNode.replaceChild(frame, document.getElementById(replaceId));
     this.setState({
       vidnum: place,
     });

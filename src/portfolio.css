@@ -3,7 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Text+Me+One&display=swap');
-.body-component-a{
+.body-portfolio{
   background-color: rgb(28, 0, 46);
   background-image: none;
   overflow-y: scroll;
@@ -12,7 +12,7 @@
 }
 #portfoliotitle{
 	font-family: "Righteous";
-	font-size: 90px;
+	font-size: 18vw;
 	color:  rgb(217, 255, 245);
 	/* text-shadow: -2px 2px 8px grey,
 				  2px 2px 8px grey,
@@ -20,9 +20,15 @@
 				  -2px -2px 0 grey; */
 	z-index: 2;
 }
+.partition{
+  margin-left: 10%;
+  text-align: left;
+  font-size: 10vw;
+  color: whitesmoke;
+}
 .head{
   font-family: "Righteous";
-	font-size: 32px;
+	font-size: 7vw;
 	color:  floralwhite;
   text-align: right;
   margin-right:2vw;
@@ -32,25 +38,34 @@
 				  -2px -2px 0 grey; */
 }
 .explan{
-  font-size: 20px;
+  font-size: 18px;
   color: floralwhite;
   font-family: "Text Me One";
-  text-align: justify;
+  text-align: left;
   margin-left: 5vw;
   margin-right: 5vw;
+  padding-left: min(20px, 0%);
+  padding-right: min(20px, 0%);
 }
 @media only screen and (min-width: 768px) {
-.explan{
-  margin-left:30vw;
+  #portfoliotitle{
+    font-size: 120px;
+  }
+  .head{
+    font-size: 36px;
+  }
+  .partition{
+    font-size: 64px;
+  }
+  .explan{
+    text-align: justify;
+    font-size: 25px;
+    margin-left:30vw;
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
-}
-.partition{
-  margin-left: 10%;
-  text-align: left;
-  font-size: 40px;
-  color: whitesmoke;
-  font-size:50px;
-}
+
 #shapegroup {
   width: 100vw;
   height: 100vh;
@@ -161,6 +176,7 @@
   /* border: 3px solid deeppink; */
   padding: 1%;
   overflow: hidden;
+  z-index: 2;
 }
 .vidplayer{
   float: left;
@@ -189,6 +205,9 @@
   border-right: 25px solid rgb(160, 201, 188);
 }
 @media only screen and (min-width: 768px) {
+  .vidButton{
+    font-size: 18px;
+  }
   .back-button{
     top: 5%;
     border-top: 20px solid transparent;

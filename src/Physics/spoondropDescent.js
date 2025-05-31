@@ -9,8 +9,10 @@ import { Link } from 'react-router-dom';
 const SpoonDropDescent = () => {
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
-
+  
   useEffect( () => {
+  const oopsAllSpoons = window.location.href.includes("Leo");
+  console.log("oopsAllSpoons = " + oopsAllSpoons );
     
     var allWalls = []; 
     var isMobile = false;
@@ -244,29 +246,36 @@ const SpoonDropDescent = () => {
             wallTracker = 0;
             defaultWalls = true;
             closeWalls = false;
-            spoonWalls = false;
+            spoonWalls = oopsAllSpoons;
             if(points > 0){
               //console.log("may switch here");
               defaultWalls = false;
-              //spawn special obstacle sets
-              let spawnset = getRandomInt(4);
-              if(spawnset === closeWallSet){
-                closeWalls = true;
+              if(oopsAllSpoons){
+                spoonWalls = true;
                 wallTracker++;
               }
               else{
-                if(spawnset === spoonWallSet){
-                  spoonWalls = true;
+
+                  //spawn special obstacle sets
+                let spawnset = getRandomInt(3);
+                if(spawnset === closeWallSet){
+                  closeWalls = true;
                   wallTracker++;
                 }
                 else{
-                  defaultWalls = true;
+                  if(spawnset === spoonWallSet){
+                    spoonWalls = true;
+                    wallTracker++;
+                  }
+                  else{
+                    defaultWalls = true;
+                  }
                 }
               }
             }
             if(oneType){
               spoonWalls = false;
-              closeWalls = false;
+              closeWalls = true;
               defaultWalls = false;
               wallTracker++;
             }
@@ -274,12 +283,12 @@ const SpoonDropDescent = () => {
           if(spoonWalls){
             spawnSpoonWalls();
           }
-          if(closeWalls){
+          else if(closeWalls){
             //console.log("closewalls spawning");
             //TODO:code new obstacle set
             spawnCloseWalls();
           }
-          if(defaultWalls){
+          else if(defaultWalls){
             spawnDefaultWalls();
           }
           wallTracker++;
@@ -297,9 +306,14 @@ const SpoonDropDescent = () => {
     // gets middle of obstacle
     function getNewCenter(){
       let pos;
-      let offset = Math.random()*(gameWidth/3) - gameWidth/6 + leftMargin;
+      let offset = Math.random()*(gameWidth/3) - gameWidth/6;
+      //chance for offset to be bigger
       if(Math.random()*10 < 7 && points > 0){
-        offset = Math.random()*(gameWidth/2) - gameWidth/4 + leftMargin;
+        offset = Math.random()*(gameWidth/2) - gameWidth/4;
+      }
+      //if offset is too small then reroll
+      if(offset < gameWidth/10 && offset > gameWidth/(-10)){
+        offset = Math.random()*(gameWidth/3) - gameWidth/6;
       }
         pos = prevCenter + offset;
         //console.log("pos = " + pos + " prevC = " + prevCenter + " offset = " + offset);
@@ -353,12 +367,16 @@ const SpoonDropDescent = () => {
         offsetFactor = width/6;
       }
       let offset = Math.random()*(offsetFactor) - offsetFactor/2;
+      //reroll if small
+      if(offset < offsetFactor/5 && offset > offsetFactor/(-5)){
+        offset = Math.random()*(offsetFactor) - offsetFactor/2;
+      }
         pos = prevCenter + offset;
         if(pos < gameWidth/25){
-          pos = gameWidth/25 + leftMargin;
+          pos = gameWidth/25 + leftMargin - offset;
         }
         if(pos > gameWidth-(width/25)){
-          pos = gameWidth-(gameWidth/25 + leftMargin);
+          pos = gameWidth-(gameWidth/25 + leftMargin) - offset;
         }
       return pos;
     }
@@ -408,10 +426,22 @@ const SpoonDropDescent = () => {
       }
       if(wallTracker%wallFrequency === 0){
         let obstacleSize = size*Math.random();
-        if(obstacleSize > size*0.5){
+        if(obstacleSize > size*0.5 || obstacleSize < size*0.05){
           obstacleSize = size*Math.random();
         }
-        let spoonWallSpawn = [width*Math.random(), height+100, height-(3*obstacleSize)+100];
+        if(obstacleSize > size*0.8){
+          obstacleSize = size*Math.random();
+        }
+        let xposSpawn = width*Math.random();
+        //balancing huge spoon spawn
+        if(obstacleSize > size*0.7){
+          let xOffset = width*0.3*Math.random();
+          xposSpawn = xOffset;
+          if(getRandomInt(2) === 0){
+            xposSpawn = width - xOffset;
+          }
+        }
+        let spoonWallSpawn = [xposSpawn, height+100, height-(3*obstacleSize)+100];
         let spoonHeadOffset = obstacleSize/10; 
 
         let partA1 = Bodies.circle(spoonWallSpawn[0], spoonWallSpawn[2], obstacleSize,
@@ -448,12 +478,21 @@ const SpoonDropDescent = () => {
         })
         Body.setCentre(spoonObstacle, Matter.Vector.create(spoonWallSpawn[0], spoonWallSpawn[1]-obstacleSize/10), false);
         let angle = Math.random(90)-45;
-        if(getRandomInt(2) === 0){
+        //flip is spoon head down randomly or if spoon is big to avoid weird load ins
+        if(obstacleSize > size*0.5 || getRandomInt(2) === 0){
           angle += 180;
+        }
+        //balancing huge spoon obstacle spawn angle 
+        if(obstacleSize > size*0.8){
+          angle = 160;
+          if(getRandomInt(2) === 0){
+            angle = 160.5;
+          }
         }
         Body.setAngle(spoonObstacle, angle);
         //Body.setDensity(spoonObstacle, 10);
         spoonObstacle.frictionAir = 0.001;
+        //only smaller spoons can spin
         if(Math.random()*2 < 1 && obstacleSize < size*0.4){
           Body.setAngularVelocity(spoonObstacle, ((obstacleSize-Math.random()*obstacleSize)/600)*(getRandomInt(3)-1))
         }

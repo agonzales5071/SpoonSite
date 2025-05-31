@@ -1,8 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+html, body, #root{
+	height: 100vh;
+  }
+  .App{
+	z-index: 0;
+  }
 html{
 	overflow: hidden;
+	padding: 0;
+  	margin: 0;
 }
 body{
 	background-origin: border-box;
@@ -18,6 +26,8 @@ body{
 	/*background-color: powderblue;*/
 	text-align: center;
 	align-content: center;
+	justify-content: center; /* Centers content vertically */
+	align-items: center;     /* Centers content horizontally */
 	overflow-x: hidden;
   overflow-y: hidden;
 	position:relative;
@@ -27,6 +37,7 @@ body{
 	align-content: center;
 	z-index: 100;
 	overflow-x: hidden;
+	min-height: 100%;
 }
 .paralax{
 	display: none;

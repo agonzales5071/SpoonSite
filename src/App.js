@@ -5,22 +5,20 @@ to deploy:
 npm run-script build 
 in terminal-
 firebase deploy --only hosting 
-to reauthorize gh account:
 
-
+npm run dev to start youtube proxy also
 */
 
 import React from 'react';
 import './App.css';
 import HotAir from './components/Home/HotAir.js';
+import ScrollToTop from './components/Common/ScrollToTop.js';
 import Portfolio from "./portfolio.js";
 import Socials from "./socials.js";
-import SpoonDrop from "./Physics/spoondrop.js"
-import LatestMic from "./latestMic.js"
+import SpoonDrop from "./Physics/spoondrop.js";
+import LatestMic from "./latestMic.js";
 import { BrowserRouter as Router, Route, Routes} from 'react-router-dom';
-import Chat from "./components/Chat/Chat.js"
-import Join from "./components/Join/Join.js"
-import Truck from "./components/Home/Truck.js"
+import Truck from "./components/Home/Truck.js";
 import SpoonDropGameSpeed from './Physics/spoondropGameSpeed';
 import SpoonDropHomerun from './Physics/spoondropHomerun';
 import SpoonDropMenu from './Physics/spoondropMenu';
@@ -33,6 +31,7 @@ class App extends React.Component {
   render(){
     return(
       <Router>
+        <ScrollToTop />
         <div className="App">
           <Routes>
             <Route path="/" element={<Home />}/>
@@ -44,8 +43,7 @@ class App extends React.Component {
             <Route path="/spoondrophomerun" element={<SpoonDropHomerun/>} />
             <Route path="/spoondropMenu" element={<SpoonDropMenu/>} />
             <Route path="/spoondropDescent" element={<SpoonDropDescent/>} />
-            <Route path="/join" component={Join} />
-            <Route path="/chat" component={Chat} />
+            <Route path="/spoondropDescentLeo" element={<SpoonDropDescent/>} />
           </Routes>
         </div>
       </Router>
@@ -64,8 +62,12 @@ class Home extends React.Component {
   }
   componentDidMount(){
     document.body.className ="body";
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0); // force scroll to top
     console.log("home mounted")
-    console.log("OS = " + getOS())
+    console.log('Scroll Y on mount:', window.scrollY);
   }
   
   // componentWillUnmount(){
@@ -102,9 +104,6 @@ class Home extends React.Component {
             componentData={component} // Passing the entire object with multiple attributes
           />
         ))}
-          {/* <HotAir id="pb" textid="pbtext" num="1" className="hotair" link="/portfolio" text="portfolio" img="images/portfolioballoon.png"></HotAir>
-          <HotAir id="sd" textid="sdtext" num="2" className="hotair" link="/spoondropMenu" text="spoon drop" img="images/spoondropballoon2.png"></HotAir>
-          <HotAir id="fm" textid="fmtext" num="3" className="hotair" link="/socials" text="find me" img="images/findmeballoon.png"></HotAir> */}
           {/* <HotAir id="cr" textid="crtext" num="3" className="hotair" link="/join" text="chat room" img="images/chatballoon.png"></HotAir> */}
         </div>
 
@@ -112,29 +111,6 @@ class Home extends React.Component {
       </div>
       );
     }
-}
-
-function getOS() {
-  var userAgent = window.navigator.userAgent,
-      platform = window.navigator?.userAgentData?.platform ?? window.navigator.platform,
-      macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'],
-      windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'],
-      iosPlatforms = ['iPhone', 'iPad', 'iPod'],
-      os = null;
-
-  if (macosPlatforms.indexOf(platform) !== -1) {
-    os = 'Mac OS';
-  } else if (iosPlatforms.indexOf(platform) !== -1) {
-    os = 'iOS';
-  } else if (windowsPlatforms.indexOf(platform) !== -1) {
-    os = 'Windows';
-  } else if (/Android/.test(userAgent)) {
-    os = 'Android';
-  } else if (!os && /Linux/.test(platform)) {
-    os = 'Linux';
-  }
-
-  return os;
 }
 
 export default App;

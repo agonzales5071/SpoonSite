@@ -1,82 +1,85 @@
-.body-mic {
-    background-color: #e2b97f; /* Light grout color */
-  background-image: 
-    linear-gradient(45deg, rgba(255, 87, 34, 1) 25%, transparent 25%) 0 0,
-    linear-gradient(-45deg, rgba(255, 87, 34, 1) 25%, transparent 25%) 0 0,
-    linear-gradient(45deg, rgba(255, 140, 0, 1) 25%, transparent 25%) 0 50px,
-    linear-gradient(-45deg, rgba(255, 140, 0, 1) 25%, transparent 25%) 0 50px;
-  background-size: 100px 100px; /* Brick size: 100px wide, 50px tall */
-  background-repeat: repeat;
-}
-/* video container to hold the spotlight effect */
-.video-container {
-    position: relative;
-    display: inline-block;
-    max-width: fit-content;
-    height: 100vh;
-  margin: auto;
-  overflow: hidden;
-  }
-  
-  /* Wrapper around the iframe */
-  /* Wrapper around the iframe to maintain aspect ratio */
-.video-wrapper {
-    position: relative;
-    width: 56.25%; /* Take up the full width of the container */
-    padding-top: 100%; /* 16 / 9 aspect ratio for vertical video (height/width * 100) */
-    /* 177.78% is the result of (16/9) * 100, which is the aspect ratio for vertical video */
-    overflow: visible;
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
-  margin-left: auto;
-  margin-right: auto;
+.body-mic {
+  background-color: #4b8a5e;
+  background-image: radial-gradient(rgb(28, 0, 46) 10px, transparent 15px);
+  background-size: 20px 20px;
+  overflow-y: scroll;
+}
+.poster-wrapper {
+  display: flex;
+  align-items: center; /* Vertical alignment */
+  justify-content: center; /* Horizontal alignment */
+}
+
+.poster-container {
+  max-width: 800px;
+  background: rgba(0, 0, 0, 0.85);
+  padding: 3rem 2rem;
+  border: 3px solid #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
+  text-align: center;
+  color: #fff;
+  font-family: 'Bebas Neue', sans-serif;
+}
+
+.poster-title {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 2px;
+}
+
+.poster-subtitle {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #f0db4f;
+}
+.video-frame {
+  height: 20%;
+}
+.video-frame iframe {
+  width: 100%;
+  height: 50%;
+  border: none;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}
+
+.poster-description {
+  font-size: 1.2rem;
+  opacity: 0.85;
+  line-height: 1.5;
+}
+
+.back-button-mic {
+  position: absolute;
+  left: 3%;
+  top: 24px;
+	width: 0;
+	height: 0;
+	border-top: 12px solid transparent;
+	border-right: 25px solid rgb(114, 133, 127);
+  border-left: transparent;
+	border-bottom: 12px solid transparent;
+  backface-visibility: hidden;
+  background-color: transparent;
+  padding: 0%;
+  stroke: none;
+  box-shadow: none;
+  z-index: 9999;
+}
+.back-button-mic:hover{
+  border-right: 25px solid rgb(160, 201, 188);
+}
+@media only screen and (min-width: 768px) {
+  .back-button-mic{
+    top: 40px;
+    border-top: 20px solid transparent;
+    border-right: 45px solid rgb(117, 153, 143);
+    border-bottom: 20px solid transparent;
   }
-  
-  /* The iframe itself */
-  .latest-video {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%; /* Make the iframe fill the entire width of the wrapper */
-    height: 100%; /* Make the iframe fill the entire height of the wrapper */
-    border: none; /* Remove iframe border */
-    border-radius: 10px; /* Optional: add rounded corners */
-    z-index: 2;
+  .back-button-mic:hover{
+    border-right: 45px solid rgb(160, 201, 188);
   }
-  
-  
-  /* Create the yellow oval at the bottom of the iframe */
-  .video-wrapper::before {
-    content: "";
-    position: absolute;
-    bottom: -5vh; /* Position it below the iframe */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 70vw;
-    height: 10vh;
-    overflow: visible;
-    background-color: rgb(199, 199, 17); /* Light yellow color with transparency */
-    border-radius: 50%;
-    z-index: 1; /* Ensure it's behind the iframe */
-  }
-  
-  /* Create the triangular yellow shape extending upward */
-  .video-wrapper::after {
-    content: "";
-    position: absolute;
-    bottom: 0vh; /* Position it above the oval */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 100vw solid transparent;
-    border-right: 30vw solid transparent;
-    border-bottom: 20vw solid rgb(199, 199, 17); /* Yellow color with transparency */
-    z-index: 1; /* Ensure it's behind the iframe */
-  }
-  
-  .center {
-    border-left: 35vw solid transparent;
-    border-right: 35vw solid transparent;
-    border-bottom: 70vh solid rgb(199, 199, 17); /* Yellow color with transparency */
-    z-index: 1; /* Ensure it's behind the iframe */
-  }
+}
