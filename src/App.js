@@ -66,8 +66,6 @@ class Home extends React.Component {
       window.history.scrollRestoration = 'manual';
     }
     window.scrollTo(0, 0); // force scroll to top
-    console.log("home mounted")
-    console.log('Scroll Y on mount:', window.scrollY);
   }
   
   // componentWillUnmount(){
