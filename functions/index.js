@@ -4,9 +4,10 @@ const axios = require("axios");
 const cors = require("cors");
 
 const app = express();
-app.use(cors({origin: true}));
+app.use(cors({origin: "https://www.droppedspoon.net"}));
+
 console.log("Function initializing...");
-app.get("/", async (req, res) => {
+app.get("/latest-video", async (req, res) => {
   console.log("Received request");
   const apiKey = process.env.YOUTUBE_API_KEY; // use Secret Manager or .env
   console.log("Accessed API Key");

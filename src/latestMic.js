@@ -17,7 +17,7 @@ const YouTubePlaylistLatestVideo = ({ playlistId }) => {
 
     const fetchLatestVideo = async () => {
       try {
-        const res = await axios.get(`${baseUrl}`,
+        const res = await axios.get(`${baseUrl}/latest-video`,
           { params: { playlistId } }
         );
         setVideoData(res.data);
