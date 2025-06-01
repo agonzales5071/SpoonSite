@@ -1,47 +1,39 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
 const {onRequest} = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
+const express = require("express");
+const axios = require("axios");
+const cors = require("cors");
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
-
-const functions = require('firebase-functions');
-const axios = require('axios');
-
-
-exports.getLatestYouTubeVideo = functions.https.onRequest(async (req, res) => {
-  const apiKey = functions.config().youtube.key; // or use Secret Manager in v2
+const app = express();
+app.use(cors({origin: true}));
+console.log("Function initializing...");
+app.get("/", async (req, res) => {
+  console.log("Received request");
+  const apiKey = process.env.YOUTUBE_API_KEY; // use Secret Manager or .env
+  console.log("Accessed API Key");
   const playlistId = req.query.playlistId;
-
   if (!playlistId) {
-    return res.status(400).send('Missing playlistId');
+    return res.status(400).send("Missing playlistId");
   }
 
   try {
+    console.log("within try");
     const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=1&key=${apiKey}`;
     const response = await axios.get(url);
     const latestVideo = response.data.items[0];
-
     if (!latestVideo) {
-      return res.status(404).send('No videos found');
+      return res.status(404).send("No videos found");
     }
 
-    const snippet = latestVideo.snippet;
-    const videoId = snippet.resourceId.videoId;
-    const title = snippet.title;
-    const description = snippet.description;
-
-    res.status(200).json({ videoId, title, description });
+    const {title, description, resourceId} = latestVideo.snippet;
+    res.status(200).json({videoId: resourceId.videoId, title, description});
   } catch (error) {
-    console.error('YouTube API error:', error.message);
-    res.status(500).send('Internal Server Error');
+    console.error("YouTube API error:", error.message);
+    res.status(500).send("Internal Server Error");
   }
 });
+
+exports.getLatestYouTubeVideo = onRequest({
+  region: "us-central1",
+  timeoutSeconds: 60,
+  memory: "256MiB",
+}, app);

@@ -13,11 +13,11 @@ const YouTubePlaylistLatestVideo = ({ playlistId }) => {
     const isLocal = window.location.hostname === 'localhost';
     const baseUrl = isLocal
       ? 'http://localhost:4000/api'
-      : 'https://us-central1-my-website-droppedspoon.cloudfunctions.net';
+      : 'https://getlatestyoutubevideo-wvmbijgnea-uc.a.run.app';
 
     const fetchLatestVideo = async () => {
       try {
-        const res = await axios.get(`${baseUrl}/latest-video`,
+        const res = await axios.get(`${baseUrl}`,
           { params: { playlistId } }
         );
         setVideoData(res.data);
