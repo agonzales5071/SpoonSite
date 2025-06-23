@@ -23,6 +23,7 @@ import SpoonDropGameSpeed from './Physics/spoondropGameSpeed';
 import SpoonDropHomerun from './Physics/spoondropHomerun';
 import SpoonDropMenu from './Physics/spoondropMenu';
 import SpoonDropDescent from './Physics/spoondropDescent';
+import SpoonDropRescue from './Physics/spoondropRescue';
 
 
 
@@ -43,6 +44,7 @@ class App extends React.Component {
             <Route path="/spoondrophomerun" element={<SpoonDropHomerun/>} />
             <Route path="/spoondropMenu" element={<SpoonDropMenu/>} />
             <Route path="/spoondropDescent" element={<SpoonDropDescent/>} />
+            <Route path="/spoondropRescue" element={<SpoonDropRescue/>} />
             <Route path="/spoondropDescentLeo" element={<SpoonDropDescent/>} />
           </Routes>
         </div>
