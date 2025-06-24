@@ -21,7 +21,6 @@ const SpoonDropRescue = () => {
       MouseConstraint,
       Vector,
       Events,
-      Detector,
     } = Matter;
 
     const allSpoons = [];
@@ -31,7 +30,6 @@ const SpoonDropRescue = () => {
 
     let engine = Engine.create({});
     let runner = Runner.create({});
-    let detector = Detector.create({});
 
     let render = Render.create({
       element: boxRef.current,
@@ -44,36 +42,32 @@ const SpoonDropRescue = () => {
       },
     });
 
-    var gameWidth = width;
-    var leftMargin = 0;
-    var detectable = [];
-    var force = 0.001;
+    var gameWidth = width*8/10;
+    var margin = width/10;
     var fric = 0.2;
-    var turnaround = 0.8;
     engine.gravity.y = 0.3;
     var restitutionValue = 0.8;
     var size = 100; // size var for spoon
+
+    // Trampoline
+    var segmentCount = 11;
+    var segmentWidth = 40;
+    var segmentHeight = 30;
+    const startX = width / 2 - (segmentCount * segmentWidth) / 2;
+    const startY = height * 0.8;
+
     if (width < 800) {
       isMobile = true;
       size = 50;
-      force = 0.0005;
       fric = 0.03;
-      turnaround = 0.8;
-    } else if (width >= (4 / 3) * height) {
-      size = 100;
-      force = 0.010;
-      fric = 0.03;
-      turnaround = 0.8;
-      gameWidth = (width * 2) / 3;
-      leftMargin = width / 6;
-    }
+      segmentCount = 7;
+      segmentWidth = 28;
+      segmentHeight = 15;
+      gameWidth = width * 9/10;
+      margin = width/20;
+    } 
 
-    // Trampoline
-    const segmentCount = 11; // reduced from 7 to 5
-    const segmentWidth = 40;
-    const segmentHeight = 30;
-    const startX = width / 2 - (segmentCount * segmentWidth) / 2;
-    const startY = height * 0.8;
+
 
     const trampoline = Composites.stack(
       startX,
@@ -166,11 +160,9 @@ const SpoonDropRescue = () => {
 
     // Variables for smooth movement
     let isDragging = false;
-    let targetMouseX = null;
-
+    //controls
     Events.on(mouseConstraint, "mousedown", () => {
       isDragging = true;
-      targetMouseX = mouse.position.x;
       if(resettable){
         restartGame();
         resettable = false;
@@ -179,22 +171,12 @@ const SpoonDropRescue = () => {
         startGame();
       }
     });
-
     Events.on(mouseConstraint, "mouseup", () => {
       isDragging = false;
-      targetMouseX = null;
     });
-
-    //anti-spoon force
-    // Events.on(engine, "beforeUpdate", () => {
-    //   let yforce = 0 - points/10000;
-    //   trampoline.bodies.forEach(segment => {
-    //     const netForce = { x: 0, y: yforce }; // upward cheat force
-    //     Body.applyForce(segment, segment.position, netForce);
-    //   });
-    // });
     
-    // Lock rails vertical position & velocity + smooth horizontal movement toward targetMouseX
+    // Movement Code
+    // Lock rails vertical position & velocity + smooth horizontal movement toward targetX
     Events.on(engine, "beforeUpdate", () => {
       if (isDragging) {
         let totalSpoonMass = 0;
@@ -245,161 +227,147 @@ const SpoonDropRescue = () => {
       Body.setVelocity(rightSegment, Vector.create(rightSegment.velocity.x, 0));
     });
     
-    
+    // accounts for spoons when game is over
     var deadSpoons = [];
-    // Setup detection array
-    var detectable = [];
-    function setDetection(body) {
-      detectable.push(body);
-      Detector.setBodies(detector, detectable);
-    }
-
-    // Add trampoline bodies to detection for collision filtering
-    trampoline.bodies.forEach((body) => setDetection(body));
-
-    // Spoon starting position
-    var spoonstart = [width / 2, height * (5 / 6), height / 4 - (3 * size) / 5];
 
     // Game state vars
-    var spawnwalls;
+    var dropSpoons;
     var points = 0;
-    var fallTracker = 0;
-    var speed = 20000;
-    var initialSpeed = 20000;
-    var speedChange = 0;
-    var firstSpoon = true;
+    var tracker = 0;
+    var initialSpeed = 50;
+    var speed = initialSpeed;
+    var pointIncrementSwitch = false;
 
     // Spawn falling spoons function
     function getRandomInt(max) {
       return Math.floor(Math.random() * max);
     }
 
-    var spoonColors = ["#2f6f8b", "#6f2f8b","#ad3f1a", "#a1ad1a", "#ad1a1a"];
-    var spoonGrav = [0.0011, 0.0012, 0.0008, 0.0009, 0.001];
-    function spawnFallingSpoons() {
-      let spoonType = getRandomInt(5);
-      let fallFrequency = 50;
-      if (isMobile) {
-        fallFrequency = 50;
+
+    function spawnFallingSpoon() {
+      let obstacleSize = size * 0.200 + size * Math.random() * 0.1; //slight variation to spawn size
+      let xposSpawn = gameWidth * Math.random() + margin; 
+
+      let spoonObstacle = getFallingSpoon(obstacleSize, xposSpawn);
+
+      allSpoons.push(spoonObstacle);
+      //remove old spoons so there arent too many in the net
+      if (allSpoons.length > 10) {//max number of spoons allowed in game
+        const oldSpoon = allSpoons.shift(); // remove first (oldest) spoon
+        Composite.remove(engine.world, oldSpoon);
       }
-      if (fallTracker % fallFrequency === 0) {
-        let obstacleSize = size * 0.25;
-        let xposSpawn = width/2;// * Math.random();
 
-        let spoonSpawn = [xposSpawn, -100, -(3 * obstacleSize) - 100];
-        let spoonHeadOffset = obstacleSize / 10;
-        let spoonDensity = spoonGrav[spoonType];
+        
+        Composite.add(engine.world, spoonObstacle);
+      
+      
+    }
 
-        let partA1 = Bodies.circle(spoonSpawn[0], spoonSpawn[2], obstacleSize, {
-          restitution: restitutionValue,
-          density: spoonDensity,
-          render: {fillStyle: spoonColors[spoonType]},
-          collisionFilter: {
-            group: -2,
-            category: 4,
-            mask: 2,
-          },
-        });
-        let partA2 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - spoonHeadOffset, obstacleSize, {
-          render: partA1.render,
-          density: spoonDensity,
-          restitution: restitutionValue,
-          collisionFilter: partA1.collisionFilter,
-        });
-        let partA3 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 2 * spoonHeadOffset, obstacleSize, {
-          render: partA1.render,
-          density: spoonDensity,
-          restitution: restitutionValue,
-          collisionFilter: partA1.collisionFilter,
-        });
-        let partA4 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 3 * spoonHeadOffset, obstacleSize, {
-          render: partA1.render,
-          density: spoonDensity,
-          restitution: restitutionValue,
-          collisionFilter: partA1.collisionFilter,
-        });
-        let partB = Bodies.trapezoid(spoonSpawn[0], spoonSpawn[1], obstacleSize, obstacleSize * 5, 0.4, {
-          render: partA1.render,
-          density: spoonDensity,
-          restitution: restitutionValue,
-        });
+    //slight variation on density of spoon based on color
+    const spoonColors = ["#2f6f8b", "#6f2f8b","#ad3f1a", "#a1ad1a", "#ad1a1a"];
+    const spoonGrav = [0.0011, 0.0012, 0.0008, 0.0009, 0.001];
 
-        let spoonObstacle = Body.create({
-          parts: [partA1, partA2, partA3, partA4, partB],
-          restitution: restitutionValue,
-          collisionFilter: partA1.collisionFilter,
-        });
+    //returns a spoon to fall from top of screen
+    function getFallingSpoon(obstacleSize, xposSpawn){
+      let spoonType = getRandomInt(5);
+      let spoonSpawn = [xposSpawn, -100, -(3 * obstacleSize) - 100];
+      let spoonHeadOffset = obstacleSize / 10;
+      let spoonDensity = spoonGrav[spoonType];
 
-        allSpoons.push(spoonObstacle);
-        if (allSpoons.length > 5) {
-          const oldSpoon = allSpoons.shift(); // remove first (oldest) spoon
-          Composite.remove(engine.world, oldSpoon);
-        }
+      //SHAPES
+      let partA1 = Bodies.circle(spoonSpawn[0], spoonSpawn[2], obstacleSize, {
+        restitution: restitutionValue,
+        density: spoonDensity,
+        render: {fillStyle: spoonColors[spoonType]},
+        collisionFilter: {
+          group: -2,
+          category: 4,
+          mask: 2,
+        },
+      });
+      let partA2 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - spoonHeadOffset, obstacleSize, {
+        render: partA1.render,
+        density: spoonDensity,
+        restitution: restitutionValue,
+        collisionFilter: partA1.collisionFilter,
+      });
+      let partA3 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 2 * spoonHeadOffset, obstacleSize, {
+        render: partA1.render,
+        density: spoonDensity,
+        restitution: restitutionValue,
+        collisionFilter: partA1.collisionFilter,
+      });
+      let partA4 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 3 * spoonHeadOffset, obstacleSize, {
+        render: partA1.render,
+        density: spoonDensity,
+        restitution: restitutionValue,
+        collisionFilter: partA1.collisionFilter,
+      });
+      let partB = Bodies.trapezoid(spoonSpawn[0], spoonSpawn[1], obstacleSize, obstacleSize * 5, 0.4, {
+        render: partA1.render,
+        density: spoonDensity,
+        restitution: restitutionValue,
+      });
 
-        allSpoons.forEach((element) => {
-          if (element.position.y > height + 100) {
-            if(gameStarted){
-              gameOver();
-            }
-            Composite.remove(engine.world, element);
-          }
-        });
-        if(gameStarted){
-          Body.setCentre(spoonObstacle, Vector.create(spoonSpawn[0], spoonSpawn[1] - obstacleSize / 10), false);
-  
-          let angle = Math.random() * 90 - 45;
-          if (obstacleSize > size * 0.5 || getRandomInt(2) === 0) {
-            angle += 180;
-          }
-          if (obstacleSize > size * 0.8) {
-            angle = 160;
-            if (getRandomInt(2) === 0) {
-              angle = 160.5;
-            }
-          }
-          Body.setAngle(spoonObstacle, angle);
-  
-          spoonObstacle.frictionAir = 0.01;
-  
-          if (Math.random() * 2 < 1 && obstacleSize < size * 0.4) {
-            Body.setAngularVelocity(
-              spoonObstacle,
-              ((obstacleSize - Math.random() * obstacleSize) / 600) * (getRandomInt(3) - 1)
-            );
-          }
-          //increment points
-          if(firstSpoon){
-            firstSpoon = false;
-          }
-          else{
-            points++;
-          }
-          Composite.add(engine.world, spoonObstacle);
-          //clear previous game if applicable
+      let spoonObstacle = Body.create({
+        parts: [partA1, partA2, partA3, partA4, partB],
+        restitution: restitutionValue,
+        collisionFilter: partA1.collisionFilter,
+      });
+
+      Body.setCentre(spoonObstacle, Vector.create(spoonSpawn[0], spoonSpawn[1] - obstacleSize / 10), false);
+      
+      //ANGLE
+      let angle = Math.random() * 90 - 45;
           
+      Body.setAngle(spoonObstacle, angle);
+
+      if (Math.random() * 2 < 1 ) {//some of em spin :)
+        Body.setAngularVelocity(
+          spoonObstacle,
+          ((obstacleSize - Math.random() * obstacleSize) / 600) * (getRandomInt(3) - 1)
+        );
+      }
+
+      return spoonObstacle;
+    }
+
+    function detectDroppedSpoons(){
+      let droppedSpoons = false;
+      allSpoons.forEach((element) => {
+        if (element.position.y > height + 100) {
+          droppedSpoons = true;
+          Composite.remove(engine.world, element);
         }
-        else{
-          //deal with spoons so they can fly up and then get deleted
-          allSpoons.forEach((element) => {
-            deadSpoons.push(element);
-          });
-          allSpoons.splice(0, allSpoons.length);
-        }
+      });
+      if(droppedSpoons && gameStarted){
+        gameOver();
+         //deal with spoons so they can fly up and then get deleted
+        allSpoons.forEach((element) => {
+          deadSpoons.push(element);
+        });
+        allSpoons.splice(0, allSpoons.length);
       }
     }
 
     // Game control vars
     var gameStarted = false;
     var resettable = false;
-    var allMovements = [];
 
     function restartGame() {
       if (resettable === true) {
         points = 0;
         resettable = false;
-        fallTracker = 0;
+        pointIncrementSwitch = false;
+        tracker = 0;
         speed = initialSpeed;
-        firstSpoon = true;
+        //removes spoons from previous game if applicable
+        if(deadSpoons.length > 0){
+          deadSpoons.forEach((element) => {
+            Composite.remove(engine.world, element);
+          });
+          deadSpoons.splice(0, deadSpoons.length);
+        }
 
         // Reset trampoline rails to center
         Body.setPosition(leftRail, Vector.create(startX, startY));
@@ -407,54 +375,94 @@ const SpoonDropRescue = () => {
         startGame();
       }
     }
+    //TODO: add more messages
     function gameOver() {
       gameStarted = false;
       resettable = true;
-      clearInterval(spawnwalls);
+      clearInterval(dropSpoons);
       trampoline.bodies.forEach(segment => {
-        const netForce = { x: 0, y: .5 }; // throw out the spoons
+        const netForce = { x: 0, y: 1 }; // throw out the spoons
         Body.applyForce(segment, segment.position, netForce);
       });
       const tutEl = document.getElementById("descenttut");
       if (tutEl) tutEl.innerHTML = "Touch anywhere to try again.";
       const dropperEl = document.getElementById("dropper");
-      if (dropperEl) dropperEl.innerHTML = "Way to go! You saved " + points + " spoon(s)!";
+      if(points >= 20){
+        if (dropperEl) dropperEl.innerHTML = "HOLY COW!!! You saved " + points + " spoons!";
+      }
+      else if (dropperEl) dropperEl.innerHTML = "Way to go! You saved " + points + " spoons!";
     }
+
+    var debug = true;
     function startGame() {
       if (gameStarted === false) {
-        if(deadSpoons.length > 0){
-          deadSpoons.forEach((element) => {
-            Composite.remove(engine.world, element);
-          });
-          deadSpoons.splice(0, deadSpoons.length);
-        }
+
         gameStarted = true;
         const tutEl = document.getElementById("descenttut");
         if (tutEl) tutEl.innerHTML = "";
 
-        spawnwalls = setInterval(() => {
+        dropSpoons = setInterval(() => {
           if (document.getElementById("dropper") === null) {
-            clearInterval(spawnwalls);
+            clearInterval(dropSpoons);
             return;
           }
-
-          if (fallTracker % (10 * speed) === 0) {
-            speedChange++;
-            if (speedChange === 2) {
-              speed--;
-              speedChange = 0;
-            }
-            fallTracker = 0;
+          detectDroppedSpoons()
+          if(doSpawnCheck()){
+            spawnFallingSpoon();
           }
-
-          spawnFallingSpoons();
-          fallTracker++;
           if(gameStarted){
-            const dropperEl = document.getElementById("dropper");
-            if (dropperEl) dropperEl.innerHTML = points + " spoons saved";
+            setText();
           }
         }, 100);
       }
+    }
+    //handles increasing speed of game spawns
+    //returns true if spawn should occur
+    function doSpawnCheck() {
+      let doSpawn = false;
+      //speed change for spoon drops
+      //after 12 it's close to max speed
+      if (tracker % (3 * speed) === 0 && speed > 25) {
+        speed = speed - 5;
+        tracker = 0;
+      }
+      //more gradual speed change to top speed
+      else if (tracker % (3 * speed) === 0 && speed > 20) {
+        speed--;
+        tracker = 0;
+      }
+      if (tracker % speed === 0) {
+        doSpawn = true;
+        pointIncrementSwitch = true;
+      }
+      else if (tracker % (Math.floor(speed/2)) === 0) {
+        doPointIncrement()
+      }
+      tracker++;
+      return doSpawn; 
+    }
+
+    //points should increment halfway through spawn increment
+    
+    function doPointIncrement() {
+      //increment points
+      if (pointIncrementSwitch) points++;
+      pointIncrementSwitch = !pointIncrementSwitch;
+    }
+
+    function setText() {
+      const dropperEl = document.getElementById("dropper");
+      //point tracking messages
+      if(points >= 20){
+        if (dropperEl) dropperEl.innerHTML = "Whoa! " + points + " spoons saved";
+      }
+      else if(points >= 10){
+        if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " spoons saved"; 
+      }
+      else{
+        if (dropperEl) dropperEl.innerHTML = points + " spoons saved";
+      }
+      if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " spoons saved. Speed = " + speed;
     }
 
     // Remove old interval movement on mouse drag - no longer needed with damping
@@ -471,7 +479,6 @@ const SpoonDropRescue = () => {
       Engine.clear(engine);
       render.canvas.remove();
       render.textures = {};
-      allMovements.forEach((element) => clearInterval(element));
     };
   }, []);
 

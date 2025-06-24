@@ -24,6 +24,7 @@ import SpoonDropHomerun from './Physics/spoondropHomerun';
 import SpoonDropMenu from './Physics/spoondropMenu';
 import SpoonDropDescent from './Physics/spoondropDescent';
 import SpoonDropRescue from './Physics/spoondropRescue';
+import SpoonDropHotSpoontato from './Physics/spoondropHotSpoontato.js';
 
 
 
@@ -45,6 +46,7 @@ class App extends React.Component {
             <Route path="/spoondropMenu" element={<SpoonDropMenu/>} />
             <Route path="/spoondropDescent" element={<SpoonDropDescent/>} />
             <Route path="/spoondropRescue" element={<SpoonDropRescue/>} />
+            <Route path="/spoondropHotSpoontato" element={<SpoonDropHotSpoontato/>} />
             <Route path="/spoondropDescentLeo" element={<SpoonDropDescent/>} />
           </Routes>
         </div>

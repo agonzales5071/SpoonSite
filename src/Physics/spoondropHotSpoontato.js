@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 
-const SpoonDropRescue = () => {
+const SpoonDropHotSpoontato = () => {
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -451,7 +451,7 @@ const SpoonDropRescue = () => {
     Events.on(engine, "afterUpdate", () => {
       if (bumpNeeded) {
         trampoline.bodies.forEach(segment => {
-          Body.applyForce(segment, segment.position, { x: 0, y: -0.02 }); // stronger upward force
+          Body.applyForce(segment, segment.position, { x: 0, y: -0.03 }); // stronger upward force
         });
         bumpNeeded = false; // reset so it only fires once
       }
@@ -534,4 +534,4 @@ const SpoonDropRescue = () => {
   );
 };
 
-export default SpoonDropRescue;
+export default SpoonDropHotSpoontato;
