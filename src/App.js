@@ -60,7 +60,7 @@ class Home extends React.Component {
     super(props);
     this.componentsData = [
       { id: "pb", textid: "pbtext", className: "hotair", link: "/portfolio", text: "portfolio", img: "images/portfolioballoon.png" },
-      { id: "sd", textid: "sdtext", className: "hotair", link: "/spoondropMenu", text: "spoon drop", img: "images/spoondropballoon2.png"},
+      { id: "sd", textid: "sdtext", className: "hotair", link: "/spoondropMenu", text: "mini games", img: "images/spoondropballoon2.png"},
       { id: "fm", textid: "fmtext", className: "hotair", link: "/socials", text: "find me", img: "images/findmeballoon.png"},
        ];
   }
