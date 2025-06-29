@@ -393,7 +393,7 @@ const SpoonDropRescue = () => {
       else if (dropperEl) dropperEl.innerHTML = "Way to go! You saved " + points + " spoons!";
     }
 
-    var debug = true;
+    var debug = false;
     function startGame() {
       if (gameStarted === false) {
 
