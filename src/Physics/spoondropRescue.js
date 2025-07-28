@@ -24,7 +24,7 @@ const SpoonDropRescue = () => {
     } = Matter;
 
     const allSpoons = [];
-    var isMobile = false;
+    //var isMobile = false;
     var width = window.innerWidth;
     var height = window.innerHeight;
 
@@ -57,7 +57,7 @@ const SpoonDropRescue = () => {
     const startY = height * 0.8;
 
     if (width < 800) {
-      isMobile = true;
+      //isMobile = true;
       size = 50;
       fric = 0.03;
       segmentCount = 7;

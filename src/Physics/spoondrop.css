@@ -69,6 +69,18 @@
 .back-button:hover{
   border-right: 25px solid rgb(160, 201, 188);
 }
+.power-bar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 10px;
+  background: #ccc;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #444;
+  width: 100px;
+}
 @media only screen and (min-width: 768px) {
   .back-button{
     visibility: visible;
@@ -79,5 +91,13 @@
   }
   .back-button:hover{
     border-right: 45px solid rgb(160, 201, 188);
+  }
+}
+
+@media (min-width: 768px){
+  .power-bar {
+    height: 20px;
+    border: 2px solid #444;
+    width: 200px;
   }
 }

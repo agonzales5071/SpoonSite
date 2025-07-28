@@ -53,7 +53,6 @@ const SpoonDropMenu = () => {
     
       function buckets(){
         var h = isMobile ? height/10 : height/6;
-        var sliceX;
         let linkTracker = 0;
         var result = [];
         const layerMax = 4;
