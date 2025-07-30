@@ -148,7 +148,9 @@ const SpoonDropMenu = () => {
             var hatchY = isMobile ? ypos + hatchHeight/2 : ypos;
             
             let hatch = Bodies.rectangle(xpos, hatchY, w, hatchHeight, {isStatic: true, 
-              render: {fillStyle: links[linkTracker][theme]}
+              render: {fillStyle: links[linkTracker][theme]},
+              link: links[linkTracker][link],
+              label: "hatch"
             }) //bottom
             
             //create and style navigation text 
@@ -264,6 +266,16 @@ const SpoonDropMenu = () => {
         Bodies.rectangle(2*width/3, 0, 50, height/2, { isStatic: true, collisionFilter:{category: 2, mask: 4}}),
         Bodies.rectangle(width/3, 0, 50, height/2, { isStatic: true, collisionFilter:{category: 2, mask: 4} })
       ]);
+
+      function cleanupSpoons(){
+        for(const spoon of navSpoons){
+          setTimeout(() => {
+            if (engine && engine.world) {
+              Composite.remove(engine.world, spoon)
+            }
+          }, 50);
+        }
+      }
       
     
     
@@ -282,8 +294,7 @@ const SpoonDropMenu = () => {
       Composite.add(engine.world, mouseConstraint);
     
       var curSpoon;
-      var trapBody;
-      var spoonTop;
+      var navSpoons = [];
       //create spoon
       Matter.Events.on(mouseConstraint, "mousedown", function(event) {
         
@@ -300,41 +311,35 @@ const SpoonDropMenu = () => {
         { render: partA1.render }
         ),
         partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA1.render });
-        spoonTop = partA1.id;
-        trapBody = partB.id;
         curSpoon = Body.create({
-          parts: [partA1, partA2, partA3, partA4, partB]
+          parts: [partA1, partA2, partA3, partA4, partB],
+          label: "spoon"
         });
-    
+        navSpoons.push(curSpoon);
         Composite.add(engine.world, curSpoon);
       });
 
       Matter.Events.on(engine, "collisionStart", function(event) {
-          
-      let collisionArray = event.source.pairs.collisionActive;
-      for(let j = 0; j < collisionArray.length; j++){
-        let bodyA = event.pairs[0].bodyA.id;
-        let bodyB = event.pairs[0].bodyB.id;
-        //console.log(event);
-        if(bodyA === trapBody || bodyA === spoonTop){
-          for(let i = 0; i < links.length; i++){
-            if(bodyB === hatches[i].id){
-              //console.log(links[i][0]);
-              window.location.href = links[i][link];
+        const pairs = event.pairs;
+        for (const pair of pairs) {
+          const { bodyA, bodyB } = pair;
+          // Check if one is a cereal and the other is a spoon
+          if(bodyA.parent !== null && bodyB.parent !== null)
+          {
+          //console.log(event);
+            if(bodyA.parent.label === "spoon" && bodyB.label === "hatch"){  
+              // console.log(bodyB.link)
+              cleanupSpoons();
+              window.location.href = bodyB.link;
+            }
+            else if(bodyA.label === "hatch" && bodyB.parent.label === "spoon"){
+              // console.log(bodyA.link)
+              cleanupSpoons();
+              window.location.href = bodyA.link;
             }
           }
         }
-        else{
-          if(bodyB === trapBody || bodyB === spoonTop){
-            for(let i = 0; i < links.length; i++){
-              if(bodyA === hatches[i].id){
-                window.location.href = links[i][link];
-              }
-            }
-          }
-        }
-      }
-    });
+      });
     
   
     Runner.run(runner, engine)
