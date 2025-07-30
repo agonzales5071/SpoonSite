@@ -507,7 +507,6 @@ const SpoonDropHotSpoontato = () => {
         }
       });
     
-      // "1" digit as a tall thin rectangle
       const one = Matter.Bodies.rectangle(x + 15, y, 5, 25, {
         isStatic: true,
         render: {

@@ -91,7 +91,9 @@ const SpoonDrop = () => {
     <div className="scene" >
       <canvas ref={canvasRef} />
       <Link to="/spoondropMenu"><button className='back-button'></button></Link>
-      <p id="menudisplay">FREEPLAY!</p></div>
+      <p id="menudisplay">FREEPLAY!</p>
+      <p>Click or tap anywhere to drop some spoons</p>
+      </div>
     )
 }
 export default SpoonDrop;
