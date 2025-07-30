@@ -49,8 +49,6 @@ const SpoonDropCerealShot = () => {
       Bodies,
       Body,
       Composite,
-      Composites,
-      Constraint,
       Mouse,
       MouseConstraint,
       Vector,
@@ -60,7 +58,6 @@ const SpoonDropCerealShot = () => {
     let activeSpoons = [];
     let cereal = [];
     let crumbParticles = [];
-    const allSpoons = [];
     // var isMobile = false;
     var width = window.innerWidth;
     var height = window.innerHeight;
@@ -99,7 +96,6 @@ const SpoonDropCerealShot = () => {
     
     var gameWidth = width*8/10;
     var margin = width/10;
-    var fric = 0.02;
     engine.gravity.y = 0.3;
     var restitutionValue = 0.8;
     var size = 100; // size var for spoon
@@ -110,7 +106,6 @@ const SpoonDropCerealShot = () => {
       isMobile = true;
       milkHeight = 20;
       size = 50;
-      fric = 0.03;
       gameWidth = width * 9/10;
       margin = width/20;
       MAX_FORCE = 0.2;
@@ -174,51 +169,49 @@ const SpoonDropCerealShot = () => {
       }
     });
     Composite.add(engine.world, oatMilk);
-// Example spoon size
-const spoonRadius = size * 0.25;
-fric = 0.001
+    // Example spoon size
+    const spoonRadius = size * 0.25;
 
 
-// Position spoon initially behind cannon along barrel direction
-function positionSpoon() {
+    // Position spoon initially behind cannon along barrel direction
+    function positionSpoon() {
 
-  if (!loadedSpoon || spoonHasBeenShot) return;
+      if (!loadedSpoon || spoonHasBeenShot) return;
 
-  const angle = cannonBarrel.angle;
+      const angle = cannonBarrel.angle;
 
-  // Calculate barrel tip position relative to cannon pivot
-    const tipX = cannonPivot.x + Math.cos(angle - Math.PI / 2) * barrelHeight;
-    const tipY = cannonPivot.y + Math.sin(angle - Math.PI / 2) * barrelHeight;
+      // Calculate barrel tip position relative to cannon pivot
+        const tipX = cannonPivot.x + Math.cos(angle - Math.PI / 2) * barrelHeight;
+        const tipY = cannonPivot.y + Math.sin(angle - Math.PI / 2) * barrelHeight;
 
-    // This offset should be rotated by cannon angle to stay consistent
-    const baseOffset = { x: 0, y: -1 }; // spoon should stick out a little
+        // This offset should be rotated by cannon angle to stay consistent
+        const baseOffset = { x: 0, y: -1 }; // spoon should stick out a little
 
-    // Rotate the offset vector by the cannon angle
-    const rotatedOffsetX = 
-      baseOffset.x * Math.cos(angle) - baseOffset.y * Math.sin(angle);
-    const rotatedOffsetY = 
-      baseOffset.x * Math.sin(angle) + baseOffset.y * Math.cos(angle);
+        // Rotate the offset vector by the cannon angle
+        const rotatedOffsetX = 
+          baseOffset.x * Math.cos(angle) - baseOffset.y * Math.sin(angle);
+        const rotatedOffsetY = 
+          baseOffset.x * Math.sin(angle) + baseOffset.y * Math.cos(angle);
 
-    // Final spoon position
-    const spoonX = tipX + rotatedOffsetX;
-    const spoonY = tipY + rotatedOffsetY;
+        // Final spoon position
+        const spoonX = tipX + rotatedOffsetX;
+        const spoonY = tipY + rotatedOffsetY;
 
-    Body.setVelocity(loadedSpoon, { x: 0, y: 0 });
-  Body.setAngularVelocity(loadedSpoon, 0);
-  Body.setPosition(loadedSpoon, {
-    x: spoonX,
-    y: spoonY,
-  });
+        Body.setVelocity(loadedSpoon, { x: 0, y: 0 });
+      Body.setAngularVelocity(loadedSpoon, 0);
+      Body.setPosition(loadedSpoon, {
+        x: spoonX,
+        y: spoonY,
+      });
 
-  Body.setAngle(loadedSpoon, angle);
-}
+      Body.setAngle(loadedSpoon, angle);
+    }
 
-//load spoon also reloads cannon
-loadSpoon();
+    //load spoon also reloads cannon
+    loadSpoon();
 
-// Call once to position initially
-positionSpoon();
-
+    // Call once to position initially
+    positionSpoon();
 
     // Mouse 
     const mouse = Mouse.create(render.canvas);
@@ -231,15 +224,9 @@ positionSpoon();
     });
     Composite.add(engine.world, mouseConstraint);
 
-    
-    
     let isMouseDown = false;
     let cannonTargetAngle = cannonBarrel.angle; // initialize with current angle
 
-
-    // Variables for smooth movement
-    let isDragging = false;
-    //controls
     // Point of rotation: center of cannon
 
     Events.on(mouseConstraint, "mousedown", (event) => {
@@ -317,15 +304,18 @@ positionSpoon();
           let parentA = bodyA.parent;
           let parentB = bodyB.parent;
           let spoon = null;
+          let cerealPos = null;
           if (isCereal(parentA) && isSpoon(parentB)) {
-            removeCereal(parentA);
             spoon = parentB;
+            cerealPos = parentA.position;
+            removeCereal(parentA);
           } else if (isCereal(parentB) && isSpoon(parentA)) {
-            removeCereal(parentB);
             spoon = parentA;
+            cerealPos = parentB.position;
+            removeCereal(parentB);
           }
           if(spoon){
-            doPointIncrement(spoon)
+            doPointIncrement(spoon, cerealPos)
           }
         }
       }
@@ -380,7 +370,7 @@ positionSpoon();
         crumb.spawnTime = performance.now();
     
         // Random fade duration between 800–1200ms
-        crumb.fadeDuration = 800 + Math.random() * 400;
+        crumb.fadeDuration = 3200 + Math.random() * 1600;
     
         Composite.add(engine.world, crumb);
         crumbParticles.push(crumb);
@@ -420,7 +410,6 @@ positionSpoon();
     var tracker = 0;
     var initialSpeed = 30;
     var speed = initialSpeed;
-    var pointIncrementSwitch = false;
     const velocityThresholdPercent = 0.1; 
     // Spawn falling spoons function
     function getRandomInt(max) {
@@ -432,10 +421,9 @@ positionSpoon();
     //imitates top heavy spoon physics
     function rotateSpoons() {
       for (const spoonState of activeSpoons) {
-        const { body, hasPeaked, rotating, rotationProgress, rotationSpeed } = spoonState;
+        const { body, hasPeaked, rotating, rotationSpeed } = spoonState;
         spoonState.maxVelocityY = Math.min(body.velocity.y, spoonState.maxVelocityY || 0);
           const vel = body.velocity;
-          const pos = body.position;
           const threshold = spoonState.maxVelocityY * velocityThresholdPercent;
         
           // Check for apex
@@ -458,8 +446,8 @@ positionSpoon();
             }
           }
           //updateSpoonRotation(body, performance.now())
+      }
     }
-  }
     function lerpAngle(a, b, t) {
       // Interpolates between angles, correctly handling wrap-around
       let delta = ((b - a + Math.PI) % (2 * Math.PI)) - Math.PI;
@@ -480,16 +468,6 @@ positionSpoon();
     
       
       const barrelAngle = cannonBarrel.angle;
-    
-      // Barrel tip position
-      const barrelLength = size * 1.5;
-      const tipX = cannonBarrel.position.x + Math.cos(barrelAngle - Math.PI / 2) * barrelLength;
-      const tipY = cannonBarrel.position.y + Math.sin(barrelAngle - Math.PI / 2) * barrelLength;
-    
-      // Offset spoon slightly *behind* the tip so only part is visible
-      const offsetDistance = -spoonRadius + 5;
-      const spawnX = tipX + Math.cos(barrelAngle - Math.PI / 2) * offsetDistance;
-      const spawnY = tipY + Math.sin(barrelAngle - Math.PI / 2) * offsetDistance;
     
 
       loadedSpoon = getSpoon(spoonRadius, cannonPivot.x)
@@ -605,13 +583,8 @@ positionSpoon();
       }
     }
 
-    //slight variation on density of spoon based on color
-    const spoonColors = ["#2f6f8b", "#6f2f8b","#ad3f1a", "#a1ad1a", "#ad1a1a"];
-    const spoonGrav = [0.0011, 0.0012, 0.0008, 0.0009, 0.001];
-
     //returns a spoon to fall from top of screen
     function getSpoon(spoonSize, xposSpawn){
-      let spoonType = getRandomInt(5);
       let spoonSpawn = [xposSpawn, -100, -(3 * spoonSize) - 100];
       let spoonHeadOffset = spoonSize / 10;
       let spoonDensity = 0.0011;
@@ -776,23 +749,24 @@ positionSpoon();
         collisionFilter: { mask: 0 }
       });
     
-      let opacity = 1;
-      const floatInterval = setInterval(() => {
-        Matter.Body.translate(composite, { x: 0, y: -1 });
-        opacity -= 0.05;
-    
-        composite.parts.forEach(part => {
-          if (!noFadeScoreParts.includes(part)) {
-            part.render.opacity = opacity;
+      setTimeout(() => {
+        let opacity = 1;
+        const floatInterval = setInterval(() => {
+          Matter.Body.translate(composite, { x: 0, y: -1 });
+          opacity -= 0.05;
+      
+          composite.parts.forEach(part => {
+            if (!noFadeScoreParts.includes(part)) {
+              part.render.opacity = opacity;
+            }
+          });
+      
+          if (opacity <= 0) {
+            clearInterval(floatInterval);
+            Matter.Composite.remove(engine.world, composite);
           }
-        });
-    
-        if (opacity <= 0) {
-          clearInterval(floatInterval);
-          Matter.Composite.remove(engine.world, composite);
-        }
-      }, 50);
-    
+        }, 50);
+      }, 1000);
       Matter.Composite.add(engine.world, composite);
     }
     
@@ -812,11 +786,9 @@ positionSpoon();
       Composite.add(engine.world, ripple);
     
       // Animate it
-      let scale = 1;
       let opacity = 0.8;
     
       const interval = setInterval(() => {
-        scale += 0.08;
         opacity -= 0.03;
     
         // Resize (scale) the body
@@ -832,8 +804,6 @@ positionSpoon();
       }, 50);
     }
 
-    
-
     // Game control vars
     var gameStarted = false;
     var resettable = false;
@@ -842,7 +812,6 @@ positionSpoon();
       if (resettable === true) {
         points = 0;
         resettable = false;
-        pointIncrementSwitch = false;
         tracker = 0;
         speed = initialSpeed;
         //removes spoons from previous game if applicable
@@ -861,12 +830,12 @@ positionSpoon();
       resettable = true;
       clearInterval(dropSpoons);
       const tutEl = document.getElementById("descenttut");
-      if (tutEl) tutEl.innerHTML = "Touch anywhere to try again.";
+      if (tutEl) tutEl.innerHTML = "Click or tap anywhere to try again.";
       const dropperEl = document.getElementById("dropper");
-      if(points >= 20){
-        if (dropperEl) dropperEl.innerHTML = "HOLY COW!!! You saved " + points + " spoons!";
+      if(points >= 2500){
+        if (dropperEl) dropperEl.innerHTML = "You did your best soldier. " + points + " points";
       }
-      else if (dropperEl) dropperEl.innerHTML = "Way to go! You saved " + points + " spoons!";
+      else if (dropperEl) dropperEl.innerHTML = "The Milkmen won this bowl. " + points + " points";
     }
 
     var debug = false;
@@ -896,14 +865,14 @@ positionSpoon();
     //returns true if spawn should occur
     function doSpawnCheck() {
       let doSpawn = false;
-      //speed change for spoon drops
+      //speed change for cereal drops
       //after 12 it's close to max speed
       if (tracker % (3 * speed) === 0 && speed > 25) {
         speed = speed - 5;
         tracker = 0;
       }
       //more gradual speed change to top speed
-      else if (tracker % (3 * speed) === 0 && speed > 20) {
+      else if (tracker % (3 * speed) === 0 && speed > 10) {
         speed--;
         tracker = 0;
       }
@@ -916,20 +885,20 @@ positionSpoon();
 
     //points should increment halfway through spawn increment
     
-    function doPointIncrement(spoon) {
+    function doPointIncrement(spoon, cerealPos) {
       const spoonState = activeSpoons.find(s => s.body === spoon);
       points+= 10*(spoonState.cerealHits+1);
       spoonState.cerealHits++;
-      createPlusScore(spoon.position.x, spoon.position.y, spoonState.cerealHits*10)
+      createPlusScore(cerealPos.x, cerealPos.y, spoonState.cerealHits*10)
     }
 
     function setText() {
       const dropperEl = document.getElementById("dropper");
       //point tracking messages
-      if(points >= 200){
+      if(points >= 2500){
         if (dropperEl) dropperEl.innerHTML = "Whoa! " + points + " points";
       }
-      else if(points >= 100){
+      else if(points >= 1000){
         if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " points"; 
       }
       else{
@@ -971,9 +940,9 @@ positionSpoon();
         <button className="back-button" onClick={() => console.log("button pressed")} />
       </Link>
       <div id="menutext">
-        <p id="dropper">click or tap and to shoot a spoon</p>
+        <p id="dropper">Somebody is making cereal the wrong way... MILK FIRST</p>
         <p id="descenttut" className="droppertext">
-          scoop up all the cereal!
+          Destroy the cereal and stop this abomination! 
         </p>
       </div>
     </div>
