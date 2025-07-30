@@ -106,8 +106,8 @@ const SpoonDropCerealShot = () => {
       isMobile = true;
       milkHeight = 20;
       size = 50;
-      gameWidth = width * 9/10;
-      margin = width/20;
+      gameWidth = width * 8/10;
+      margin = width/10;
       MAX_FORCE = 0.2;
       cerealGrav = 0.0022
     } 

@@ -97,7 +97,13 @@
 @media (min-width: 768px){
   .power-bar {
     height: 20px;
+    bottom: 20px;
     border: 2px solid #444;
     width: 200px;
+    z-index: 10;
+  }
+  .notscene {
+    position: relative;
+    z-index: 0;
   }
 }
