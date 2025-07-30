@@ -25,6 +25,7 @@ const SpoonDropRescue = () => {
 
     const allSpoons = [];
     //var isMobile = false;
+
     var width = window.innerWidth;
     var height = window.innerHeight;
 
@@ -393,7 +394,7 @@ const SpoonDropRescue = () => {
       else if (dropperEl) dropperEl.innerHTML = "Way to go! You saved " + points + " spoons!";
     }
 
-    var debug = true;
+    var debug = false;
     function startGame() {
       if (gameStarted === false) {
 
