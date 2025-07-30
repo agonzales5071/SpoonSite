@@ -101,6 +101,8 @@
     border: 2px solid #444;
     width: 200px;
     z-index: 10;
+    outline: 2px solid blue;
+    background: red;
   }
   .notscene {
     position: relative;
