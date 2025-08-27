@@ -8,10 +8,12 @@ const SpoonDropCerealShot = () => {
   const canvasRef = useRef(null);
   const [power, setPower] = useState(0);
   const [charging, setCharging] = useState(false);
+  
 
   const powerRef = useRef(0);
   const directionRef = useRef(1); // 1 = filling, -1 = draining
-
+  
+  
   useEffect(() => {
     let animationId;
   
@@ -55,6 +57,8 @@ const SpoonDropCerealShot = () => {
       Events,
     } = Matter;
 
+    const swipeControls = window.location.href.includes("Leo");
+
     let activeSpoons = [];
     let cereal = [];
     let crumbParticles = [];
@@ -92,6 +96,7 @@ const SpoonDropCerealShot = () => {
       mask: CATEGORY_CEREAL,
     };
     const cannonPivot = { x: width / 2, y: height };
+    let mouseDownPos = { x: width / 2, y: height };
     const backgroundColor = '#14151f';
     
     var gameWidth = width*8/10;
@@ -226,27 +231,43 @@ const SpoonDropCerealShot = () => {
 
     let isMouseDown = false;
     let cannonTargetAngle = cannonBarrel.angle; // initialize with current angle
+    let prevDX = 0;
 
     // Point of rotation: center of cannon
 
     Events.on(mouseConstraint, "mousedown", (event) => {
+      if(!isMouseDown){
+        mouseDownPos = {x: event.mouse.position.x, y: event.mouse.position.y};
+      }
       isMouseDown = true;
       if(resettable){restartGame()}
       else if(!gameStarted){startGame()}
-
       const mousePos = event.mouse.position;
-      const dx = mousePos.x - cannonPivot.x;
-      const dy = mousePos.y - cannonPivot.y;
-      cannonTargetAngle = Math.atan2(dy, dx) + Math.PI / 2;
+
+      if(!swipeControls){
+        const dx = mousePos.x - cannonPivot.x;
+        const dy = mousePos.y - cannonPivot.y;
+        cannonTargetAngle = Math.atan2(dy, dx) + Math.PI / 2;
+      }
     });
     // On mouse move: update angle if mouse is down
     Events.on(mouseConstraint, "mousemove", (event) => {
       if (!isMouseDown) return;
 
       const mousePos = event.mouse.position;
-      const dx = mousePos.x - cannonPivot.x;
-      const dy = mousePos.y - cannonPivot.y;
-      cannonTargetAngle = Math.atan2(dy, dx) + Math.PI / 2;
+      if(swipeControls){
+        const dx = mousePos.x - mouseDownPos.x;
+        const pivotDir = dx > prevDX ? 1 : -1; 
+        var pivotSpeed = Math.abs(dx) - Math.abs(prevDX) > 0.1 ? 0.02 : 0.01
+          prevDX = dx;
+          const pivotSpeedDampener = isMobile ? 2 : 1; 
+          cannonTargetAngle = cannonTargetAngle + pivotDir*pivotSpeed/pivotSpeedDampener;
+      }
+      else{
+        const dx = mousePos.x - cannonPivot.x;
+        const dy = mousePos.y - cannonPivot.y;
+        cannonTargetAngle = Math.atan2(dy, dx) + Math.PI / 2;
+      }
     });
 
 
