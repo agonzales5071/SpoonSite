@@ -1,5 +1,8 @@
 import Matter, { Bodies, Body, Composite, Vector} from "matter-js";
 
+const segmentLength = 12;
+const segmentThickness = 4;
+
 export function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
@@ -51,7 +54,7 @@ export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, ce
       return spoon;
     }
 
-export function createPlusScore(x, y, score, engine, segmentLength, noFadeScoreParts) {
+export function createPlusScore(x, y, score, world, noFadeScoreParts) {
   const parts = [];
 
   // "+" sign
@@ -95,11 +98,11 @@ export function createPlusScore(x, y, score, engine, segmentLength, noFadeScoreP
   
       if (opacity <= 0) {
         clearInterval(floatInterval);
-        Matter.Composite.remove(engine.world, composite);
+        Matter.Composite.remove(world, composite);
       }
     }, 50);
   }, 1000);
-  Matter.Composite.add(engine.world, composite);
+  Matter.Composite.add(world, composite);
 }
 
 const digitSegments = {
