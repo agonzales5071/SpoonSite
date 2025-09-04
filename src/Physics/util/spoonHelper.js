@@ -38,10 +38,11 @@ export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, ce
         density: spoonDensity,
         collisionFilter: partA1.collisionFilter,
       });
+      let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
 
       let spoon = Body.create({
         parts: [partA1, partA2, partA3, partA4, partB],
-        collisionFilter: partA1.collisionFilter,
+        collisionFilter: spoonFilter,
       });
 
       if(center === "middle"){
@@ -50,9 +51,146 @@ export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, ce
       if(center === "bottom"){
         Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] + spoonSize/2), false);
       }
-      
       return spoon;
     }
+// export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, center = "middle"){
+//       let spoonSpawn = [xposSpawn, yposSpawn, - spoonSize/2 + yposSpawn];
+//       let spoonHeadOffset = spoonSize / 50;
+
+//       //SHAPES
+//       let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
+
+//       let spoon = Body.create({
+//         parts: parts,
+//         collisionFilter: spoonFilter,
+//       });
+
+//       if(center === "middle"){
+//         Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] - spoonSize / 10), false);
+//       }
+//       if(center === "bottom"){
+//         Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] + spoonSize/2), false);
+//       }
+      
+//       return spoon;
+//     }
+
+export function getSpoonWithHilt(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, center = "bottom" ){
+  let spoonSpawn = [xposSpawn, yposSpawn, - spoonSize/2 + yposSpawn];
+  let spoonHeadOffset = spoonSize / 50;
+
+  //SHAPES
+  let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
+  let hilt = Bodies.trapezoid(xposSpawn, yposSpawn+spoonSize*6/12, 
+    spoonSize/4, spoonSize/4, 0.1, {
+    render: {fillStyle: '#444444ff'},
+    collisionFilter: spoonFilter,
+  })
+  hilt.label = "hilt";
+  parts.push(hilt)
+
+  let spoon = Body.create({
+    parts: parts,
+    collisionFilter: spoonFilter,
+  });
+
+  
+  if(center === "middle"){
+    Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] - spoonSize / 10), false);
+  }
+  if(center === "bottom"){
+    Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] + spoonSize/2), false);
+  }
+  
+  return spoon;
+}
+
+export function getDualSidedSaber(spoonSize, x, y, spoonFilter, color, gap = 0) {
+  const headOffset = spoonSize / 50;
+  const handleLen  = spoonSize*9/10;          // your trapezoid height in getSpoonBodies
+  gap = spoonSize/2;
+  // Where the *center* of each handle should be so their inner flat ends meet at y
+  const topHandleY = y - (gap / 2 + handleLen / 2);
+  const botHandleY = y + (gap / 2 + handleLen / 2);
+
+  // Head centers for each spoon before any rotation
+  const topHeadY = topHandleY - spoonSize / 2; // head above top handle
+  const botHeadY = botHandleY - spoonSize / 2; // head below bottom handle
+
+  // Build the top spoon (points "up" already with your getSpoonBodies)
+  const topParts = getSpoonBodies(
+    spoonSize,
+    [x, topHandleY, topHeadY],
+    spoonFilter,
+    color,
+    headOffset
+  );
+  topParts.forEach(p => { p.label = "topSpoon"; p.group = "topSpoon"; });
+
+  // Build the bottom spoon at its own handle center, then rotate 180° around that center
+  const bottomParts = getSpoonBodies(
+    spoonSize,
+    [x, botHandleY, botHeadY],
+    spoonFilter,
+    color,
+    headOffset
+  );
+  bottomParts.forEach(p => {
+    Body.rotate(p, Math.PI, { x, y: botHandleY });
+    p.label = "bottomSpoon";
+    p.group = "bottomSpoon";
+  });
+
+  // Hilt between them (tall, thin rectangle centered at (x, y))
+  const hiltWidth  = spoonSize*8/24;
+  const hiltHeight = Math.max(8, gap || spoonSize * 0.14);
+  const hilt = Bodies.rectangle(x, y, hiltWidth, hiltHeight, {
+    render: { fillStyle: "#444444" },
+    collisionFilter: spoonFilter
+  });
+  hilt.label = "hilt";
+
+  // Combine into one body
+  const saber = Body.create({
+    parts: [...topParts, ...bottomParts, hilt],
+    collisionFilter: spoonFilter
+  });
+
+  return saber;
+}
+
+function getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset){
+    let spoonDensity = 0.0011;
+
+    //SHAPES
+    let partA1 = Bodies.circle(spoonSpawn[0], spoonSpawn[2], spoonSize/5, {
+      density: spoonDensity,
+      render: {fillStyle: color},
+      collisionFilter: spoonFilter,
+    });
+    let partA2 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - spoonHeadOffset, spoonSize/5, {
+      render: partA1.render,
+      density: spoonDensity,
+      collisionFilter: partA1.collisionFilter,
+    });
+    let partA3 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 2*spoonHeadOffset, spoonSize/5, {
+      render: partA1.render,
+      density: spoonDensity,
+      collisionFilter: partA1.collisionFilter,
+    });
+    let partA4 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 3*spoonHeadOffset, spoonSize/5, {
+      render: partA1.render,
+      density: spoonDensity,
+      collisionFilter: partA1.collisionFilter,
+    });
+    let partB = Bodies.trapezoid(spoonSpawn[0], spoonSpawn[1], spoonSize/5, spoonSize, 0.4, {
+      render: partA1.render,
+      density: spoonDensity,
+      collisionFilter: partA1.collisionFilter,
+    });
+    let parts = [partA1, partA2, partA3, partA4, partB] 
+  return parts;
+}
 
 export function createPlusScore(x, y, score, world, noFadeScoreParts) {
   const parts = [];

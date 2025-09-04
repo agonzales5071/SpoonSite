@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
-import { createPlusScore, getRandomInt, getSpoon } from "./util/spoonHelper";
-//TODO: Scoring, double sided dark side saber, hilt, weak hitboxes, lives
+import { createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, getDualSidedSaber } from "./util/spoonHelper";
+//TODO: Scoring, double sided dark side saber, hilt, weak hitboxes, lives, add hilt to cosmetic filter
 const SpoonSaberBattle = () => {
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
@@ -46,7 +46,7 @@ const SpoonSaberBattle = () => {
     var points = 0;
     var fric = 0.1
     var size = 100; //size var for spoon
-    var isPlayerDarkSide = false;
+    var isPlayerDarkSide = true;
     //mobile augmentations
     if(width < 800){
       fric = 0.03
@@ -113,17 +113,13 @@ const SpoonSaberBattle = () => {
     }
     var force = 0.015;
     
-    var saber = getSpoon(size, spoonStart.x, spoonStart.y, spoonFilter, getRandomSaberColor(isPlayerDarkSide), "bottom");
-    var hilt = getHilt(saber, size);
-    // saber = Body.create({
-    //   parts: [saber, hilt],
-    //   collisionFilter: saber.collisionFilter,
-    // });
-    Composite.add(engine.world, hilt)
+    var saber = getSpoonWithHilt(size, spoonStart.x, spoonStart.y, spoonFilter, getRandomSaberColor(isPlayerDarkSide));
+    if(isPlayerDarkSide){saber = getDualSidedSaber(size*4/5, spoonStart.x, spoonStart.y, spoonFilter, getRandomSaberColor(isPlayerDarkSide));}
     saber.label = 'playerSaber'
     saber.isSensor = true;
     saber.frictionAir = fric;
     Composite.add(engine.world, saber);
+    // Composite.add(engine.world, saber2);
 
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
       if(!gameStarted){startGame();}
@@ -147,26 +143,18 @@ const SpoonSaberBattle = () => {
         saberClash(pair, false)
       });
     });
-    function getHilt(body, spoonSize){
-      let hilt = Bodies.trapezoid(body.position.x, body.position.y-spoonSize/20, 
-        spoonSize/5, spoonSize/5, 0.1, {
-        render: {fillStyle: '#FFFFFF'},
-        collisionFilter: body.collisionFilter,
-      });
-      Body.setCentre(hilt, Vector.create(body.position.x, body.position.y + spoonSize*20), false)
-      return hilt;
-    }
     function saberClash(pair, isInitialCollision){
         const { bodyA, bodyB } = pair;
         const bodies = [bodyA, bodyB];
         var collision = pair.collision;
 
-        if (bodyA.parent.label === 'playerSaber' || bodyB.parent.label === 'playerSaber') {
+        if ((bodyA.parent.label === 'playerSaber' || bodyB.parent.label === 'playerSaber') &&
+          (bodyA.label !== 'hilt' && bodyB.label !== 'hilt')) {
           attacks.forEach(attack => {
             if (attack.hitbox && bodies.includes(attack.hitbox) && collision.supports.length > 0) {
               // ✅ Saber clashed with hitbox
               var collisionPoint = collision.supports[0]; 
-
+              
               //increment score once
               if(isInitialCollision && !attack.beenHit){
                 createPlusScore(attack.initialPosition.x, attack.initialPosition.y-size/2, 100, engine.world, []);
@@ -191,9 +179,10 @@ const SpoonSaberBattle = () => {
     function spawnClashParticles(x, y, count = 4) {
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = 5 + Math.random() * 5;
+        const speed = isMobile ? (2.5 + Math.random() * 2.5) : (5 + Math.random() * 5);
+        let radius  = isMobile ? 1.5 : 2
 
-        const particle = Matter.Bodies.circle(x, y, 2, {
+        const particle = Matter.Bodies.circle(x, y, radius, {
           restitution: 0.6,
           friction: 0.05,
           render: { fillStyle: "white" }
@@ -222,7 +211,7 @@ const SpoonSaberBattle = () => {
         if (attack.size < size) {
           attack.size *= attackGrowthSpeed;
           let oldBody = attack.body;
-          let newBody = getSpoon(attack.size, attack.initialPosition.x, attack.initialPosition.y, spoonFilter, attack.color);
+          let newBody = getSpoonWithHilt(attack.size, attack.initialPosition.x, attack.initialPosition.y, spoonFilter, attack.color, "middle");
           Body.setAngle(newBody, attack.angle)
           newBody.isSensor = true;
           Composite.add(engine.world, newBody); 
@@ -303,9 +292,9 @@ const SpoonSaberBattle = () => {
 
     function rotatePlayerToward(target, dtMs) {
       const current = saber.angle;
-
+      let angleAdjustment = isPlayerDarkSide ? 0 : Math.PI
       // desired angle pointing from saber -> target (adjust for your sprite orientation)
-      const desired = Math.atan2(target.y - saber.position.y, target.x - saber.position.x) - Math.PI / 2;
+      const desired = Math.atan2(target.y - saber.position.y, target.x - saber.position.x) - angleAdjustment;
 
       // shortest angular difference in [-PI, PI]
       let diff = Math.atan2(Math.sin(desired - current), Math.cos(desired - current));
@@ -417,7 +406,7 @@ const SpoonSaberBattle = () => {
       let attack = {
         outer: evilOuter,
         inner: evilInner,
-        body: getSpoon(size*initialSizeFactor, enemyX, enemyY, spoonFilter, color), 
+        body: getSpoonWithHilt(size*initialSizeFactor, enemyX, enemyY, spoonFilter, color), 
         size: initialSizeFactor*size,
         color: color,
         initialPosition: {x: enemyX, y: enemyY},
