@@ -192,18 +192,21 @@ function getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffs
   return parts;
 }
 
-export function createPlusScore(x, y, score, world, noFadeScoreParts) {
+export function createPlusScore(x, y, score, world, color = "#ffffff") {
   const parts = [];
-
+  let isRainbow = color === "rainbow";
+  if(isRainbow){
+    color = "#FFFFFF"
+  }
   // "+" sign
   parts.push(
     Matter.Bodies.rectangle(x, y, 20, 5, {
       isStatic: true,
-      render: { fillStyle: "#ffffff" }
+      render: { fillStyle: color }
     }),
     Matter.Bodies.rectangle(x, y, 5, 20, {
       isStatic: true,
-      render: { fillStyle: "#ffffff" }
+      render: { fillStyle: color }
     })
   );
 
@@ -211,7 +214,7 @@ export function createPlusScore(x, y, score, world, noFadeScoreParts) {
   const digits = score.toString();
 
   for (const digit of digits) {
-    const digitParts = getDigitBodies(digit, offsetX, y);
+    const digitParts = getDigitBodies(digit, offsetX, y, color);
     parts.push(...digitParts);
     offsetX += segmentLength + 10;
   }
@@ -222,24 +225,34 @@ export function createPlusScore(x, y, score, world, noFadeScoreParts) {
     collisionFilter: { mask: 0 }
   });
 
-  setTimeout(() => {
-    let opacity = 1;
-    const floatInterval = setInterval(() => {
+  let opacity = 1;
+  let hue = 0;
+  let startFadeTime = 20;
+  let fadeTimer = 0;
+  const floatInterval = setInterval(() => {
+    if(fadeTimer>=startFadeTime){
       Matter.Body.translate(composite, { x: 0, y: -1 });
       opacity -= 0.05;
-  
-      composite.parts.forEach(part => {
-        if (!noFadeScoreParts.includes(part)) {
-          part.render.opacity = opacity;
-        }
+    }
+    else{
+      fadeTimer++;
+    }
+    const { r, g, b } = hexToRgb(color);
+    const fill = isRainbow
+      ? `hsla(${hue}, 100%, 50%, ${opacity})`
+      : `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    if(isRainbow && composite.parts){
+      hue = (hue + 5) % 360; // step hue, adjust 5 for speed
+      composite.parts.forEach((part, i) => {
+        if (i === 0) return; // skip index 0 (the parent reference)
+        part.render.fillStyle = fill;
       });
-  
-      if (opacity <= 0) {
-        clearInterval(floatInterval);
-        Matter.Composite.remove(world, composite);
-      }
-    }, 50);
-  }, 1000);
+    }
+    if (opacity <= 0) {
+      clearInterval(floatInterval);
+      Matter.Composite.remove(world, composite);
+    }
+  }, 50);
   Matter.Composite.add(world, composite);
 }
 
@@ -291,4 +304,13 @@ export function getDigitBodies(digit, centerX, centerY, color = "#ffffff", segme
   }
 
   return bodies;
+}
+
+// helper: hex -> rgb
+function hexToRgb(hex) {
+  const bigint = parseInt(hex.replace("#", ""), 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return { r, g, b };
 }

@@ -46,7 +46,9 @@ const SpoonSaberBattle = () => {
     var points = 0;
     var fric = 0.1
     var size = 100; //size var for spoon
-    var isPlayerDarkSide = true;
+    const isPlayerDarkSide = window.location.href.includes("DarthPlayer");
+    // var isPlayerDarkSide = false;
+
     //mobile augmentations
     if(width < 800){
       fric = 0.03
@@ -88,11 +90,16 @@ const SpoonSaberBattle = () => {
       
     const CATEGORY_SPOON = 0x0002;
     const CATEGORY_ENEMY_SPOON = 0x0004;
+    const CATEGORY_NOTHING = 0x0000;
 
     const enemyFilter = {
       category: CATEGORY_ENEMY_SPOON,
       mask: CATEGORY_SPOON,
     };
+
+    const cosmeticFilter = {
+      mask: CATEGORY_NOTHING
+    }
 
     const spoonFilter = {
       category: CATEGORY_SPOON,
@@ -143,7 +150,15 @@ const SpoonSaberBattle = () => {
         saberClash(pair, false)
       });
     });
-    function saberClash(pair, isInitialCollision){
+    let scoreMult = 2;
+    let scoreMultGain = 0.1;
+    let scorePerfect = 150;
+    let scoreWeak = 100;
+    if(isPlayerDarkSide){
+      scorePerfect *= (2/3);
+      scoreWeak *= (2/3)
+    }
+    function saberClash(pair, isCollisionStart){
         const { bodyA, bodyB } = pair;
         const bodies = [bodyA, bodyB];
         var collision = pair.collision;
@@ -151,15 +166,31 @@ const SpoonSaberBattle = () => {
         if ((bodyA.parent.label === 'playerSaber' || bodyB.parent.label === 'playerSaber') &&
           (bodyA.label !== 'hilt' && bodyB.label !== 'hilt')) {
           attacks.forEach(attack => {
-            if (attack.hitbox && bodies.includes(attack.hitbox) && collision.supports.length > 0) {
+            if (attack.hitbox && collision.supports.length > 0) {
               // ✅ Saber clashed with hitbox
               var collisionPoint = collision.supports[0]; 
-              
+              let color = "#FFFFFF"
               //increment score once
-              if(isInitialCollision && !attack.beenHit){
-                createPlusScore(attack.initialPosition.x, attack.initialPosition.y-size/2, 100, engine.world, []);
+              if(isPlayerDarkSide){//darkside can hit twice
+                if(isCollisionStart && (!attack.beenHit || !attack.beenHitSecondSide)){  
+                  if(checkValidHit(attack, bodyA, bodyB)){
+                    let scoreGain = getPointsScored(attack, bodies);
+                    if(attack.beenPerfectHit){color = "#3df13d"}
+                    if(scoreMult > 2) {color = "rainbow"}
+                    let offset = !attack.beenHit || !attack.beenHitSecondSide ? size/10 : size/2;
+                    createPlusScore(attack.initialPosition.x, attack.initialPosition.y-offset, scoreGain, engine.world, color);
+                    spawnClashParticles(collisionPoint.x, collisionPoint.y);
+                    points += scoreGain;
+                  }
+                }
+              }
+              else if(isCollisionStart && !attack.beenHit){
+                let scoreGain = getPointsScored(attack, bodies);
+                if(attack.beenPerfectHit){color = "#3df13dff"}
+                if(scoreMult > 2) {color = "rainbow"}
+                createPlusScore(attack.initialPosition.x, attack.initialPosition.y-size/2, scoreGain, engine.world, color);
                 spawnClashParticles(collisionPoint.x, collisionPoint.y);
-                points += 100;
+                points += scoreGain;
                 attack.beenHit = true;
               }
 
@@ -173,9 +204,33 @@ const SpoonSaberBattle = () => {
           });
         }
     }
-
+    function getPointsScored(attack, bodies){
+      let scoreGain = scoreWeak * scoreMult;
+      if(bodies.includes(attack.hitbox)){
+        attack.beenPerfectHit = true;
+        scoreGain = scorePerfect * scoreMult;
+        scoreMult += scoreMultGain;
+      }
+      return Math.trunc(scoreGain);
+    }
+    //dark side 2 hit check
+    function checkValidHit(attack, bodyA, bodyB){
+      let validHit = false;
+      if(bodyA.label === "topSpoon" || bodyB.label === "topSpoon"){
+        if(!attack.beenHit){
+          validHit = true;
+          attack.beenHit = true;
+        }
+      }
+      if(bodyA.label === "bottomSpoon" || bodyB.label === "bottomSpoon"){
+        if(!attack.beenHitSecondSide){
+          validHit = true;
+          attack.beenHitSecondSide = true
+        }
+      }
+      return validHit;
+    }
     let particles = [];
-
     function spawnClashParticles(x, y, count = 4) {
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -211,22 +266,25 @@ const SpoonSaberBattle = () => {
         if (attack.size < size) {
           attack.size *= attackGrowthSpeed;
           let oldBody = attack.body;
-          let newBody = getSpoonWithHilt(attack.size, attack.initialPosition.x, attack.initialPosition.y, spoonFilter, attack.color, "middle");
+          let newBody = getSpoonWithHilt(attack.size, attack.initialPosition.x, attack.initialPosition.y, cosmeticFilter, attack.color, "middle");
           Body.setAngle(newBody, attack.angle)
+          newBody.isStatic = true;
           newBody.isSensor = true;
           Composite.add(engine.world, newBody); 
           Composite.remove(engine.world, oldBody);
           attack.body = newBody;
         }
         else{
+          
+          if (attack.outer) Composite.remove(engine.world, attack.outer);
+          if (attack.inner) Composite.remove(engine.world, attack.inner);
           startCollisionTimer(attack)
         }
       });
     }
-    var collidableAttacks = []; //TODO
     function startCollisionTimer(attack) {
-      if (attack.collidable) return; // prevent duplicates
-      attack.collidable = true;
+      if (attack.collided) return; // prevent duplicates
+      attack.collided = true;
 
       const perfectHitbox = Bodies.circle(
         attack.initialPosition.x,
@@ -242,14 +300,20 @@ const SpoonSaberBattle = () => {
       Body.setAngle(perfectHitbox, attack.angle);
       attack.hitbox = perfectHitbox;
       Composite.add(engine.world, perfectHitbox);
-
+      
+      attack.weakHitboxTimeout = setTimeout(() => {
+        attack.body.collisionFilter.mask = enemyFilter.mask;
+        attack.body.collisionFilter.category = enemyFilter.category;
+      }, 50);
       // Give the player a limited window to clash
       attack.timeout = setTimeout(() => {
         removeAttack(attack);
       }, 300); // 300ms clash window
     }
     function removeAttack(attack) {
+      if(!attack.beenPerfectHit) {scoreMult = 1; }
       if (attack.timeout) clearTimeout(attack.timeout);
+      if (attack.weakHitboxTimeout) clearTimeout(attack.weakHitboxTimeout);
       if (attack.outer) Composite.remove(engine.world, attack.outer);
       if (attack.inner) Composite.remove(engine.world, attack.inner);
       if (attack.body) Composite.remove(engine.world, attack.body);
@@ -292,7 +356,7 @@ const SpoonSaberBattle = () => {
 
     function rotatePlayerToward(target, dtMs) {
       const current = saber.angle;
-      let angleAdjustment = isPlayerDarkSide ? 0 : Math.PI
+      let angleAdjustment = isPlayerDarkSide ? 0 : Math.PI/2;
       // desired angle pointing from saber -> target (adjust for your sprite orientation)
       const desired = Math.atan2(target.y - saber.position.y, target.x - saber.position.x) - angleAdjustment;
 
@@ -363,7 +427,7 @@ const SpoonSaberBattle = () => {
           spawnEnemy();
         }
         if(gameStarted){
-          //setText();
+          setText();
         }
       }, 100);
     }
@@ -397,8 +461,8 @@ const SpoonSaberBattle = () => {
       const angle = Math.random()*attackAngleRange - attackAngleRange/2 
       let enemyX = Math.random()*gameWidth+marginX;
       let enemyY = Math.random()*gameHeight+marginY;
-      let evilOuter = getSpoon(size, enemyX, enemyY, spoonFilter, color);
-      let evilInner = getSpoon(size*innerFactor, enemyX, enemyY, spoonFilter, backgroundColor);
+      let evilOuter = getSpoon(size, enemyX, enemyY, cosmeticFilter, color);
+      let evilInner = getSpoon(size*innerFactor, enemyX, enemyY, cosmeticFilter, backgroundColor);
       Body.setAngle(evilOuter, angle);
       Body.setAngle(evilInner, angle);
       Composite.add(engine.world, evilOuter)
@@ -406,14 +470,17 @@ const SpoonSaberBattle = () => {
       let attack = {
         outer: evilOuter,
         inner: evilInner,
-        body: getSpoonWithHilt(size*initialSizeFactor, enemyX, enemyY, spoonFilter, color), 
+        body: getSpoonWithHilt(size*initialSizeFactor, enemyX, enemyY, cosmeticFilter, color), 
         size: initialSizeFactor*size,
         color: color,
         initialPosition: {x: enemyX, y: enemyY},
-        collidable: false,
+        collided: false,
         hitbox: null,
         timeout: null,
+        weakHitboxTimeout: null,
         beenHit: false,
+        beenHitSecondSide: false, //only for dark side dual sided saber
+        beenPerfectHit: false,
         particleTracker: 1,
         angle: angle
       }
@@ -467,10 +534,10 @@ const SpoonSaberBattle = () => {
     function setText() {
       const dropperEl = document.getElementById("dropper");
       //point tracking messages
-      if(points >= 2500){
+      if(points >= 10000){
         if (dropperEl) dropperEl.innerHTML = "Whoa! " + points + " points";
       }
-      else if(points >= 1000){
+      else if(points >= 5000){
         if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " points"; 
       }
       else{
