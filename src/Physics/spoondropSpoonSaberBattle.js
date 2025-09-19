@@ -54,7 +54,7 @@ const SpoonSaberBattle = () => {
     let lives = 3;
     var size = 100; //size var for spoon
     var ragDoll = false;
-    const isPlayerDarkSide = window.location.href.includes("DarthPlayer");
+    var isPlayerDarkSide = window.location.href.includes("DarthPlayer");
     // var isPlayerDarkSide = false;
 
     //mobile augmentations
@@ -122,8 +122,13 @@ const SpoonSaberBattle = () => {
       x: width/2,
       y: height/2
     }
+    function selectSide(){
+      let mousePos = mouse.position;
+      isPlayerDarkSide = mousePos.x > width/2 ? true : false;
+    }
     function initializePlayer(){
       Composite.remove(engine.world, saber);
+      selectSide()
       ragDoll = false;
       lives = 3;
       playerColor = getRandomSaberColor(isPlayerDarkSide);
@@ -285,7 +290,7 @@ const SpoonSaberBattle = () => {
         size / 5,
         {
           isSensor: true,
-          render: { fillStyle: "rgba(255,255,255,0.5)" },
+          render: { fillStyle: "rgba(255, 255, 255, 0.01)" },
           collisionFilter: enemyFilter
         }
       );
@@ -501,7 +506,6 @@ const SpoonSaberBattle = () => {
         
     function startGame() {
       if (gameStarted === false) {
-
         gameStarted = true;
         startEnemy();
       }
@@ -513,13 +517,6 @@ const SpoonSaberBattle = () => {
         resettable = false;
         tracker = 0;
         speed = initialSpeed;
-        //removes spoons from previous game if applicable
-        // if(deadSpoons.length > 0){
-        //   deadSpoons.forEach((element) => {
-        //     Composite.remove(engine.world, element);
-        //   });
-        //   deadSpoons.splice(0, deadSpoons.length);
-        // }
         startGame();
       }
     }
@@ -530,7 +527,14 @@ const SpoonSaberBattle = () => {
       attacks.forEach(attack => {
         removeAttack(attack);
       });
-      //set text
+      let pointType = isPlayerDarkSide ? " padawans slain" : " points"
+      const tutEl = document.getElementById("descenttut");
+      if (tutEl) tutEl.innerHTML = "Click or tap to play again. Left for light side, Right for dark.";
+      const dropperEl = document.getElementById("dropper");
+      if(points >= 2500){
+        if (dropperEl) dropperEl.innerHTML = "Heck yeah! " + points + pointType;
+      }
+      else if (dropperEl) dropperEl.innerHTML = "Good battle. " + points + pointType;
       //leaderboards
     }
 
@@ -572,13 +576,34 @@ const SpoonSaberBattle = () => {
       const dropperEl = document.getElementById("dropper");
       //point tracking messages
       if(points >= 10000){
-        if (dropperEl) dropperEl.innerHTML = "Whoa! " + points + " points";
+        if (dropperEl){
+          if(isPlayerDarkSide){
+            dropperEl.innerHTML = "Muahaha! " + points + " padawans slain";
+          }
+          else {
+            dropperEl.innerHTML = "Whoa! " + points + " points";
+          }
+        } 
       }
       else if(points >= 5000){
-        if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " points"; 
+        if (dropperEl){
+          if(isPlayerDarkSide){
+            dropperEl.innerHTML = "Very good. " + points + " padawans slain";
+          }
+          else {
+            dropperEl.innerHTML = "Nice! " + points + " points";
+          } 
+        }
       }
       else{
-        if (dropperEl) dropperEl.innerHTML = points + " points";
+        if (dropperEl){
+          if(isPlayerDarkSide){
+            dropperEl.innerHTML = "Do it. " + points + " padawans slain";
+          }
+          else {
+            dropperEl.innerHTML = points + " points";
+          } 
+        }
       }
       //if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
     }
@@ -606,8 +631,8 @@ const SpoonSaberBattle = () => {
       <canvas ref={hudRef} className="hud" style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none" }} />
       <Link to="/spoondropMenu"><button className='back-button' onClick={console.log("button pressed")}></button></Link>
       <div id="menutext">
-        <p id="dropper">instructions</p>
-        <p id="descenttut"className="droppertext">do it!</p>
+        <p id="dropper">The sith are attacking!</p>
+        <p id="descenttut"className="droppertext">Use your spoon saber to block attacks.</p>
       </div>
     </div>
   )
