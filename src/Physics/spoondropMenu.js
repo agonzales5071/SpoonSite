@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import Matter from 'matter-js'
 import './spoondrop.css';
+import { getDigitBodies } from './util/spoonHelper';
 
 const SpoonDropMenu = () => {
     const boxRef = useRef(null);
@@ -34,16 +35,17 @@ const SpoonDropMenu = () => {
       var size = 100; //size var for spoon
       var isMobile = false;
       var segmentLength = 24;
-      var segmentThickness = 8;
+      var segmentThickness = 12;
       if(width < 800){
         size = 50;
         isMobile = true;
         segmentLength = 12;
-        segmentThickness = 4;
+        segmentThickness = 6;
       }
       const links = [
         ["/spoondropGameSpeed", "SpeedClick", "#77c2abff", "#74EE15"], 
         ["/spoondropCerealShot", "CerealShot", "#fff2d1", "#006FFF"], 
+        ["/spoondropSpoonSaberBattle", "SpoonSaber Battle", "#f7e546ff", "#74EE15"], 
         ["/spoondropDescent", "Descent",  "#9b8b70ff"],
         ["/spoondropRescue", "Rescue",  "#aec8f8ff"],
         ["/spoondropHotSpoontato", "HotSpoontato",  "#c75656ff"],
@@ -58,54 +60,8 @@ const SpoonDropMenu = () => {
 
 
 
-      const digitSegments = {
-        '0': ['A', 'B', 'C', 'D', 'E', 'F'],
-        '1': ['B', 'C'],
-        '2': ['A', 'B', 'G', 'E', 'D'],
-        '3': ['A', 'B', 'C', 'D', 'G'],
-        '4': ['F', 'G', 'B', 'C'],
-        '5': ['A', 'F', 'G', 'C', 'D'],
-        '6': ['A', 'F', 'E', 'D', 'C', 'G'],
-        '7': ['A', 'B', 'C'],
-        '8': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
-        '9': ['A', 'B', 'C', 'D', 'F', 'G'],
-      };
-      function createSegment(x, y, horizontal, color = "#ffffff") {
-        return Matter.Bodies.rectangle(
-          x, y,
-          horizontal ? segmentLength : segmentThickness,
-          horizontal ? segmentThickness : segmentLength,
-          {
-            isStatic: true,
-            render: { fillStyle: color }
-          }
-        );
-      }
-      function getDigitBodies(digit, centerX, centerY, color = "#ffffff") {
-      const segments = digitSegments[digit];
-      if (!segments) return [];
-
-      const offset = segmentLength / 2 + 1;
-      const bodies = [];
-
-      const positions = {
-        A: [centerX, centerY - offset * 2, true],
-        B: [centerX + offset, centerY - offset, false],
-        C: [centerX + offset, centerY + offset, false],
-        D: [centerX, centerY + offset * 2, true],
-        E: [centerX - offset, centerY + offset, false],
-        F: [centerX - offset, centerY - offset, false],
-        G: [centerX, centerY, true],
-      };
-
-      for (const seg of segments) {
-        const [x, y, horizontal] = positions[seg];
-        bodies.push(createSegment(x, y, horizontal, color));
-      }
-
-      return bodies;
-    }
-    function createSegmentNumber(x, y, num) {
+      
+    function createSegmentNumber(x, y, num, color = "#FFFFFF", segmentLength, segmentThickness) {
       const parts = [];
 
       let offsetX = x;
@@ -113,7 +69,7 @@ const SpoonDropMenu = () => {
       const digits = num.toString();
 
       for (const digit of digits) {
-        const digitParts = getDigitBodies(digit, offsetX, y-yOffsetModifier*segmentLength);
+        const digitParts = getDigitBodies(digit, offsetX, y-yOffsetModifier*segmentLength, color,  segmentLength, segmentThickness);
         parts.push(...digitParts);
         offsetX += segmentLength + 10;
       }
@@ -160,7 +116,7 @@ const SpoonDropMenu = () => {
             location.style.color = links[linkTracker][theme];
             location.innerHTML = (linkTracker+1) + ". " + links[linkTracker][name];
             document.getElementById("menudisplay").appendChild(location);
-            createSegmentNumber(xpos, ypos, linkTracker+1);
+            createSegmentNumber(xpos, ypos, linkTracker+1, location.style.color, segmentLength, segmentThickness);
             
             //stores hatch for reference
             hatches.push(hatch);

@@ -2,11 +2,12 @@ import React, { useEffect, useRef } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
-import { createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, getDualSidedSaber } from "./util/spoonHelper";
+import { createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, getDualSidedSaber, drawHUD, createRandom2DVector } from "./util/spoonHelper";
 //TODO: Scoring, double sided dark side saber, hilt, weak hitboxes, lives, add hilt to cosmetic filter
 const SpoonSaberBattle = () => {
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
+  const hudRef = useRef(null);
   
   useEffect( () => {
 
@@ -36,6 +37,11 @@ const SpoonSaberBattle = () => {
         wireframes: false
       }
     });
+    const hudCanvas = hudRef.current;
+    if (hudCanvas) {
+      hudCanvas.width = window.innerWidth;
+      hudCanvas.height = window.innerHeight;
+    }
 
     const backgroundColor = '#14151f';
 
@@ -45,7 +51,9 @@ const SpoonSaberBattle = () => {
     var marginY = (height-gameHeight)/2
     var points = 0;
     var fric = 0.1
+    let lives = 3;
     var size = 100; //size var for spoon
+    var ragDoll = false;
     const isPlayerDarkSide = window.location.href.includes("DarthPlayer");
     // var isPlayerDarkSide = false;
 
@@ -109,19 +117,26 @@ const SpoonSaberBattle = () => {
     //gamevars init
     var gameStarted = false;
     var resettable = false;
-    var ragdoll = false;
-    var isPlayerMoving = false;
     var isMouseDown = false;
-    var allMovements = [];
-    var playerMovement;
     const spoonStart = {
       x: width/2,
       y: height/2
     }
-    var force = 0.015;
-    
-    var saber = getSpoonWithHilt(size, spoonStart.x, spoonStart.y, spoonFilter, getRandomSaberColor(isPlayerDarkSide));
-    if(isPlayerDarkSide){saber = getDualSidedSaber(size*4/5, spoonStart.x, spoonStart.y, spoonFilter, getRandomSaberColor(isPlayerDarkSide));}
+    function initializePlayer(){
+      Composite.remove(engine.world, saber);
+      ragDoll = false;
+      lives = 3;
+      playerColor = getRandomSaberColor(isPlayerDarkSide);
+      saber = getSpoonWithHilt(size, spoonStart.x, spoonStart.y, spoonFilter, playerColor);
+      if(isPlayerDarkSide){saber = getDualSidedSaber(size*4/5, spoonStart.x, spoonStart.y, spoonFilter, playerColor);}
+      saber.label = 'playerSaber'
+      saber.isSensor = true;
+      saber.frictionAir = fric;
+      Composite.add(engine.world, saber);
+    }
+    let playerColor = getRandomSaberColor(isPlayerDarkSide);
+    var saber = getSpoonWithHilt(size, spoonStart.x, spoonStart.y, spoonFilter, playerColor);
+    if(isPlayerDarkSide){saber = getDualSidedSaber(size*4/5, spoonStart.x, spoonStart.y, spoonFilter, playerColor);}
     saber.label = 'playerSaber'
     saber.isSensor = true;
     saber.frictionAir = fric;
@@ -129,7 +144,8 @@ const SpoonSaberBattle = () => {
     // Composite.add(engine.world, saber2);
 
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
-      if(!gameStarted){startGame();}
+      if(resettable){restartGame()}
+      else if(!gameStarted){startGame()}
       isMouseDown = true;  
     });
 
@@ -150,7 +166,7 @@ const SpoonSaberBattle = () => {
         saberClash(pair, false)
       });
     });
-    let scoreMult = 2;
+    let scoreMult = 1;
     let scoreMultGain = 0.1;
     let scorePerfect = 150;
     let scoreWeak = 100;
@@ -169,30 +185,8 @@ const SpoonSaberBattle = () => {
             if (attack.hitbox && collision.supports.length > 0) {
               // ✅ Saber clashed with hitbox
               var collisionPoint = collision.supports[0]; 
-              let color = "#FFFFFF"
               //increment score once
-              if(isPlayerDarkSide){//darkside can hit twice
-                if(isCollisionStart && (!attack.beenHit || !attack.beenHitSecondSide)){  
-                  if(checkValidHit(attack, bodyA, bodyB)){
-                    let scoreGain = getPointsScored(attack, bodies);
-                    if(attack.beenPerfectHit){color = "#3df13d"}
-                    if(scoreMult > 2) {color = "rainbow"}
-                    let offset = !attack.beenHit || !attack.beenHitSecondSide ? size/10 : size/2;
-                    createPlusScore(attack.initialPosition.x, attack.initialPosition.y-offset, scoreGain, engine.world, color);
-                    spawnClashParticles(collisionPoint.x, collisionPoint.y);
-                    points += scoreGain;
-                  }
-                }
-              }
-              else if(isCollisionStart && !attack.beenHit){
-                let scoreGain = getPointsScored(attack, bodies);
-                if(attack.beenPerfectHit){color = "#3df13dff"}
-                if(scoreMult > 2) {color = "rainbow"}
-                createPlusScore(attack.initialPosition.x, attack.initialPosition.y-size/2, scoreGain, engine.world, color);
-                spawnClashParticles(collisionPoint.x, collisionPoint.y);
-                points += scoreGain;
-                attack.beenHit = true;
-              }
+              handlePoints(isCollisionStart, attack, bodies, collisionPoint)
 
               //spawn particles while collision active
               if(attack.particleTracker && attack.particleTracker % particleCooldown === 0){
@@ -230,7 +224,6 @@ const SpoonSaberBattle = () => {
       }
       return validHit;
     }
-    let particles = [];
     function spawnClashParticles(x, y, count = 4) {
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -318,17 +311,24 @@ const SpoonSaberBattle = () => {
       if (attack.inner) Composite.remove(engine.world, attack.inner);
       if (attack.body) Composite.remove(engine.world, attack.body);
       if (attack.hitbox) Composite.remove(engine.world, attack.hitbox);
-
+      
+      if(gameStarted && !(attack.beenHit || attack.beenHitSecondSide)){
+        lives = Math.max(0, lives - 1);
+        if(lives <= 0) {
+          gameOver();
+        }
+      }
       attacks = attacks.filter(a => a !== attack);
     }
     Matter.Events.on(engine, "beforeUpdate", (evt) => {
       const dt = evt.delta;
       const target = mouse.position;
-      
-      if(isMouseDown){
-        movePlayerToward(target, dt);
+      if(!ragDoll){
+        if(isMouseDown){
+          movePlayerToward(target, dt);
+        }
+        rotatePlayerToward(target, dt);
       }
-      rotatePlayerToward(target, dt);
     });
     function redrawPlayer(){
       Composite.remove(engine.world, saber);
@@ -434,6 +434,9 @@ const SpoonSaberBattle = () => {
         //handles increasing speed of game spawns
     //returns true if spawn should occur
     function doSpawnCheck() {
+      if(!gameStarted){
+        return false;
+      }
       let doSpawn = false;
       //speed change for cereal drops
       //after 12 it's close to max speed
@@ -505,6 +508,7 @@ const SpoonSaberBattle = () => {
     }
     function restartGame() {
       if (resettable === true) {
+        initializePlayer();
         points = 0;
         resettable = false;
         tracker = 0;
@@ -522,13 +526,46 @@ const SpoonSaberBattle = () => {
     function gameOver() {
       gameStarted = false;
       resettable = true;
+      deathAnimation();
+      attacks.forEach(attack => {
+        removeAttack(attack);
+      });
       //set text
       //leaderboards
     }
 
-    function doPointIncrement(spoon, cerealPos) {
-      //points+= 10*(spoonState.cerealHits+1);
-      //createPlusScore(cerealPos.x, cerealPos.y, spoonState.cerealHits*10)
+    function handlePoints(isCollisionStart, attack, bodies, collisionPoint, color = "#FFFFFF") {
+      let bodyA = bodies[0];
+      let bodyB = bodies[1];
+      if(isPlayerDarkSide){//darkside can hit twice
+        if(isCollisionStart && (!attack.beenHit || !attack.beenHitSecondSide)){  
+          if(checkValidHit(attack, bodyA, bodyB)){
+            let scoreGain = getPointsScored(attack, bodies);
+            if(attack.beenPerfectHit){color = "#3df13d"}
+            if(scoreMult > 2) {color = "rainbow"}
+            let offset = !attack.beenHit || !attack.beenHitSecondSide ? size/10 : size/2;
+            createPlusScore(attack.initialPosition.x, attack.initialPosition.y-offset, scoreGain, engine.world, true, color);
+            spawnClashParticles(collisionPoint.x, collisionPoint.y);
+            points += scoreGain;
+          }
+        }
+      }
+      else if(isCollisionStart && !attack.beenHit){
+        let scoreGain = getPointsScored(attack, bodies);
+        if(attack.beenPerfectHit){color = "#3df13dff"}
+        if(scoreMult > 2) {color = "rainbow"}
+        createPlusScore(attack.initialPosition.x, attack.initialPosition.y-size/2, scoreGain, engine.world, true, color);
+        spawnClashParticles(collisionPoint.x, collisionPoint.y);
+        points += scoreGain;
+        attack.beenHit = true;
+      }
+    }
+    function deathAnimation(){
+      ragDoll = true;
+      let magnitude = isMobile ? .15 : 2.5
+      let angularVel = isMobile ? Math.random()*80-40 : Math.random()*150-75;
+      Body.applyForce(saber, saber.position, createRandom2DVector(magnitude));
+      Body.setAngularVelocity(saber, angularVel)
     }
 
     function setText() {
@@ -548,6 +585,7 @@ const SpoonSaberBattle = () => {
 
     Runner.run(runner, engine)
     Render.run(render);
+    drawHUD(() => lives, () => gameStarted, hudRef, () => playerColor);
   // Cleanup on unmount
     return () => {
       Render.stop(render);
@@ -565,6 +603,7 @@ const SpoonSaberBattle = () => {
     return (
       <div className="notscene">
       <canvas ref={canvasRef} />
+      <canvas ref={hudRef} className="hud" style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none" }} />
       <Link to="/spoondropMenu"><button className='back-button' onClick={console.log("button pressed")}></button></Link>
       <div id="menutext">
         <p id="dropper">instructions</p>

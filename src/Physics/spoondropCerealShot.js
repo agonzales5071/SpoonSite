@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
+import { floatAndFade } from "./util/spoonHelper";
 
 const SpoonDropCerealShot = () => {
   const boxRef = useRef(null);
@@ -186,23 +187,23 @@ const SpoonDropCerealShot = () => {
       const angle = cannonBarrel.angle;
 
       // Calculate barrel tip position relative to cannon pivot
-        const tipX = cannonPivot.x + Math.cos(angle - Math.PI / 2) * barrelHeight;
-        const tipY = cannonPivot.y + Math.sin(angle - Math.PI / 2) * barrelHeight;
+      const tipX = cannonPivot.x + Math.cos(angle - Math.PI / 2) * barrelHeight;
+      const tipY = cannonPivot.y + Math.sin(angle - Math.PI / 2) * barrelHeight;
 
-        // This offset should be rotated by cannon angle to stay consistent
-        const baseOffset = { x: 0, y: -1 }; // spoon should stick out a little
+      // This offset should be rotated by cannon angle to stay consistent
+      const baseOffset = { x: 0, y: -1 }; // spoon should stick out a little
 
-        // Rotate the offset vector by the cannon angle
-        const rotatedOffsetX = 
-          baseOffset.x * Math.cos(angle) - baseOffset.y * Math.sin(angle);
-        const rotatedOffsetY = 
-          baseOffset.x * Math.sin(angle) + baseOffset.y * Math.cos(angle);
+      // Rotate the offset vector by the cannon angle
+      const rotatedOffsetX = 
+        baseOffset.x * Math.cos(angle) - baseOffset.y * Math.sin(angle);
+      const rotatedOffsetY = 
+        baseOffset.x * Math.sin(angle) + baseOffset.y * Math.cos(angle);
 
-        // Final spoon position
-        const spoonX = tipX + rotatedOffsetX;
-        const spoonY = tipY + rotatedOffsetY;
+      // Final spoon position
+      const spoonX = tipX + rotatedOffsetX;
+      const spoonY = tipY + rotatedOffsetY;
 
-        Body.setVelocity(loadedSpoon, { x: 0, y: 0 });
+      Body.setVelocity(loadedSpoon, { x: 0, y: 0 });
       Body.setAngularVelocity(loadedSpoon, 0);
       Body.setPosition(loadedSpoon, {
         x: spoonX,
@@ -705,7 +706,7 @@ const SpoonDropCerealShot = () => {
         const zeroSize = 14;
         const zeroOuter = Matter.Bodies.circle(centerX-segmentLength*2 + zeroSize*2.5, centerY, zeroSize, {
           isStatic: true,
-          render: { fillStyle: "#ffffff" }
+          render: { fillStyle: color }
         });
       
         const zeroInner = Matter.Bodies.circle(centerX-segmentLength*2 + zeroSize*2.5, centerY, zeroSize/3, {
@@ -740,18 +741,21 @@ const SpoonDropCerealShot = () => {
     }
     
 
-    function createPlusScore(x, y, score) {
+    function createPlusScore(x, y, score, color) {
       const parts = [];
-    
+      let isRainbow = color === "rainbow";
+      if(isRainbow){
+        color = "#FFFFFF"
+      }
       // "+" sign
       parts.push(
         Matter.Bodies.rectangle(x, y, 20, 5, {
           isStatic: true,
-          render: { fillStyle: "#ffffff" }
+          render: { fillStyle: color }
         }),
         Matter.Bodies.rectangle(x, y, 5, 20, {
           isStatic: true,
-          render: { fillStyle: "#ffffff" }
+          render: { fillStyle: color }
         })
       );
     
@@ -759,7 +763,7 @@ const SpoonDropCerealShot = () => {
       const digits = score.toString();
     
       for (const digit of digits) {
-        const digitParts = getDigitBodies(digit, offsetX, y);
+        const digitParts = getDigitBodies(digit, offsetX, y, color);
         parts.push(...digitParts);
         offsetX += segmentLength + 10;
       }
@@ -770,24 +774,7 @@ const SpoonDropCerealShot = () => {
         collisionFilter: { mask: 0 }
       });
     
-      setTimeout(() => {
-        let opacity = 1;
-        const floatInterval = setInterval(() => {
-          Matter.Body.translate(composite, { x: 0, y: -1 });
-          opacity -= 0.05;
-      
-          composite.parts.forEach(part => {
-            if (!noFadeScoreParts.includes(part)) {
-              part.render.opacity = opacity;
-            }
-          });
-      
-          if (opacity <= 0) {
-            clearInterval(floatInterval);
-            Matter.Composite.remove(engine.world, composite);
-          }
-        }, 50);
-      }, 1000);
+      floatAndFade(composite, engine.world,  color, isRainbow, noFadeScoreParts)
       Matter.Composite.add(engine.world, composite);
     }
     
@@ -910,7 +897,14 @@ const SpoonDropCerealShot = () => {
       const spoonState = activeSpoons.find(s => s.body === spoon);
       points+= 10*(spoonState.cerealHits+1);
       spoonState.cerealHits++;
-      createPlusScore(cerealPos.x, cerealPos.y, spoonState.cerealHits*10)
+      let color = "#FFFFFF"
+      if(spoonState.cerealHits > 2){
+        color = "#3df13d"
+      }
+      if(spoonState.cerealHits > 4){
+        color = "rainbow"
+      }
+      createPlusScore(cerealPos.x, cerealPos.y, spoonState.cerealHits*10, color)
     }
 
     function setText() {

@@ -74,7 +74,7 @@ const YouTubePlaylistLatestVideo = ({ playlistId }) => {
     </div>
   ) : 
   (
-    <p>Loading…</p>
+    <p id="mic-loading">Loading…</p>
   );
 };
 

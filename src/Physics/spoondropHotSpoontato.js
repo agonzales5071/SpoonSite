@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
+import { drawHUD } from "./util/spoonHelper";
 
 const SpoonDropHotSpoontato = () => {
   const boxRef = useRef(null);
@@ -617,21 +618,6 @@ const SpoonDropHotSpoontato = () => {
       }
     }
 
-    
-
-    function drawSpoonIcon(ctx, x, y, radius) {
-      // Spoon bowl
-      ctx.fillStyle = "#cccccc";
-      // Spoon head (circle)
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Handle
-      ctx.fillRect(x - 2, y, 4, 20);
-    }
-    
-
     // Game control vars
     var gameStarted = false;
     var resettable = false;
@@ -737,42 +723,8 @@ const SpoonDropHotSpoontato = () => {
     // Start Matter runner and renderer
     Runner.run(runner, engine);
     Render.run(render);
-    function drawHUD() {
-      const ctx = hudRef.current.getContext("2d");
     
-      const renderHUD = () => {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        if (!gameStarted) {
-          requestAnimationFrame(renderHUD);
-          return;
-        }
-        
-        ctx.font = "24px Arial";
-        ctx.fillStyle = "#ffffff";
-    
-        const spoonSpacing = 35;
-        const spoonRadius = 10
-        const margin = 20;
-        const topOffset = 40;
-        const text = "Lives:";
-        const textWidth = ctx.measureText(text).width;
-        const startX = ctx.canvas.width - (margin + textWidth + 15);
-        const startY = topOffset - 10;
-        
-        // Draw text
-        ctx.fillText(text, startX - 90, topOffset);
-    
-        // Draw spoons
-        for (let i = 0; i < lives; i++) {
-          drawSpoonIcon(ctx, startX + i * spoonSpacing, startY, spoonRadius);
-        }
-    
-        requestAnimationFrame(renderHUD);
-      };
-    
-      renderHUD();
-    }
-    drawHUD();
+    drawHUD(() => lives, () => gameStarted, hudRef);
     
 
     // Cleanup on unmount

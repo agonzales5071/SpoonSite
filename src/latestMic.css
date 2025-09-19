@@ -11,6 +11,11 @@
   align-items: center; /* Vertical alignment */
   justify-content: center; /* Horizontal alignment */
 }
+#mic-loading {
+  font-size: 3rem;
+  color:#f0db4f;
+  text-shadow: 0px 0px 20px #000000;
+}
 
 .poster-container {
   max-width: 800px;
@@ -81,5 +86,8 @@
   }
   .back-button-mic:hover{
     border-right: 45px solid rgb(160, 201, 188);
+  }
+  #mic-loading {
+    font-size: 5rem;
   }
 }

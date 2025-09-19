@@ -192,7 +192,7 @@ function getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffs
   return parts;
 }
 
-export function createPlusScore(x, y, score, world, color = "#ffffff") {
+export function createPlusScore(x, y, score, world, fade, color = "#ffffff") {
   const parts = [];
   let isRainbow = color === "rainbow";
   if(isRainbow){
@@ -225,6 +225,12 @@ export function createPlusScore(x, y, score, world, color = "#ffffff") {
     collisionFilter: { mask: 0 }
   });
 
+  if(fade){
+    floatAndFade(composite, world, color, isRainbow)
+  }
+  Matter.Composite.add(world, composite);
+}
+export function floatAndFade(composite, world,  color, isRainbow, noFadeScoreParts = []){
   let opacity = 1;
   let hue = 0;
   let startFadeTime = 20;
@@ -245,7 +251,9 @@ export function createPlusScore(x, y, score, world, color = "#ffffff") {
       hue = (hue + 5) % 360; // step hue, adjust 5 for speed
       composite.parts.forEach((part, i) => {
         if (i === 0) return; // skip index 0 (the parent reference)
-        part.render.fillStyle = fill;
+        if (!noFadeScoreParts.includes(part)) {
+          part.render.fillStyle = fill;
+        }
       });
     }
     if (opacity <= 0) {
@@ -253,7 +261,6 @@ export function createPlusScore(x, y, score, world, color = "#ffffff") {
       Matter.Composite.remove(world, composite);
     }
   }, 50);
-  Matter.Composite.add(world, composite);
 }
 
 const digitSegments = {
@@ -313,4 +320,65 @@ function hexToRgb(hex) {
   const g = (bigint >> 8) & 255;
   const b = bigint & 255;
   return { r, g, b };
+}
+
+export function drawHUD(getLives, getGameStarted, hudRef, getColor = "") {
+  const ctx = hudRef.current.getContext("2d");
+  let color = "#cccccc"
+  
+  const renderHUD = () => {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+    const lives = getLives();
+    const gameStarted = getGameStarted();
+    if(getColor){
+      color = getColor();
+    }
+
+    if (!gameStarted) {
+      requestAnimationFrame(renderHUD);
+      return;
+    }
+
+    ctx.font = "24px Arial";
+    ctx.fillStyle = "#ffffff";
+
+    const spoonSpacing = 35;
+    const spoonRadius = 10;
+    const margin = 20;
+    const topOffset = 40;
+    const text = "Lives:";
+    const textWidth = ctx.measureText(text).width;
+    const startX = ctx.canvas.width - (margin + textWidth + 15);
+    const startY = topOffset - 10;
+
+    ctx.fillText(text, startX - 90, topOffset);
+
+    for (let i = 0; i < lives; i++) {
+      drawSpoonIcon(ctx, startX + i * spoonSpacing, startY, spoonRadius, color);
+    }
+
+    requestAnimationFrame(renderHUD);
+  };
+
+  renderHUD();
+}
+
+function drawSpoonIcon(ctx, x, y, radius, color) {
+  // Spoon bowl
+  ctx.fillStyle = color;
+  // Spoon head (circle)
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Handle
+  ctx.fillRect(x - 2, y, 4, 20);
+}
+
+export function createRandom2DVector(magnitude) {
+  const angle = Math.random() * 2 * Math.PI; // random direction
+  const x = Math.cos(angle) * magnitude;
+  const y = Math.sin(angle) * magnitude;
+  return Matter.Vector.create(x, y);
 }
