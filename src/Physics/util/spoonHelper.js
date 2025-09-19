@@ -1,7 +1,7 @@
-import Matter, { Bodies, Body, Composite, Vector} from "matter-js";
+import Matter, { Bodies, Body, Vector} from "matter-js";
 
 const segmentLength = 12;
-const segmentThickness = 4;
+//const segmentThickness = 4;
 
 export function getRandomInt(max) {
   return Math.floor(Math.random() * max);
@@ -38,7 +38,7 @@ export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, ce
         density: spoonDensity,
         collisionFilter: partA1.collisionFilter,
       });
-      let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
+      //let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
 
       let spoon = Body.create({
         parts: [partA1, partA2, partA3, partA4, partB],
