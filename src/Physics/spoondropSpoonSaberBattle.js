@@ -517,6 +517,12 @@ const SpoonSaberBattle = () => {
         resettable = false;
         tracker = 0;
         speed = initialSpeed;
+        scorePerfect = 150;
+        scoreWeak = 100;
+        if(isPlayerDarkSide){
+          scorePerfect *= (2/3);
+          scoreWeak *= (2/3)
+        }
         startGame();
       }
     }
