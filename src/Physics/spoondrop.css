@@ -102,3 +102,215 @@
     width: 200px;
   }
 }
+#sd-modal-background {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 1;
+    height: 100%;
+    width: 100%;
+    background-image: url("https://assets.codepen.io/1468070/Repeatable+Pattern+-+Wavy+Lines.png?format=auto&quality=80");
+    background-size: 200%;
+    opacity: 0.3;
+    animation: move-background 50s linear infinite;
+  }
+#sd-modal-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(75, 0, 0, 0); /* Transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9;
+}
+#sd-modal-content {  
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: 3rem;
+  position: relative;
+  z-index: 1;
+}
+
+@media(max-height: 800px) {
+  #sd-modal-wrapper {
+    height: 100vh;
+  }
+}
+
+#sd-modal {
+  display: flex;
+  width: 50rem;
+  aspect-ratio: 5 / 3;
+  position: relative;
+  background: #0097b8;
+  padding: 30px;
+  border-radius: 10px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0, 176, 225, 0.3);
+  border: 0.5rem solid rgb(30 30 30);
+  border-top-right-radius: 5rem;
+  border-bottom-left-radius: 5rem;
+  overflow: hidden;
+}
+
+  #modal {
+    background-color: rgb(50 50 50);
+  }
+#sd-modal-message p {
+  font-size: 36px;
+  font-weight: bold;
+  font-family: "GrapeSoda";
+}
+
+#sd-modal-actions {
+  display: flex;
+  margin-top: auto;
+  justify-content: center;
+  gap: 2rem;
+}
+@media(max-width: 1024px) {
+  #sd-modal-actions {
+    align-items: center;
+    flex-direction: column-reverse;
+  }
+}
+@media(max-width: 1024px) {
+    #sd-modal {
+      aspect-ratio: auto;
+      min-height: 500px;
+      width: 100%; 
+      border-top-right-radius: 3rem;
+      border-bottom-left-radius: 3rem;
+    }
+  }
+  
+@media(max-width: 728px) {
+  #sd-modal {
+    min-height: 400px;
+  }
+}
+.sd-modal-action {
+  width: 100%;
+  background-color: #fdfdfd;
+  margin: 10px;
+  cursor: pointer;
+  /* transition: background-color 0.3s ease; */
+   overflow: hidden;
+    padding: 0.85rem;
+    position: relative;
+    font-size: 1.25rem;
+    border: none;
+    border-radius: 0.75rem;
+    outline: 0.2rem solid white;
+    outline-offset: 0.2rem;
+    z-index: 0;
+}
+
+.sd-modal-action:is(:hover, :focus-visible) {  
+    background-color: rgb(253, 224, 71);
+  }
+
+  .sd-modal-action:is(:hover, :focus-visible) .sd-modal-action-fade,
+  .sd-modal-action:is(:hover, :focus-visible) .sd-modal-action-pattern {  
+    display: block; 
+  }
+
+.sd-modal-action-text {
+  color: #000000;
+  font-size: 24px;
+  font-family: "GrapeSoda";
+  z-index: 9999;
+}
+
+.sd-modal-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.sd-modal-action-fade {
+  background-color: #000000;
+  border-radius: 5px;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+.sd-modal-action-fade,
+.sd-modal-action-pattern {
+  display: none;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: 0;
+}
+.sd-modal-action-pattern {
+    background-image: radial-gradient(
+      rgb(255 255 255 / 0.6) 30%, 
+      transparent 30%
+    );
+    background-position: 0% 0%;
+    background-size: 10px 10px;
+    animation: move-background 50s linear infinite;
+    transform: skew(-15deg, 0deg);
+    z-index: -1;
+  }
+.sd-modal-action:is(:hover, :focus-visible) .sd-modal-action-fade,
+.sd-modal-action:is(:hover, :focus-visible) .sd-modal-action-pattern {  
+    display: block; 
+  }
+.modal-action-text-letter {
+    display: inline-flex;
+    position: relative;
+  }
+.sd-modal-action:is(:hover, :focus-visible) .sd-modal-action-text-letter {
+    animation: bounce infinite;
+  }
+  
+  .sd-modal-action-fade {  
+    z-index: -1;
+    background: linear-gradient(to left, rgb(253, 224, 71), transparent 60%);
+  }
+
+#restart-action{
+  padding: 0.85rem;
+  position: left;
+  font-size: 1.25rem;
+  font-family: "GrapeSoda";
+  border: none;
+  border-radius: 0.75rem;
+  outline: 0.2rem solid rgb(53, 227, 0);
+  outline-offset: 0.2rem;
+  overflow: hidden;
+  z-index: 0;
+}
+  #restart-action-fade {  
+    z-index: 0;
+    background: linear-gradient(to left, rgb(255, 225, 119), transparent 60%);
+  }
+  #restart-action:is(:hover, :focus-visible) {  
+    background-color: rgb(76, 235, 76);
+  }
+  #game-menu-action-fade {  
+    z-index: 0;
+    background: linear-gradient(to left, rgb(255, 225, 119), transparent 60%);
+  }
+  #game-menu-action:is(:hover, :focus-visible) {  
+    background-color: rgb(235, 89, 76);
+  }
+
+#game-menu-action{
+  font-family: "SixtyFour";
+  padding: 0.85rem;
+  position: left;
+  font-size: 1.25rem;
+  border: none;
+  border-radius: 0.75rem;
+  outline: 0.2rem solid rgb(223, 2, 2);
+  outline-offset: 0.2rem;
+  overflow: hidden;
+}

@@ -1,13 +1,19 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
+import GameOver from "./util/gameoverPopup";
 import { createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, getDualSidedSaber, drawHUD, createRandom2DVector } from "./util/spoonHelper";
 //TODO: Scoring, double sided dark side saber, hilt, weak hitboxes, lives, add hilt to cosmetic filter
 const SpoonSaberBattle = () => {
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
   const hudRef = useRef(null);
+  const restartRef = useRef(null);
+
+  const [gameOverState, setGameOverState] = useState(false);
+  const [score, setScore] = useState(0);
+  const [message, setMessage] = useState("");
   
   useEffect( () => {
 
@@ -149,8 +155,7 @@ const SpoonSaberBattle = () => {
     // Composite.add(engine.world, saber2);
 
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
-      if(resettable){restartGame()}
-      else if(!gameStarted){startGame()}
+      if(!gameStarted && !resettable){startGame()}
       isMouseDown = true;  
     });
 
@@ -423,7 +428,7 @@ const SpoonSaberBattle = () => {
       if (tutEl) tutEl.innerHTML = "";
 
       spawnEnemies = setInterval(() => {
-        if (document.getElementById("dropper") === null) {
+        if (document.getElementById("dropper") === null || !gameStarted) {
           clearInterval(spawnEnemies);
           return;
         }
@@ -443,7 +448,6 @@ const SpoonSaberBattle = () => {
         return false;
       }
       let doSpawn = false;
-      //speed change for cereal drops
       //after 12 it's close to max speed
       if (tracker % (3 * speed) === 0 && speed > 25) {
         speed = speed - 5;
@@ -506,12 +510,14 @@ const SpoonSaberBattle = () => {
         
     function startGame() {
       if (gameStarted === false) {
+        setGameOverState(false); // Show game over screen
         gameStarted = true;
         startEnemy();
       }
     }
     function restartGame() {
       if (resettable === true) {
+        setScore(0);            // reset score
         initializePlayer();
         points = 0;
         resettable = false;
@@ -519,7 +525,7 @@ const SpoonSaberBattle = () => {
         speed = initialSpeed;
         scorePerfect = 150;
         scoreWeak = 100;
-        if(isPlayerDarkSide){
+        if(isPlayerDarkSide) {
           scorePerfect *= (2/3);
           scoreWeak *= (2/3)
         }
@@ -527,6 +533,9 @@ const SpoonSaberBattle = () => {
       }
     }
     function gameOver() {
+      setScore(points);
+      let endMessage = getEndMessage()
+      setMessage(endMessage)            
       gameStarted = false;
       resettable = true;
       deathAnimation();
@@ -541,7 +550,13 @@ const SpoonSaberBattle = () => {
         if (dropperEl) dropperEl.innerHTML = "Heck yeah! " + points + pointType;
       }
       else if (dropperEl) dropperEl.innerHTML = "Good battle. " + points + pointType;
+      setTimeout(() => {
+        setGameOverState(true); // Show game over screen
+      }, 1100)
       //leaderboards
+    }
+    function getEndMessage(){
+      return "game over chump"
     }
 
     function handlePoints(isCollisionStart, attack, bodies, collisionPoint, color = "#FFFFFF") {
@@ -611,8 +626,9 @@ const SpoonSaberBattle = () => {
           } 
         }
       }
-      //if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
+      if (dropperEl ) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
     }
+    restartRef.current = restartGame;
 
     Runner.run(runner, engine)
     Render.run(render);
@@ -627,12 +643,12 @@ const SpoonSaberBattle = () => {
       render.textures = {};
     };
   }, []);
-
-
-
   
     return (
       <div className="notscene">
+        <div>
+            <GameOver message={message} score={score} visible={gameOverState} onRestart={() => restartRef.current()} />
+        </div>
       <canvas ref={canvasRef} />
       <canvas ref={hudRef} className="hud" style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none" }} />
       <Link to="/spoondropMenu"><button className='back-button' onClick={console.log("button pressed")}></button></Link>

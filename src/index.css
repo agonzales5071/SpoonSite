@@ -9,13 +9,57 @@ body {
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  monospace;
 }
 @font-face {
   font-family:"Alphasmoke";
   src: local("Alphasmoke"), url("./fonts/Alphasmoke-OOX6.ttf") format("truetype");
 }
 @font-face {
+  font-family:"Bebas Neue";
+  src: local("BebasNeue-Regular"), url("./fonts/BebasNeue-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family:"DotGothic";
+  src: local("DotGothic16-Regular"), url("./fonts/DotGothic16-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "GrapeSoda";
+  src: local("GrapeSoda"), url("./fonts/GrapeSoda.ttf") format("truetype");
+}
+@font-face {
   font-family: "MckloudBlack-32p";
   src: local("MckloudBlack-32p"), url("./fonts/MckloudBlack-32p.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Major Mono Display";
+  src: local("MajorMonoDisplay-Regular"), url("./fonts/MajorMonoDisplay-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family:"PatrickHand";
+  src: local("PatrickHand-Regular"), url("./fonts/PatrickHand-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family:"PressStart2P";
+  src: local("PressStart2P-Regular"), url("./fonts/PressStart2P-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family:"Righteous";
+  src: local("Righteous-Regular"), url("./fonts/Righteous-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family:"Sixtyfour";
+  src: local("Sixtyfour-Regular-VariableFont_BLED,SCAN"), url("./fonts/Sixtyfour-Regular-VariableFont_BLED,SCAN.ttf") format("truetype");
+}
+@font-face {
+  font-family:"Text Me One";
+  src: local("TextMeOne-Regular"), url("./fonts/TextMeOne-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family:"Tourney";
+  src: local("Tourney-VariableFont_wdth,wght"), url("./fonts/Tourney-VariableFont_wdth,wght.ttf") format("truetype");
+}
+@font-face {
+  font-family:"VT323";
+  src: local("VT323-Regular"), url("./fonts/VT323-Regular.ttf") format("truetype");
 }
