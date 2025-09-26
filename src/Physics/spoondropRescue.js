@@ -1,11 +1,18 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Matter from "matter-js";
+import GameOver from "./util/gameoverPopup";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 
 const SpoonDropRescue = () => {
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
+  const restartRef = useRef(null);
+  const [playButtonText, setPlayButtonText] = useState("Play")
+
+  const [gameOverState, setGameOverState] = useState(false);
+  const [message, setMessage] = useState("AHHH! Spoons are falling from the skyyyyy.");
+  const [scoreText, setScoreText] = useState("Click or tap and drag to move the net. Catch all the spoons!");
 
   useEffect(() => {
     const {
@@ -164,13 +171,7 @@ const SpoonDropRescue = () => {
     //controls
     Events.on(mouseConstraint, "mousedown", () => {
       isDragging = true;
-      if(resettable){
-        restartGame();
-        resettable = false;
-      }
-      if(!gameStarted){
-        startGame();
-      }
+      if(!gameStarted && !resettable){startGame()}
     });
     Events.on(mouseConstraint, "mouseup", () => {
       isDragging = false;
@@ -358,6 +359,7 @@ const SpoonDropRescue = () => {
     function restartGame() {
       if (resettable === true) {
         points = 0;
+        setScoreText(points);            // reset score
         resettable = false;
         pointIncrementSwitch = false;
         tracker = 0;
@@ -378,6 +380,9 @@ const SpoonDropRescue = () => {
     }
     //TODO: add more messages
     function gameOver() {
+      setScoreText(points + " spoons saved");
+      let endMessage = getPopupMessage()
+      setMessage(endMessage);
       gameStarted = false;
       resettable = true;
       clearInterval(dropSpoons);
@@ -386,18 +391,17 @@ const SpoonDropRescue = () => {
         Body.applyForce(segment, segment.position, netForce);
       });
       const tutEl = document.getElementById("descenttut");
-      if (tutEl) tutEl.innerHTML = "Touch anywhere to try again.";
+      if (tutEl) tutEl.innerHTML = "";
       const dropperEl = document.getElementById("dropper");
-      if(points >= 20){
-        if (dropperEl) dropperEl.innerHTML = "HOLY COW!!! You saved " + points + " spoons!";
-      }
-      else if (dropperEl) dropperEl.innerHTML = "Way to go! You saved " + points + " spoons!";
+      if (dropperEl) dropperEl.innerHTML = "";
+      setTimeout(() => {
+        setGameOverState(true); // Show game over screen
+      }, 1100)
     }
-
     var debug = false;
     function startGame() {
       if (gameStarted === false) {
-
+        setGameOverState(false); // Show game over screen
         gameStarted = true;
         const tutEl = document.getElementById("descenttut");
         if (tutEl) tutEl.innerHTML = "";
@@ -466,12 +470,29 @@ const SpoonDropRescue = () => {
       if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " spoons saved. Speed = " + speed;
     }
 
-    // Remove old interval movement on mouse drag - no longer needed with damping
+    function getPopupMessage(isStart){
+      if(isStart){
+        return "context!"
+      }
+      let message;
+      if(points >= 20){
+        message = "Now we're gonna be able to open that soup kitchen :)";
+      }
+      else message = "What are we gonna do with all these?";
+      return message;
+    }
+    function startRestart(){
+      if(!gameStarted && !resettable){startGame()}
+      else{
+        restartGame();
+      }
+      setPlayButtonText("Restart")
+    }
+    restartRef.current = startRestart;
 
-    // Start Matter runner and renderer
-    Runner.run(runner, engine);
+    Runner.run(runner, engine)
     Render.run(render);
-
+    setGameOverState(true); // Show game over screen
     // Cleanup on unmount
     return () => {
       Render.stop(render);
@@ -485,15 +506,17 @@ const SpoonDropRescue = () => {
 
   return (
     <div className="notscene" ref={boxRef}>
+      <div>
+          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
+          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
+        </div>
       <canvas ref={canvasRef} />
       <Link to="/spoondropMenu">
         <button className="back-button" onClick={() => console.log("button pressed")} />
       </Link>
       <div id="menutext">
-        <p id="dropper">click or tap and drag to move the net</p>
-        <p id="descenttut" className="droppertext">
-          catch the spoons!
-        </p>
+        <p id="dropper">Rescue</p>
+        <p id="descenttut" className="droppertext"></p>
       </div>
     </div>
   );

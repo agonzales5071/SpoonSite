@@ -7,61 +7,41 @@ export function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
-export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, center = "middle"){
-      let spoonSpawn = [xposSpawn, yposSpawn, - spoonSize/2 + yposSpawn];
-      let spoonHeadOffset = spoonSize / 50;
-      let spoonDensity = 0.0011;
-
-      //SHAPES
-      let partA1 = Bodies.circle(spoonSpawn[0], spoonSpawn[2], spoonSize/5, {
-        density: spoonDensity,
-        render: {fillStyle: color},
-        collisionFilter: spoonFilter,
-      });
-      let partA2 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - spoonHeadOffset, spoonSize/5, {
-        render: partA1.render,
-        density: spoonDensity,
-        collisionFilter: partA1.collisionFilter,
-      });
-      let partA3 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 2*spoonHeadOffset, spoonSize/5, {
-        render: partA1.render,
-        density: spoonDensity,
-        collisionFilter: partA1.collisionFilter,
-      });
-      let partA4 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 3*spoonHeadOffset, spoonSize/5, {
-        render: partA1.render,
-        density: spoonDensity,
-        collisionFilter: partA1.collisionFilter,
-      });
-      let partB = Bodies.trapezoid(spoonSpawn[0], spoonSpawn[1], spoonSize/5, spoonSize, 0.4, {
-        render: partA1.render,
-        density: spoonDensity,
-        collisionFilter: partA1.collisionFilter,
-      });
-      //let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
-
-      let spoon = Body.create({
-        parts: [partA1, partA2, partA3, partA4, partB],
-        collisionFilter: spoonFilter,
-      });
-
-      if(center === "middle"){
-        Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] - spoonSize / 10), false);
-      }
-      if(center === "bottom"){
-        Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] + spoonSize/2), false);
-      }
-      return spoon;
-    }
 // export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, center = "middle"){
 //       let spoonSpawn = [xposSpawn, yposSpawn, - spoonSize/2 + yposSpawn];
 //       let spoonHeadOffset = spoonSize / 50;
+//       let spoonDensity = 0.0011;
 
 //       //SHAPES
-//       let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
+//       let partA1 = Bodies.circle(spoonSpawn[0], spoonSpawn[2], spoonSize/5, {
+//         density: spoonDensity,
+//         render: {fillStyle: color},
+//         collisionFilter: spoonFilter,
+//       });
+//       let partA2 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - spoonHeadOffset, spoonSize/5, {
+//         render: partA1.render,
+//         density: spoonDensity,
+//         collisionFilter: partA1.collisionFilter,
+//       });
+//       let partA3 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 2*spoonHeadOffset, spoonSize/5, {
+//         render: partA1.render,
+//         density: spoonDensity,
+//         collisionFilter: partA1.collisionFilter,
+//       });
+//       let partA4 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 3*spoonHeadOffset, spoonSize/5, {
+//         render: partA1.render,
+//         density: spoonDensity,
+//         collisionFilter: partA1.collisionFilter,
+//       });
+//       let partB = Bodies.trapezoid(spoonSpawn[0], spoonSpawn[1], spoonSize/5, spoonSize, 0.4, {
+//         render: partA1.render,
+//         density: spoonDensity,
+//         collisionFilter: partA1.collisionFilter,
+//       });
+//       //let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
 
 //       let spoon = Body.create({
-//         parts: parts,
+//         parts: [partA1, partA2, partA3, partA4, partB],
 //         collisionFilter: spoonFilter,
 //       });
 
@@ -71,9 +51,36 @@ export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, ce
 //       if(center === "bottom"){
 //         Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] + spoonSize/2), false);
 //       }
-      
 //       return spoon;
 //     }
+export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, center = "middle"){
+  if(spoonFilter === null){
+    spoonFilter = {
+      group: 0,
+      category: 0x0001,
+      mask: 0xFFFFFFFF,
+    };
+  }
+  let spoonSpawn = [xposSpawn, yposSpawn, - spoonSize/2 + yposSpawn];
+  let spoonHeadOffset = spoonSize / 50;
+
+  //SHAPES
+  let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
+
+  let spoon = Body.create({
+    parts: parts,
+    collisionFilter: spoonFilter,
+  });
+
+  if(center === "middle"){
+    Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] - spoonSize / 10), false);
+  }
+  if(center === "bottom"){
+    Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] + spoonSize/2), false);
+  }
+  
+  return spoon;
+}
 
 export function getSpoonWithHilt(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, center = "bottom" ){
   let spoonSpawn = [xposSpawn, yposSpawn, - spoonSize/2 + yposSpawn];

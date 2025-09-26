@@ -113,6 +113,7 @@
     background-size: 200%;
     opacity: 0.3;
     animation: move-background 50s linear infinite;
+    overflow-y: hidden;
   }
 #sd-modal-wrapper {
   position: fixed;
@@ -126,6 +127,7 @@
   align-items: center;
   z-index: 9;
 }
+
 #sd-modal-content {  
   display: flex;
   flex-direction: column;
@@ -134,10 +136,23 @@
   position: relative;
   z-index: 1;
 }
+@media(max-width: 1024px) {
+  #sd-modal-content {
+    padding: 0;
+  }
+}
+#sd-modal-message p {
+  font-size: 1.5rem;
+  font-family: "GrapeSoda";
+}
 
-@media(max-height: 800px) {
+@media(max-width: 1024px) {
   #sd-modal-wrapper {
-    height: 100vh;
+    height: 80vh;
+    width: 80vw;
+    margin-top: 10vh;
+    margin-left: 10vw;
+    box-sizing: border-box;
   }
 }
 
@@ -161,11 +176,6 @@
   #modal {
     background-color: rgb(50 50 50);
   }
-#sd-modal-message p {
-  font-size: 36px;
-  font-weight: bold;
-  font-family: "GrapeSoda";
-}
 
 #sd-modal-actions {
   display: flex;
@@ -176,7 +186,11 @@
 @media(max-width: 1024px) {
   #sd-modal-actions {
     align-items: center;
-    flex-direction: column-reverse;
+    /* flex-direction: column; */
+    width:100%;
+    margin-left: auto;
+    margin-right: auto;
+    gap: 1.5rem;
   }
 }
 @media(max-width: 1024px) {
@@ -193,14 +207,20 @@
   #sd-modal {
     min-height: 400px;
   }
+
+}
+@media(min-width: 728px) {
+  #sd-modal-message p{
+    font-size: 36px;
+  }
 }
 .sd-modal-action {
   width: 100%;
   background-color: #fdfdfd;
-  margin: 10px;
   cursor: pointer;
   /* transition: background-color 0.3s ease; */
    overflow: hidden;
+  justify-content: center;
     padding: 0.85rem;
     position: relative;
     font-size: 1.25rem;
@@ -210,7 +230,11 @@
     outline-offset: 0.2rem;
     z-index: 0;
 }
-
+@media(min-width: 728px) {
+  #sd-modal-action{
+    padding: .5rem;
+  }
+}
 .sd-modal-action:is(:hover, :focus-visible) {  
     background-color: rgb(253, 224, 71);
   }
@@ -219,15 +243,27 @@
   .sd-modal-action:is(:hover, :focus-visible) .sd-modal-action-pattern {  
     display: block; 
   }
-
+/* @media(min-width: 728px) {
+  .sd-modal-action{
+    width: 40%;
+  }
+} */
 .sd-modal-action-text {
   color: #000000;
   font-size: 24px;
   font-family: "GrapeSoda";
   z-index: 9999;
 }
+.darkside-modal-action-text {
+  color: #ffffff;
+  font-size: 24px;
+  font-family: "GrapeSoda";
+  z-index: 9999;
+}
 
 .sd-modal-link {
+  width: 100%;
+  position: relative;
   text-decoration: none;
   color: inherit;
 }
@@ -295,6 +331,7 @@
   #restart-action:is(:hover, :focus-visible) {  
     background-color: rgb(76, 235, 76);
   }
+  
   #game-menu-action-fade {  
     z-index: 0;
     background: linear-gradient(to left, rgb(255, 225, 119), transparent 60%);
@@ -308,9 +345,31 @@
   padding: 0.85rem;
   position: left;
   font-size: 1.25rem;
+  justify-content: center;
   border: none;
   border-radius: 0.75rem;
   outline: 0.2rem solid rgb(223, 2, 2);
   outline-offset: 0.2rem;
   overflow: hidden;
 }
+#darkside-action{
+  padding: 0.85rem;
+  position: left;
+  font-size: 1.25rem;
+  font-family: "GrapeSoda";
+  border: none;
+  color:#ffffff;
+  background-color: #1d1d1d;
+  border-radius: 0.75rem;
+  outline: 0.2rem solid rgb(45, 45, 45);
+  outline-offset: 0.2rem;
+  overflow: hidden;
+  z-index: 0;
+}
+  #darkside-action-fade {  
+    z-index: 0;
+    background: linear-gradient(to left, rgb(181, 30, 0), transparent 60%);
+  }
+  #darkside-action:is(:hover, :focus-visible) {  
+    background-color: rgb(45, 45, 45);
+  }

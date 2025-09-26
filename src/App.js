@@ -47,11 +47,9 @@ class App extends React.Component {
             <Route path="/spoondrophomerun" element={<SpoonDropHomerun/>} />
             <Route path="/spoondropMenu" element={<SpoonDropMenu/>} />
             <Route path="/spoondropDescent" element={<SpoonDropDescent/>} />
-            <Route path="/spoondropDescentLeo" element={<SpoonDropDescent/>} />
             <Route path="/spoondropRescue" element={<SpoonDropRescue/>} />
             <Route path="/spoondropHotSpoontato" element={<SpoonDropHotSpoontato/>} />
             <Route path="/spoondropCerealShot" element={<SpoonDropCerealShot/>} />
-            <Route path="/spoondropCerealShotLeo" element={<SpoonDropCerealShot/>} />
             <Route path="/spoondropSpoonSaberBattle" element={<SpoonSaberBattle/>} />
           </Routes>
         </div>

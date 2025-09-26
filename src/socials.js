@@ -4,7 +4,6 @@ import './socials.css';
 class Socials extends React.Component {
     componentDidMount(){
       document.body.className="body-socials"; // Or set the class
-      console.log("socials mounted");
     }
     componentWillUnmount(){
       document.body.className ="body";

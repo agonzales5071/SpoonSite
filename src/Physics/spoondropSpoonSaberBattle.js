@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
-import GameOver from "./util/gameoverPopup";
+import GameOver from "./util/gameoverPopupSaberBattle";
 import { createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, getDualSidedSaber, drawHUD, createRandom2DVector } from "./util/spoonHelper";
 //TODO: Scoring, double sided dark side saber, hilt, weak hitboxes, lives, add hilt to cosmetic filter
 const SpoonSaberBattle = () => {
@@ -10,10 +10,13 @@ const SpoonSaberBattle = () => {
   const canvasRef = useRef(null);
   const hudRef = useRef(null);
   const restartRef = useRef(null);
+  const [playButtonText, setPlayButtonText] = useState("Play");
+  const [mobilePlayer, setMobilePlayer] = useState(false);
 
   const [gameOverState, setGameOverState] = useState(false);
-  const [score, setScore] = useState(0);
-  const [message, setMessage] = useState("");
+  const [darkSideVisible, setDarkSideVisible] = useState(false);
+  const [message, setMessage] = useState("The Soupth are attacking! You must take up your SpoonSaber.");
+  const [scoreText, setScoreText] = useState("Click or tap and drag your SpoonSaber to block the enemy attacks");
   
   useEffect( () => {
 
@@ -60,7 +63,11 @@ const SpoonSaberBattle = () => {
     let lives = 3;
     var size = 100; //size var for spoon
     var ragDoll = false;
-    var isPlayerDarkSide = window.location.href.includes("DarthPlayer");
+    var isPlayerDarkSide = false;
+    if(window.location.href.includes("DarthPlayer")){
+      setDarkSideVisible(true);
+      setPlayButtonText("Light Side");
+    }
     // var isPlayerDarkSide = false;
 
     //mobile augmentations
@@ -68,8 +75,8 @@ const SpoonSaberBattle = () => {
       fric = 0.03
       isMobile = true;
       size = 50;
+      setMobilePlayer(true);
     }
-
     // add mouse control
     var mouse = Mouse.create(render.canvas),
       mouseConstraint = MouseConstraint.create(engine, {
@@ -128,13 +135,8 @@ const SpoonSaberBattle = () => {
       x: width/2,
       y: height/2
     }
-    function selectSide(){
-      let mousePos = mouse.position;
-      isPlayerDarkSide = mousePos.x > width/2 ? true : false;
-    }
     function initializePlayer(){
       Composite.remove(engine.world, saber);
-      selectSide()
       ragDoll = false;
       lives = 3;
       playerColor = getRandomSaberColor(isPlayerDarkSide);
@@ -164,7 +166,7 @@ const SpoonSaberBattle = () => {
     });
     
     Matter.Events.on(engine, "collisionStart", function(event) {
-      console.log("colision")
+      // console.log("colision")
        event.pairs.forEach(pair => {
         saberClash(pair, true);
       });
@@ -347,22 +349,37 @@ const SpoonSaberBattle = () => {
 
     function movePlayerToward(target, dtMs) {
       const current = saber.position;
+
+      let adjustedTarget = { ...target };
+
+      if (isMobile) {
+        // Find angle from saber to target
+        const angle = Math.atan2(target.y - current.y, target.x - current.x);
+
+        // Offset backwards along that angle (so saber trails behind finger)
+        const distanceBehind = isPlayerDarkSide ? 20 : 40; 
+        adjustedTarget.x -= Math.cos(angle) * distanceBehind;
+        adjustedTarget.y -= Math.sin(angle) * distanceBehind;
+      }
+
       const desired = {
-        x: target.x - current.x,
-        y: target.y - current.y
+        x: adjustedTarget.x - current.x,
+        y: adjustedTarget.y - current.y,
       };
 
       const dist = Math.hypot(desired.x, desired.y);
       if (dist < 0.5) return; // small deadzone to stop jitter
+
       const alpha = 1 - Math.pow(1 - 0.2, dtMs / (1000 / 60)); // ~20% catch-up per frame
 
       const step = {
         x: desired.x * alpha,
-        y: desired.y * alpha
+        y: desired.y * alpha,
       };
 
       Matter.Body.translate(saber, step);
     }
+
 
     function rotatePlayerToward(target, dtMs) {
       const current = saber.angle;
@@ -517,7 +534,7 @@ const SpoonSaberBattle = () => {
     }
     function restartGame() {
       if (resettable === true) {
-        setScore(0);            // reset score
+        setScoreText(0);            // reset score
         initializePlayer();
         points = 0;
         resettable = false;
@@ -533,8 +550,9 @@ const SpoonSaberBattle = () => {
       }
     }
     function gameOver() {
-      setScore(points);
-      let endMessage = getEndMessage()
+      setDarkSideVisible(true);
+      setScoreText(points);
+      let endMessage = getPopupMessage()
       setMessage(endMessage)            
       gameStarted = false;
       resettable = true;
@@ -542,21 +560,16 @@ const SpoonSaberBattle = () => {
       attacks.forEach(attack => {
         removeAttack(attack);
       });
-      let pointType = isPlayerDarkSide ? " padawans slain" : " points"
+      let pointType = isPlayerDarkSide ? points + " padawans slain" : "Score: " + points + " points"
+      setScoreText(pointType)
       const tutEl = document.getElementById("descenttut");
-      if (tutEl) tutEl.innerHTML = "Click or tap to play again. Left for light side, Right for dark.";
+      if (tutEl) tutEl.innerHTML = "";
       const dropperEl = document.getElementById("dropper");
-      if(points >= 2500){
-        if (dropperEl) dropperEl.innerHTML = "Heck yeah! " + points + pointType;
-      }
-      else if (dropperEl) dropperEl.innerHTML = "Good battle. " + points + pointType;
+      if (dropperEl) dropperEl.innerHTML = "";
       setTimeout(() => {
         setGameOverState(true); // Show game over screen
       }, 1100)
       //leaderboards
-    }
-    function getEndMessage(){
-      return "game over chump"
     }
 
     function handlePoints(isCollisionStart, attack, bodies, collisionPoint, color = "#FFFFFF") {
@@ -626,13 +639,50 @@ const SpoonSaberBattle = () => {
           } 
         }
       }
-      if (dropperEl ) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
+      // debug
+      //if (dropperEl ) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
     }
-    restartRef.current = restartGame;
+    function getPopupMessage(){
+      let message;
+      if(points >= 10000){
+        if(isPlayerDarkSide){
+          message = "Excellent. From here on you will be known as Darth Spooner"
+        }
+        else{
+          message = "You have fought well. The dark side is at bay for now."
+        }
+      }
+      else if(points >= 5000){
+        if(isPlayerDarkSide){
+          message = "Dark Siders RULE!!!"
+        }
+        else{
+          message = "Through darkness we prevail."
+        }
+      }
+      else if(isPlayerDarkSide){
+        message = "The dark side has no place for weaklings."
+      }
+      else{
+        message = "There is hope for all utensils in this galaxy."
+      }
+      return message;
+    }
+      
+    function startRestart(setDarkSide){
+      isPlayerDarkSide = setDarkSide;
+      if(!gameStarted && !resettable){startGame()}
+      else{
+        restartGame();
+      }
+      setPlayButtonText("Light Side")
+    }
+    restartRef.current = startRestart;
 
     Runner.run(runner, engine)
     Render.run(render);
     drawHUD(() => lives, () => gameStarted, hudRef, () => playerColor);
+    setGameOverState(true)
   // Cleanup on unmount
     return () => {
       Render.stop(render);
@@ -647,14 +697,16 @@ const SpoonSaberBattle = () => {
     return (
       <div className="notscene">
         <div>
-            <GameOver message={message} score={score} visible={gameOverState} onRestart={() => restartRef.current()} />
+            <GameOver message={message} scoreText={scoreText} visible={gameOverState}
+             onRestart={() => restartRef.current(false)} onRestartDarkSide={() => restartRef.current(true)}
+             playButtonText={playButtonText} darkSideVisible={darkSideVisible} mobile={mobilePlayer}/>
         </div>
       <canvas ref={canvasRef} />
       <canvas ref={hudRef} className="hud" style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none" }} />
       <Link to="/spoondropMenu"><button className='back-button' onClick={console.log("button pressed")}></button></Link>
       <div id="menutext">
-        <p id="dropper">The sith are attacking!</p>
-        <p id="descenttut"className="droppertext">Use your spoon saber to block attacks.</p>
+        <p id="dropper">SpoonSaber Battle</p>
+        <p id="descenttut"className="droppertext"></p>
       </div>
     </div>
   )

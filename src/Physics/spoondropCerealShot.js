@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
+import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
 import { floatAndFade } from "./util/spoonHelper";
 
@@ -9,6 +10,12 @@ const SpoonDropCerealShot = () => {
   const canvasRef = useRef(null);
   const [power, setPower] = useState(0);
   const [charging, setCharging] = useState(false);
+  const restartRef = useRef(null);
+
+  const [gameOverState, setGameOverState] = useState(false);
+  const [scoreText, setScoreText] = useState(0);
+  const [message, setMessage] = useState("");
+  const [playButtonText, setPlayButtonText] = useState("Play")
   
 
   const powerRef = useRef(0);
@@ -241,8 +248,7 @@ const SpoonDropCerealShot = () => {
         mouseDownPos = {x: event.mouse.position.x, y: event.mouse.position.y};
       }
       isMouseDown = true;
-      if(resettable){restartGame()}
-      else if(!gameStarted){startGame()}
+      if(!gameStarted && !resettable){startGame()}
       const mousePos = event.mouse.position;
 
       if(!swipeControls){
@@ -819,6 +825,7 @@ const SpoonDropCerealShot = () => {
     function restartGame() {
       if (resettable === true) {
         points = 0;
+        setScoreText(points);            // reset score
         resettable = false;
         tracker = 0;
         speed = initialSpeed;
@@ -834,22 +841,34 @@ const SpoonDropCerealShot = () => {
     }
     //TODO: add more messages
     function gameOver() {
+      setScoreText(points + " points");
+      const dropperEl = document.getElementById("dropper");
+      if (dropperEl) dropperEl.innerHTML = "";
+      let endMessage = getPopupMessage();
+      setMessage(endMessage);        
       gameStarted = false;
       resettable = true;
       clearInterval(dropSpoons);
-      const tutEl = document.getElementById("descenttut");
-      if (tutEl) tutEl.innerHTML = "Click or tap anywhere to try again.";
-      const dropperEl = document.getElementById("dropper");
-      if(points >= 2500){
-        if (dropperEl) dropperEl.innerHTML = "You did your best soldier. " + points + " points";
+      setTimeout(() => {
+        setGameOverState(true); // Show game over screen
+      }, 1100)
+    }
+    function getPopupMessage(isStart){
+      if(isStart){
+        return "Somebody is making cereal the wrong way... MILK FIRST. Destroy the cereal and stop this abomination!"
       }
-      else if (dropperEl) dropperEl.innerHTML = "The Milkmen won this bowl. " + points + " points";
+      let message;
+      if(points >= 2500){
+        message = "You did your best soldier.";
+      }
+      else message = "The Milkmen won this bowl.";
+      return message;
     }
 
     var debug = false;
     function startGame() {
       if (gameStarted === false) {
-
+        setGameOverState(false); // Show game over screen
         gameStarted = true;
         const tutEl = document.getElementById("descenttut");
         if (tutEl) tutEl.innerHTML = "";
@@ -921,12 +940,23 @@ const SpoonDropCerealShot = () => {
       }
       if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
     }
+    function startRestart(){
+      if(!gameStarted && !resettable){startGame()}
+      else{
+        restartGame();
+      }
+      setPlayButtonText("Restart")
+    }
+    let startMessage = getPopupMessage(true);
+    setMessage(startMessage);
+    setScoreText("Tap and hold to charge cannon. Release to shoot.")
+    restartRef.current = startRestart;
 
-    // Remove old interval movement on mouse drag - no longer needed with damping
 
     // Start Matter runner and renderer
     Runner.run(runner, engine);
     Render.run(render);
+    setGameOverState(true); // Show game over screen
     
 
     // Cleanup on unmount
@@ -942,6 +972,10 @@ const SpoonDropCerealShot = () => {
 
   return (
     <div className="notscene" ref={boxRef}>
+      <div>
+          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
+          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
+      </div>
       <div className="power-bar">
         <div style={{
           width: `${power * 100}%`,
@@ -955,9 +989,9 @@ const SpoonDropCerealShot = () => {
         <button className="back-button" onClick={() => console.log("button pressed")} />
       </Link>
       <div id="menutext">
-        <p id="dropper">Somebody is making cereal the wrong way... MILK FIRST</p>
+        <p id="dropper"></p>
         <p id="descenttut" className="droppertext">
-          Destroy the cereal and stop this abomination! 
+          Cereal Shot
         </p>
       </div>
     </div>

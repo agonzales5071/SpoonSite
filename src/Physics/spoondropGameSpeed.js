@@ -1,11 +1,19 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Matter from "matter-js";
 import "./spoondrop.css";
+import GameOver from './util/gameoverPopup';
 import { Link } from 'react-router-dom';
+import { getSpoon } from './util/spoonHelper';
 
 const SpoonDropGameSpeed = () => {
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
+  const restartRef = useRef(null);
+  const [playButtonText, setPlayButtonText] = useState("Play")
+
+  const [gameOverState, setGameOverState] = useState(false);
+  const [message, setMessage] = useState("Endurance test: How many spoons can you drop in 15 seconds?");
+  const [scoreText, setScoreText] = useState("Click to drop a spoon in the bucket.");
 
   useEffect(() => {
     var width = window.innerWidth;
@@ -14,14 +22,12 @@ const SpoonDropGameSpeed = () => {
     let Render = Matter.Render;
     let Runner = Matter.Runner;
     let Bodies = Matter.Bodies;
-    let Body = Matter.Body;
     let Composite = Matter.Composite;
     let Mouse = Matter.Mouse;
     let MouseConstraint = Matter.MouseConstraint;
   
     let engine = Engine.create({});
     let runner = Runner.create({});
-    document.getElementById("speedclickdisplay").innerText = "Endurance test:\nHow many spoons can you drop in \n15s";
 
     let render = Render.create({
       element: boxRef.current,
@@ -60,7 +66,6 @@ const SpoonDropGameSpeed = () => {
     var seconds = 1;
     var spoonCount = 0;
     var countingUp = false; 
-    var curSpoon;
     var allSpoons = [];
     var gameRunning = false;
     var gameStartable = true;
@@ -74,6 +79,7 @@ const SpoonDropGameSpeed = () => {
       }
       if (gameStartable){
         gameRunning = true;
+        setGameOverState(false); // Show game over screen
         gameStartable = false;
         let timer = setInterval(function() {
           if(document.getElementById("speedclickdisplay") === null){
@@ -103,11 +109,18 @@ const SpoonDropGameSpeed = () => {
                   }
                   if(countUp === spoonCount && countingUp){
                     countingUp = false;
-                    document.getElementById("speedclickdisplay").innerHTML = "Nice! You dropped " + countUp + " spoons!";
-                    document.getElementById("restart").innerHTML = "click anywhere to restart";
                     clearInterval(counter);
                     clearInterval(timer);
-                    gameRunning = false;
+                    setScoreText(spoonCount + " spoons dropped");
+                    setPlayButtonText("Restart")
+                    let endMessage = getPopupMessage();
+                    setMessage(endMessage);
+                    setTimeout(() => {
+                      if(document.getElementById("speedclickdisplay").innerHTML){
+                        document.getElementById("speedclickdisplay").innerHTML = "";
+                      }
+                      setGameOverState(true); // Show game over screen
+                    }, 1100)
                   
                   }
                 }
@@ -123,20 +136,8 @@ const SpoonDropGameSpeed = () => {
       var size = 100,
       x = mouse.position.x,
       y = mouse.position.y,
-      partA1 = Bodies.circle(x, y-(3*size/5), size/5),
-      partA2 = Bodies.circle(x, y-(3*size/5)-2, size/5,
-      { render: partA1.render }
-      ),
-      partA3 = Bodies.circle(x, y-(3*size/5)-4, size/5,
-      { render: partA1.render }
-      ),
-      partA4 = Bodies.circle(x, y-(3*size/5)-6, size/5,
-      { render: partA1.render }
-      ),
-      partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA1.render });
-      curSpoon = Body.create({
-        parts: [partA1, partA2, partA3, partA4, partB],
-      });
+      
+      curSpoon = getSpoon(size, x, y, null)
       if(seconds>0){
         spoonCount++;
         allSpoons.push(curSpoon);
@@ -147,31 +148,64 @@ const SpoonDropGameSpeed = () => {
     
     function resetGame(){
       spoonCount = 0;
+      setGameOverState(false); // Show game over screen
       seconds = 15;
       countingUp = false;
       gameStartable = true; 
       allSpoons.forEach(element =>{
         Composite.remove(engine.world, element);
       })
-      document.getElementById("restart").innerHTML = "";
+      if(document.getElementById("speedclickdisplay")){
+        document.getElementById("speedclickdisplay").innerText = "Time starts with your first spoon.";
+      }
       if(!hatchPresent){
         hatch = Bodies.rectangle(width/2, height*4/5, width/2, 50, {isStatic: true} );
         Composite.add(engine.world, hatch);
       }
     }
+    function getPopupMessage(isStart){
+      if(isStart){
+        return "context!"
+      }
+      let message;
+      if(spoonCount >= 100){
+        message = "WOW! You're real clicker. Respect.";
+      }
+      else if(spoonCount >= 50){
+        message = "Now who's gonna pick all those up?";
+      }
+      else message = "Gotta pump up those numbers...";
+      return message;
+    }
+      
 
-    Runner.run(runner, engine);
+    restartRef.current = resetGame;
 
+    Runner.run(runner, engine)
     Render.run(render);
-  });
+    setGameOverState(true); // Show game over screen
+  // Cleanup on unmount
+    return () => {
+      Render.stop(render);
+      Runner.stop(runner);
+      Composite.clear(engine.world, false);
+      Engine.clear(engine);
+      render.canvas.remove();
+      render.textures = {};
+    };
+  }, []);
 
   
     return (
       <div className="scene">
+        <div>
+          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
+          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
+      </div>
         <canvas ref={canvasRef} />
         <Link to="/spoondropMenu"><button className='back-button'></button></Link>
         <div id="menutext">
-          <p id="speedclickdisplay">Endurance test: How many spoons can you drop in 15s</p>
+          <p id="speedclickdisplay">Speed Click</p>
           <p id="restart"></p>
         </div>
       </div>

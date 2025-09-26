@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
@@ -6,6 +6,12 @@ import { Link } from 'react-router-dom';
 const SpoonDropTemplate = () => {
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
+  const restartRef = useRef(null);
+  const [playButtonText, setPlayButtonText] = useState("Play")
+
+  const [gameOverState, setGameOverState] = useState(false);
+  const [message, setMessage] = useState("");
+  const [scoreText, setScoreText] = useState("");
   
   useEffect( () => {
 
@@ -79,24 +85,36 @@ const SpoonDropTemplate = () => {
 
     
     function startGame() {
+      if (gameStarted === false) {
+        setGameOverState(false); // Show game over screen
+        gameStarted = true;
+        // startEnemy();
+      }
     }
     function restartGame(){
       if (resettable === true){
         //cleanup and reset
+        resettable = false
+        setScore(0);            // reset score
       }
     }
     function gameOver() {
+      setScore(points);
+      let endMessage = getPopupMessage()
+      setMessage(endMessage)        
       gameStarted = false;
       resettable = true;
       //set text
       //leaderboards
+      setTimeout(() => {
+        setGameOverState(true); // Show game over screen
+      }, 1100)
     }
 
     function doPointIncrement(spoon, cerealPos) {
       //points+= 10*(spoonState.cerealHits+1);
       //createPlusScore(cerealPos.x, cerealPos.y, spoonState.cerealHits*10)
     }
-
     function setText() {
       const dropperEl = document.getElementById("dropper");
       //point tracking messages
@@ -111,9 +129,30 @@ const SpoonDropTemplate = () => {
       }
       //if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
     }
+    function getPopupMessage(isStart){
+      if(isStart){
+        return "context!"
+      }
+      let message;
+      if(points >= 2500){
+        message = "great";
+      }
+      else message = "good";
+      return message;
+    }
+      
+    function startRestart(){
+      if(!gameStarted && !resettable){startGame()}
+      else{
+        restartGame();
+      }
+      setPlayButtonText("Restart")
+    }
+    restartRef.current = startRestart;
 
     Runner.run(runner, engine)
     Render.run(render);
+    setGameOverState(true); // Show game over screen
   // Cleanup on unmount
     return () => {
       Render.stop(render);
@@ -128,8 +167,12 @@ const SpoonDropTemplate = () => {
 
 
   
-    return (
-      <div className="notscene">
+  return (
+    <div className="notscene">
+      <div>
+          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
+          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
+      </div>
       <canvas ref={canvasRef} />
       <Link to="/spoondropMenu"><button className='back-button' onClick={console.log("button pressed")}></button></Link>
       <div id="menutext">

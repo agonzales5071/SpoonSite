@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
+import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
 
 //bug fixes
@@ -9,6 +10,12 @@ import { Link } from 'react-router-dom';
 const SpoonDropDescent = () => {
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
+  const restartRef = useRef(null);
+  const [playButtonText, setPlayButtonText] = useState("Play")
+
+  const [gameOverState, setGameOverState] = useState(false);
+  const [scoreText, setScoreText] = useState(0);
+  const [message, setMessage] = useState("");
   
   useEffect( () => {
   const oopsAllSpoons = window.location.href.includes("Leo");
@@ -117,9 +124,7 @@ const SpoonDropDescent = () => {
     var resettable = false;
     //create spoon
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
-      restartGame();
-      resettable = false;
-      startGame();      
+      if(!gameStarted && !resettable){startGame()}
       movement = setInterval(function() {
         if(!ragdoll){
           let mousex = mouse.position.x,
@@ -166,18 +171,27 @@ const SpoonDropDescent = () => {
     });
     
     Matter.Events.on(engine, "collisionStart", function(event) {
-      
+      //gameover
         allWalls.forEach(element => {
           Body.setStatic(element, true);
         });
+        setScoreText(points + "m fallen");
+        let endMessage = getPopupMessage();
+        setMessage(endMessage);
         gameStarted = false;
         resettable = true;
         //Body.setStatic(curSpoon, true);
         ragdoll = true;
         clearInterval(spawnwalls);
         if( document.getElementById('descenttut') !== null){
-          document.getElementById("descenttut").innerHTML = "Nice! Touch anywhere to try again!";
+          document.getElementById("descenttut").innerHTML = "";
         }
+        if( document.getElementById('dropper') !== null){
+          document.getElementById("dropper").innerHTML = "";
+        }
+      setTimeout(() => {
+        setGameOverState(true); // Show game over screen
+      }, 1100)
         
       
       // let collisionArray = event.source.pairs.collisionActive;
@@ -230,6 +244,7 @@ const SpoonDropDescent = () => {
     }
     function startGame() {
       if(gameStarted === false){
+        setGameOverState(false); // Show game over screen
         gameStarted = true;     
         document.getElementById('descenttut').innerHTML = "";
 
@@ -506,39 +521,59 @@ const SpoonDropDescent = () => {
         })
     }
 
-    // function isSpoonCollision(event){
-    //   let spoonCollided = false;
-    //   let collisionArray = event.source.pairs.collisionActive;
-    //   for(let j = 0; j < collisionArray.length; j++){
-    //     let bodyA = event.pairs[0].bodyA.id;
-    //     let bodyB = event.pairs[0].bodyB.id;
-    //     //console.log(event);
-    //     if(bodyA === trapBody || bodyA === spoonTop || bodyB === trapBody || bodyB === spoonTop){
-    //       spoonCollided = true;
-    //       }
-    //     }
-        
-    //   return spoonCollided;
-    //   }
-    
-
     function restartGame(){
       if (resettable === true){
+        resettable = false;
         allWalls.forEach(element =>{
             Composite.remove(engine.world, element);
         })
         points = 0;
+        setScoreText(points);            // reset score
         wallTracker = 0;
         speed = initialSpeed;
         ragdoll = false;
         let resetPos = Matter.Vector.create(curSpoon.position.x, spoonstart[1]);
         Body.setPosition(curSpoon, resetPos);
+        startGame();
       }
     }
-
-
-    Runner.run(runner, engine)
+    function startRestart(){
+      if(!gameStarted && !resettable){startGame()}
+      else{
+        restartGame();
+      }
+      setPlayButtonText("Restart")
+    }
+    function getPopupMessage(isStart){
+      if(isStart){
+        return "A spoon has been dropped."
+      }
+      let message;
+      if(points >= 2500){
+        message = "Well that's deep.";
+      }
+      else message = "The spoon descends no longer...";
+      return message;
+    }
+    let startMessage = getPopupMessage(true);
+    setMessage(startMessage);
+    setScoreText("Click or tap to guide the spoon's descent.")
+    restartRef.current = startRestart;
+    // Start Matter runner and renderer
+    Runner.run(runner, engine);
     Render.run(render);
+    setGameOverState(true); // Show game over screen
+    
+
+    // Cleanup on unmount
+    return () => {
+      Render.stop(render);
+      Runner.stop(runner);
+      Composite.clear(engine.world, false);
+      Engine.clear(engine);
+      render.canvas.remove();
+      render.textures = {};
+    };
   }, []);
 
 
@@ -546,11 +581,15 @@ const SpoonDropDescent = () => {
   
     return (
       <div className="notscene">
+      <div>
+          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
+          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
+      </div>
       <canvas ref={canvasRef} />
       <Link to="/spoondropMenu"><button className='back-button' onClick={console.log("button pressed")}></button></Link>
       <div id="menutext">
-        <p id="dropper">click or tap to drop a spoon</p>
-        <p id="descenttut"className="droppertext">guide its way down!</p>
+        <p id="dropper">Descent</p>
+        <p id="descenttut"className="droppertext"></p>
       </div>
     </div>
   )

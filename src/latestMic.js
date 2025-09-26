@@ -29,7 +29,6 @@ const YouTubePlaylistLatestVideo = ({ playlistId }) => {
     fetchLatestVideo();
   }, [playlistId]);
   const isMobile = useIsMobile();
-  console.log("is mobile? " + isMobile);
 
   var thumbnailStyle = {
     width: '100%',

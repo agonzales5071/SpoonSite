@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
+import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
 import { drawHUD } from "./util/spoonHelper";
 
@@ -8,6 +9,12 @@ const SpoonDropHotSpoontato = () => {
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
   const hudRef = useRef(null);
+  const restartRef = useRef(null);
+  const [playButtonText, setPlayButtonText] = useState("Play")
+
+  const [gameOverState, setGameOverState] = useState(false);
+  const [message, setMessage] = useState("AH ouch! The spoons are hot hot hot.");
+  const [scoreText, setScoreText] = useState("Click or tap and drag to move the trampoline and bounce the spoons until they're cool");
 
   useEffect(() => {
     const {
@@ -168,13 +175,7 @@ const SpoonDropHotSpoontato = () => {
 
     Events.on(mouseConstraint, "mousedown", () => {
       isDragging = true;
-      if(resettable){
-        restartGame();
-        resettable = false;
-      }
-      if(!gameStarted){
-        startGame();
-      }
+      if(!gameStarted && !resettable){startGame()}
     });
 
     Events.on(mouseConstraint, "mouseup", () => {
@@ -625,6 +626,7 @@ const SpoonDropHotSpoontato = () => {
     function restartGame() {
       if (resettable === true) {
         points = 0;
+        setScoreText(points);            // reset score
         resettable = false;
         tracker = 0;
         lives = 3;
@@ -638,6 +640,9 @@ const SpoonDropHotSpoontato = () => {
     }
     //TODO: add more messages
     function gameOver() {
+      setScoreText(points + " cool spoons");
+      let endMessage = getPopupMessage();
+      setMessage(endMessage);
       gameStarted = false;
       resettable = true;
       clearInterval(dropSpoons);
@@ -646,18 +651,19 @@ const SpoonDropHotSpoontato = () => {
         Body.applyForce(segment, segment.position, netForce);
       });
       const tutEl = document.getElementById("descenttut");
-      if (tutEl) tutEl.innerHTML = "Touch anywhere to try again.";
+      if (tutEl) tutEl.innerHTML = "";
       const dropperEl = document.getElementById("dropper");
-      if(points >= 20){
-        if (dropperEl) dropperEl.innerHTML = "HOLY COW!!! You cooled " + points + " spoons!";
-      }
-      else if (dropperEl) dropperEl.innerHTML = "Way to go! You cooled " + points + " spoons!";
+      if (dropperEl) dropperEl.innerHTML = "";
+      
+      setTimeout(() => {
+        setGameOverState(true); // Show game over screen
+      }, 1100)
     }
 
     var debug = false;
     function startGame() {
       if (gameStarted === false) {
-        
+        setGameOverState(false); // Show game over screen
         gameStarted = true;
         const tutEl = document.getElementById("descenttut");
         if (tutEl) tutEl.innerHTML = "";
@@ -717,12 +723,30 @@ const SpoonDropHotSpoontato = () => {
       if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " cool spoons. Speed = " + speed;
     }
 
+    function getPopupMessage(isStart){
+      if(isStart){
+        return "context!"
+      }
+      let message;
+      if(points >= 20){
+        message = "You are a professional cool guy/gal, aren't you?";
+      }
+      else message = "If you can't take the heat, get out of the utensil drawer.";
+      return message;
+    }
+      
+    function startRestart(){
+      if(!gameStarted && !resettable){startGame()}
+      else{
+        restartGame();
+      }
+      setPlayButtonText("Restart")
+    }
+    restartRef.current = startRestart;
 
-    // Remove old interval movement on mouse drag - no longer needed with damping
-
-    // Start Matter runner and renderer
-    Runner.run(runner, engine);
+    Runner.run(runner, engine)
     Render.run(render);
+    setGameOverState(true); // Show game over screen
     
     drawHUD(() => lives, () => gameStarted, hudRef);
     
@@ -740,16 +764,18 @@ const SpoonDropHotSpoontato = () => {
 
   return (
     <div className="notscene" ref={boxRef}>
+      <div>
+          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
+          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
+      </div>
       <canvas ref={canvasRef} />
       <canvas ref={hudRef} className="hud" style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none" }} />
       <Link to="/spoondropMenu">
         <button className="back-button" onClick={() => console.log("button pressed")} />
       </Link>
       <div id="menutext">
-        <p id="dropper">click or tap and drag to move the net</p>
-        <p id="descenttut" className="droppertext">
-          catch the spoons!
-        </p>
+        <p id="dropper">Hot Spoontato</p>
+        <p id="descenttut" className="droppertext"></p>
       </div>
     </div>
   );
