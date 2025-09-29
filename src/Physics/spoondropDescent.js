@@ -586,7 +586,8 @@ const SpoonDropDescent = () => {
           onRestart={() => restartRef.current()} playButtonText={playButtonText} />
       </div>
       <canvas ref={canvasRef} />
-      <Link to="/spoondropMenu"><button className='back-button' onClick={console.log("button pressed")}></button></Link>
+      <Link to="/spoondropMenu"><button className='back-button' 
+      style={{ display: gameOverState ? "none" : "block" }} ></button></Link>
       <div id="menutext">
         <p id="dropper">Descent</p>
         <p id="descenttut"className="droppertext"></p>

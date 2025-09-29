@@ -771,7 +771,7 @@ const SpoonDropHotSpoontato = () => {
       <canvas ref={canvasRef} />
       <canvas ref={hudRef} className="hud" style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none" }} />
       <Link to="/spoondropMenu">
-        <button className="back-button" onClick={() => console.log("button pressed")} />
+        <button className="back-button" style={{ display: gameOverState ? "none" : "block" }}/>
       </Link>
       <div id="menutext">
         <p id="dropper">Hot Spoontato</p>

@@ -512,7 +512,7 @@ const SpoonDropRescue = () => {
         </div>
       <canvas ref={canvasRef} />
       <Link to="/spoondropMenu">
-        <button className="back-button" onClick={() => console.log("button pressed")} />
+        <button className="back-button" style={{ display: gameOverState ? "none" : "block" }} />
       </Link>
       <div id="menutext">
         <p id="dropper">Rescue</p>
