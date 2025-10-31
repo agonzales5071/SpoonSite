@@ -911,19 +911,21 @@ const SpoonDropCerealShot = () => {
     }
 
     //points should increment halfway through spawn increment
-    
+    let maxHits = 12;
     function doPointIncrement(spoon, cerealPos) {
       const spoonState = activeSpoons.find(s => s.body === spoon);
-      points+= 10*(spoonState.cerealHits+1);
       spoonState.cerealHits++;
-      let color = "#FFFFFF"
-      if(spoonState.cerealHits > 2){
-        color = "#3df13d"
+      if(spoonState.cerealHits < maxHits){
+        points+= 10*(spoonState.cerealHits);
+        let color = "#FFFFFF"
+        if(spoonState.cerealHits > 2){
+          color = "#3df13d"
+        }
+        if(spoonState.cerealHits > 4){
+          color = "rainbow"
+        }
+        createPlusScore(cerealPos.x, cerealPos.y, spoonState.cerealHits*10, color)
       }
-      if(spoonState.cerealHits > 4){
-        color = "rainbow"
-      }
-      createPlusScore(cerealPos.x, cerealPos.y, spoonState.cerealHits*10, color)
     }
 
     function setText() {

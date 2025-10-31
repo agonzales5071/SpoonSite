@@ -133,8 +133,8 @@ const SpoonDropGameSpeed = () => {
       }
 
 
-      var size = 100,
-      x = mouse.position.x,
+      var size = width > 800 ? 100 : 50;
+      var x = mouse.position.x,
       y = mouse.position.y,
       
       curSpoon = getSpoon(size, x, y, null)

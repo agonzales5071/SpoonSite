@@ -3,7 +3,8 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from "./util/gameoverPopupSaberBattle";
-import { createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, getDualSidedSaber, drawHUD, createRandom2DVector } from "./util/spoonHelper";
+import { createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, 
+  getDualSidedSaber, drawHUD, createRandom2DVector, rotatePlayerToward } from "./util/spoonHelper";
 //TODO: Scoring, double sided dark side saber, hilt, weak hitboxes, lives, add hilt to cosmetic filter
 const SpoonSaberBattle = () => {
   const boxRef = useRef(null);
@@ -339,7 +340,7 @@ const SpoonSaberBattle = () => {
         if(isMouseDown){
           movePlayerToward(target, dt);
         }
-        rotatePlayerToward(target, dt);
+        rotatePlayerToward(target, dt, saber, isPlayerDarkSide);
       }
     });
     function redrawPlayer(){
@@ -381,59 +382,7 @@ const SpoonSaberBattle = () => {
     }
 
 
-    function rotatePlayerToward(target, dtMs) {
-      const current = saber.angle;
-      let angleAdjustment = isPlayerDarkSide ? 0 : Math.PI/2;
-      // desired angle pointing from saber -> target (adjust for your sprite orientation)
-      const desired = Math.atan2(target.y - saber.position.y, target.x - saber.position.x) - angleAdjustment;
-
-      // shortest angular difference in [-PI, PI]
-      let diff = Math.atan2(Math.sin(desired - current), Math.cos(desired - current));
-      const absDiff = Math.abs(diff);
-
-      // --- Dynamic deadzone based on distance to target (pixels) ---
-      // When the target is very close to the saber, allow a larger deadzone so small mouse wiggles are ignored.
-      const dist = Math.hypot(target.x - saber.position.x, target.y - saber.position.y);
-      const maxDistForDeadzone = 180;     // tune: how far "near" counts
-      const minDeadzone = 0.006;          // radians (~0.34°) - when target far
-      const maxDeadzone = 0.04;           // radians (~2.3°) - when target very near
-      const t = Math.max(0, Math.min(1, 1 - dist / maxDistForDeadzone)); // 1 when dist=0, 0 when far
-      const deadzone = minDeadzone + (maxDeadzone - minDeadzone) * t;
-
-      // --- Frame-rate aware smoothing ---
-      // turningSharpness (0..1) is "how aggressive the easing is" at 60fps.
-      const turningSharpness = 0.5; // increase => snappier, decrease => more floaty
-      const alpha = 1 - Math.pow(1 - turningSharpness, dtMs / (1000 / 60));
-
-      // adapt alpha slightly by diff magnitude so big turns accelerate a bit
-      const adaptFactor = Math.min(1, absDiff / (Math.PI / 24) + 0.1); // scale up when diff > 7.5°
-      const effectiveAlpha = alpha * adaptFactor;
-
-      // compute step
-      let step;
-      if (absDiff < deadzone) {
-        // If within deadzone, still *move smoothly* a little toward the goal (no snapping).
-        const tinyFactor = 0.05; // very slow glide inside deadzone
-        step = diff * tinyFactor;
-      } else {
-        step = diff * effectiveAlpha;
-      }
-
-      // --- Minimum step so tiny diffs keep moving smoothly (prevents "stuck" micro-jitter) ---
-      const minStepPerSecond = 0.05; // rad/sec (tune downward for less micro-movement)
-      const minStepThisFrame = minStepPerSecond * (dtMs / 1000);
-      if (Math.abs(step) < minStepThisFrame && Math.abs(diff) > deadzone) {
-        step = Math.sign(diff) * minStepThisFrame;
-      }
-
-      // --- Cap max angular speed per frame ---
-      const maxAngularSpeedPerSecond = Math.PI * 6; // rad/sec (≈ 3 turns/sec) — tune up/down
-      const maxStepThisFrame = maxAngularSpeedPerSecond * (dtMs / 1000);
-      if (Math.abs(step) > maxStepThisFrame) step = Math.sign(step) * maxStepThisFrame;
-
-      // apply rotation
-      Matter.Body.setAngle(saber, current + step);
-    }
+    
     var spawnEnemies;
     var tracker = 0;
     var initialSpeed = 30;

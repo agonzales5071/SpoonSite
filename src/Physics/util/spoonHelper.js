@@ -2,57 +2,28 @@ import Matter, { Bodies, Body, Vector} from "matter-js";
 
 const segmentLength = 12;
 //const segmentThickness = 4;
+const CATEGORY_SPOON = 0x0002;
+const CATEGORY_ENEMY_SPOON = 0x0004;
+const CATEGORY_NOTHING = 0x0000;
+
+export const enemyFilter = {
+  category: CATEGORY_ENEMY_SPOON,
+  mask: CATEGORY_SPOON,
+};
+
+export const cosmeticFilter = {
+  mask: CATEGORY_NOTHING
+}
+
+export const spoonFilter = {
+  category: CATEGORY_SPOON,
+  mask: CATEGORY_ENEMY_SPOON,
+};
 
 export function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
-// export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, center = "middle"){
-//       let spoonSpawn = [xposSpawn, yposSpawn, - spoonSize/2 + yposSpawn];
-//       let spoonHeadOffset = spoonSize / 50;
-//       let spoonDensity = 0.0011;
-
-//       //SHAPES
-//       let partA1 = Bodies.circle(spoonSpawn[0], spoonSpawn[2], spoonSize/5, {
-//         density: spoonDensity,
-//         render: {fillStyle: color},
-//         collisionFilter: spoonFilter,
-//       });
-//       let partA2 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - spoonHeadOffset, spoonSize/5, {
-//         render: partA1.render,
-//         density: spoonDensity,
-//         collisionFilter: partA1.collisionFilter,
-//       });
-//       let partA3 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 2*spoonHeadOffset, spoonSize/5, {
-//         render: partA1.render,
-//         density: spoonDensity,
-//         collisionFilter: partA1.collisionFilter,
-//       });
-//       let partA4 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 3*spoonHeadOffset, spoonSize/5, {
-//         render: partA1.render,
-//         density: spoonDensity,
-//         collisionFilter: partA1.collisionFilter,
-//       });
-//       let partB = Bodies.trapezoid(spoonSpawn[0], spoonSpawn[1], spoonSize/5, spoonSize, 0.4, {
-//         render: partA1.render,
-//         density: spoonDensity,
-//         collisionFilter: partA1.collisionFilter,
-//       });
-//       //let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
-
-//       let spoon = Body.create({
-//         parts: [partA1, partA2, partA3, partA4, partB],
-//         collisionFilter: spoonFilter,
-//       });
-
-//       if(center === "middle"){
-//         Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] - spoonSize / 10), false);
-//       }
-//       if(center === "bottom"){
-//         Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] + spoonSize/2), false);
-//       }
-//       return spoon;
-//     }
 export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, center = "middle"){
   if(spoonFilter === null){
     spoonFilter = {
@@ -164,6 +135,58 @@ export function getDualSidedSaber(spoonSize, x, y, spoonFilter, color, gap = 0) 
   });
 
   return saber;
+}
+
+export function getSpoonShip(spoonSize, xposSpawn, yposSpawn, spoonFilter, color){
+  let spoonSpawn = [xposSpawn, yposSpawn, - spoonSize/2 + yposSpawn];
+  let spoonHeadOffset = spoonSize / 50;
+  let triHeight = spoonSize/4
+  let halfWidth = spoonSize/8;
+  let baseY = yposSpawn + spoonSize/3
+
+  //SHAPES
+  let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
+  let leftTriangle = Bodies.fromVertices(
+  spoonSpawn[0] - halfWidth,
+  baseY,
+  [[
+    { x: 0, y: 0 },
+    { x: -triHeight/2, y: triHeight },
+    { x: 0, y: triHeight }
+  ]],
+  {
+    render: {fillStyle: "red"},
+    collisionFilter: spoonFilter,
+  },
+  true
+);
+
+let rightTriangle = Bodies.fromVertices(
+  spoonSpawn[0] + halfWidth,
+  baseY,
+  [[
+    { x: 0, y: 0 },
+    { x: triHeight/2, y: triHeight },
+    { x: 0, y: triHeight }
+  ]],
+  {
+    render: {fillStyle: "red"},
+    collisionFilter: spoonFilter,
+  },
+  true
+);
+  parts.push(rightTriangle, leftTriangle);
+
+  let spoon = Body.create({
+    parts: parts,
+    collisionFilter: spoonFilter,
+  });
+
+  
+    Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] - spoonSize / 10), false);
+  
+  
+  return spoon;
 }
 
 function getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset){
@@ -388,4 +411,70 @@ export function createRandom2DVector(magnitude) {
   const x = Math.cos(angle) * magnitude;
   const y = Math.sin(angle) * magnitude;
   return Matter.Vector.create(x, y);
+}
+export function createDefined2DVector(magnitude, angle) {
+  angle -= Math.PI/2
+  const x = Math.cos(angle) * magnitude;
+  const y = Math.sin(angle) * magnitude;
+  return Matter.Vector.create(x, y);
+}
+//used to rotate a body toward mouse
+export function rotatePlayerToward(target, dtMs, body, offsetNinety = false, offsetOneEighty = false) {
+  const current = body.angle;
+  let angleAdjustment = Math.PI/2;
+  if(offsetNinety){
+    angleAdjustment = 0;
+  }
+  else{
+    angleAdjustment = offsetOneEighty ? Math.PI*3/2 : angleAdjustment;
+  }
+  // desired angle pointing from body -> target (adjust for your sprite orientation)
+  const desired = Math.atan2(target.y - body.position.y, target.x - body.position.x) - angleAdjustment;
+
+  // shortest angular difference in [-PI, PI]
+  let diff = Math.atan2(Math.sin(desired - current), Math.cos(desired - current));
+  const absDiff = Math.abs(diff);
+
+  // --- Dynamic deadzone based on distance to target (pixels) ---
+  // When the target is very close to the body, allow a larger deadzone so small mouse wiggles are ignored.
+  const dist = Math.hypot(target.x - body.position.x, target.y - body.position.y);
+  const maxDistForDeadzone = 180;     // tune: how far "near" counts
+  const minDeadzone = 0.006;          // radians (~0.34°) - when target far
+  const maxDeadzone = 0.04;           // radians (~2.3°) - when target very near
+  const t = Math.max(0, Math.min(1, 1 - dist / maxDistForDeadzone)); // 1 when dist=0, 0 when far
+  const deadzone = minDeadzone + (maxDeadzone - minDeadzone) * t;
+
+  // --- Frame-rate aware smoothing ---
+  // turningSharpness (0..1) is "how aggressive the easing is" at 60fps.
+  const turningSharpness = 0.5; // increase => snappier, decrease => more floaty
+  const alpha = 1 - Math.pow(1 - turningSharpness, dtMs / (1000 / 60));
+
+  // adapt alpha slightly by diff magnitude so big turns accelerate a bit
+  const adaptFactor = Math.min(1, absDiff / (Math.PI / 24) + 0.1); // scale up when diff > 7.5°
+  const effectiveAlpha = alpha * adaptFactor;
+
+  // compute step
+  let step;
+  if (absDiff < deadzone) {
+    // If within deadzone, still *move smoothly* a little toward the goal (no snapping).
+    const tinyFactor = 0.05; // very slow glide inside deadzone
+    step = diff * tinyFactor;
+  } else {
+    step = diff * effectiveAlpha;
+  }
+
+  // --- Minimum step so tiny diffs keep moving smoothly (prevents "stuck" micro-jitter) ---
+  const minStepPerSecond = 0.05; // rad/sec (tune downward for less micro-movement)
+  const minStepThisFrame = minStepPerSecond * (dtMs / 1000);
+  if (Math.abs(step) < minStepThisFrame && Math.abs(diff) > deadzone) {
+    step = Math.sign(diff) * minStepThisFrame;
+  }
+
+  // --- Cap max angular speed per frame ---
+  const maxAngularSpeedPerSecond = Math.PI * 6; // rad/sec (≈ 3 turns/sec) — tune up/down
+  const maxStepThisFrame = maxAngularSpeedPerSecond * (dtMs / 1000);
+  if (Math.abs(step) > maxStepThisFrame) step = Math.sign(step) * maxStepThisFrame;
+
+  // apply rotation
+  Matter.Body.setAngle(body, current + step);
 }
