@@ -65,7 +65,7 @@ const SpoonDropCerealShot = () => {
       Events,
     } = Matter;
 
-    const swipeControls = window.location.href.includes("Leo");
+    const swipeControls = window.location.href.includes("Leo") || window.location.href.includes("leo");
 
     let activeSpoons = [];
     let cereal = [];
@@ -265,7 +265,7 @@ const SpoonDropCerealShot = () => {
       if(swipeControls){
         const dx = mousePos.x - mouseDownPos.x;
         const pivotDir = dx > prevDX ? 1 : -1; 
-        var pivotSpeed = Math.abs(dx) - Math.abs(prevDX) > 0.1 ? 0.02 : 0.01
+        var pivotSpeed = Math.abs(dx) - Math.abs(prevDX) > 0.1 ? 0.05 : 0.02
           prevDX = dx;
           const pivotSpeedDampener = isMobile ? 2 : 1; 
           cannonTargetAngle = cannonTargetAngle + pivotDir*pivotSpeed/pivotSpeedDampener;
@@ -987,7 +987,7 @@ const SpoonDropCerealShot = () => {
         }} />
       </div>
       <canvas ref={canvasRef} />
-      <Link to="/spoondropMenu">
+      <Link to="/games">
         <button className="back-button" 
         style={{ display: gameOverState ? "none" : "block" }} />
       </Link>

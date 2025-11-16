@@ -203,7 +203,7 @@ const SpoonDropGameSpeed = () => {
           onRestart={() => restartRef.current()} playButtonText={playButtonText} />
       </div>
         <canvas ref={canvasRef} />
-        <Link to="/spoondropMenu"><button className='back-button'
+        <Link to="/games"><button className='back-button'
         style={{ display: gameOverState ? "none" : "block" }}></button></Link>
         <div id="menutext">
           <p id="speedclickdisplay">Speed Click</p>

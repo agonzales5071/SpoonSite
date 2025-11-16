@@ -43,13 +43,13 @@ const SpoonDropMenu = () => {
         segmentThickness = 6;
       }
       const links = [
-        ["/spoondropGameSpeed", "SpeedClick", "#77c2abff", "#74EE15"], 
-        ["/spoondropCerealShot", "CerealShot", "#fff2d1", "#006FFF"], 
-        ["/spoondropSpoonSaberBattle", "SpoonSaber Battle", "#f7e546ff", "#74EE15"], 
-        ["/spoondropDescent", "Descent",  "#9b8b70ff"],
-        ["/spoondropRescue", "Rescue",  "#aec8f8ff"],
-        ["/spoondropHotSpoontato", "HotSpoontato",  "#c75656ff"],
-        ["/spoondrop", "Freeplay", "#c996ceff", "#8C00FC"],
+        ["/games/SpeedClick", "SpeedClick", "#77c2abff", "#74EE15"], 
+        ["/games/CerealShot", "CerealShot", "#fff2d1", "#006FFF"], 
+        ["/games/SpoonSaberBattle", "SpoonSaber Battle", "#f7e546ff", "#74EE15"], 
+        ["/games/Descent", "Descent",  "#9b8b70ff"],
+        ["/games/Rescue", "Rescue",  "#aec8f8ff"],
+        ["/games/HotSpoontato", "HotSpoontato",  "#c75656ff"],
+        ["/games/Freeplay", "Freeplay", "#c996ceff", "#8C00FC"],
         ["/", "Home Page", "#BFFCC6", "#FF6701"]];
       const link = 0;
       const name = 1;

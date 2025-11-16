@@ -90,7 +90,7 @@ const SpoonDrop = () => {
     return (
     <div className="scene" >
       <canvas ref={canvasRef} />
-      <Link to="/spoondropMenu"><button className='back-button'></button></Link>
+      <Link to="/games"><button className='back-button'></button></Link>
       <p id="menudisplay">FREEPLAY!</p>
       <p>Click or tap anywhere to drop some spoons</p>
       </div>
