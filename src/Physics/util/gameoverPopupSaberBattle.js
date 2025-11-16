@@ -39,7 +39,7 @@ const GameOver = ({ message, scoreText, visible, onRestart, playButtonText, dark
                   <span className="darkside-modal-action-text inter-font">Dark Side</span>
                 
               </button>
-                <Link to="/spoondropMenu" className="sd-modal-link">
+                <Link to="/games" className="sd-modal-link">
               <button type="button" className="sd-modal-action" id="game-menu-action">
                   <div className="sd-modal-action-pattern"></div>
                   <div className="sd-modal-action-fade"></div>

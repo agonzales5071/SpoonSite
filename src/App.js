@@ -15,18 +15,18 @@ import HotAir from './components/Home/HotAir.js';
 import ScrollToTop from './components/Common/ScrollToTop.js';
 import Portfolio from "./portfolio.js";
 import Socials from "./socials.js";
-import SpoonDrop from "./Physics/spoondrop.js";
+import SpoonDrop from "./Physics/Freeplay.js";
 import LatestMic from "./latestMic.js";
 import { BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import Truck from "./components/Home/Truck.js";
-import SpoonDropGameSpeed from './Physics/spoondropGameSpeed';
-import SpoonDropHomerun from './Physics/spoondropHomerun';
-import SpoonDropMenu from './Physics/spoondropMenu';
-import SpoonDropDescent from './Physics/spoondropDescent';
-import SpoonDropRescue from './Physics/spoondropRescue';
-import SpoonDropHotSpoontato from './Physics/spoondropHotSpoontato.js';
-import SpoonDropCerealShot from './Physics/spoondropCerealShot.js';
-import SpoonSaberBattle from './Physics/spoondropSpoonSaberBattle.js';
+import SpoonDropGameSpeed from './Physics/SpeedClick.js';
+import SpoonDropHomerun from './Physics/Homerun.js';
+import SpoonDropMenu from './Physics/Menu.js';
+import SpoonDropDescent from './Physics/Descent.js';
+import SpoonDropRescue from './Physics/Rescue.js';
+import SpoonDropHotSpoontato from './Physics/HotSpoontato.js';
+import SpoonDropCerealShot from './Physics/CerealShot.js';
+import SpoonSaberBattle from './Physics/SpoonSaberBattle.js';
 
 
 
@@ -40,12 +40,12 @@ class App extends React.Component {
           <Routes>
             <Route path="/" element={<Home />}/>
             <Route path="/portfolio" element={<Portfolio/>} />
-            <Route path="/spoondrop" element={<SpoonDrop/>} />
             <Route path="/socials" element={<Socials/>} />
             <Route path="/latest-mic" element={<LatestMic/>} />
+            <Route path="/games" element={<SpoonDropMenu/>} />
+            <Route path="/games/Freeplay" element={<SpoonDrop/>} />
             <Route path="/games/SpeedClick" element={<SpoonDropGameSpeed/>} />
             <Route path="/games/Homerun" element={<SpoonDropHomerun/>} />
-            <Route path="/games" element={<SpoonDropMenu/>} />
             <Route path="/games/Descent" element={<SpoonDropDescent/>} />
             <Route path="/games/Rescue" element={<SpoonDropRescue/>} />
             <Route path="/games/HotSpoontato" element={<SpoonDropHotSpoontato/>} />
@@ -63,7 +63,7 @@ class Home extends React.Component {
     super(props);
     this.componentsData = [
       { id: "pb", textid: "pbtext", className: "hotair", link: "/portfolio", text: "portfolio", img: "images/portfolioballoon.png" },
-      { id: "sd", textid: "sdtext", className: "hotair", link: "/spoondropMenu", text: "mini games", img: "images/spoondropballoon2.png"},
+      { id: "sd", textid: "sdtext", className: "hotair", link: "/games", text: "mini games", img: "images/spoondropballoon2.png"},
       { id: "fm", textid: "fmtext", className: "hotair", link: "/socials", text: "find me", img: "images/findmeballoon.png"},
        ];
   }

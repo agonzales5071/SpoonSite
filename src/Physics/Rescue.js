@@ -511,7 +511,7 @@ const SpoonDropRescue = () => {
           onRestart={() => restartRef.current()} playButtonText={playButtonText} />
         </div>
       <canvas ref={canvasRef} />
-      <Link to="/spoondropMenu">
+      <Link to="/games">
         <button className="back-button" style={{ display: gameOverState ? "none" : "block" }} />
       </Link>
       <div id="menutext">

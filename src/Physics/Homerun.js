@@ -137,7 +137,7 @@ const SpoonDropHomerun = () => {
     return (
     <div className="scene">
       <canvas ref={canvasRef} />
-      <Link to="/spoondropMenu"><button className='back-button'></button></Link>
+      <Link to="/games"><button className='back-button'></button></Link>
       <div id="menutext">
         <p id="homerundisplay">Drag a spoon into the circle and let it fly! Or just toss it...</p>
       </div>
