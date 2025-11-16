@@ -43,14 +43,14 @@ class App extends React.Component {
             <Route path="/spoondrop" element={<SpoonDrop/>} />
             <Route path="/socials" element={<Socials/>} />
             <Route path="/latest-mic" element={<LatestMic/>} />
-            <Route path="/spoondropgamespeed" element={<SpoonDropGameSpeed/>} />
-            <Route path="/spoondrophomerun" element={<SpoonDropHomerun/>} />
-            <Route path="/spoondropMenu" element={<SpoonDropMenu/>} />
-            <Route path="/spoondropDescent" element={<SpoonDropDescent/>} />
-            <Route path="/spoondropRescue" element={<SpoonDropRescue/>} />
-            <Route path="/spoondropHotSpoontato" element={<SpoonDropHotSpoontato/>} />
-            <Route path="/spoondropCerealShot" element={<SpoonDropCerealShot/>} />
-            <Route path="/spoondropSpoonSaberBattle" element={<SpoonSaberBattle/>} />
+            <Route path="/games/SpeedClick" element={<SpoonDropGameSpeed/>} />
+            <Route path="/games/Homerun" element={<SpoonDropHomerun/>} />
+            <Route path="/games" element={<SpoonDropMenu/>} />
+            <Route path="/games/Descent" element={<SpoonDropDescent/>} />
+            <Route path="/games/Rescue" element={<SpoonDropRescue/>} />
+            <Route path="/games/HotSpoontato" element={<SpoonDropHotSpoontato/>} />
+            <Route path="/games/CerealShot" element={<SpoonDropCerealShot/>} />
+            <Route path="/games/SpoonSaberBattle" element={<SpoonSaberBattle/>} />
           </Routes>
         </div>
       </Router>
