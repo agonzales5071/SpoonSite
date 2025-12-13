@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import { floatAndFade } from "./util/spoonHelper";
+import { floatAndFade, spawnFallingO } from "./util/spoonHelper";
 
 const SpoonDropCerealShot = () => {
   const boxRef = useRef(null);
@@ -369,6 +369,7 @@ const SpoonDropCerealShot = () => {
     function spawnCrumbBurst(cerealBody) {
       const { x, y } = cerealBody.position;
       const radius = cerealBody.circleRadius || 20;
+      const color = cerealBody.color;
     
       const crumbCount = getRandomInt(8) + 8;
       for (let i = 0; i < crumbCount; i++) {
@@ -384,7 +385,7 @@ const SpoonDropCerealShot = () => {
           frictionAir: .2,
           density: crumbDensity,
           render: {
-            fillStyle: "#edc55f",
+            fillStyle: color,
             opacity: 1,
           },
           collisionFilter: {
@@ -558,45 +559,16 @@ const SpoonDropCerealShot = () => {
     
     
 
-    function spawnFallingO() {
-      let obstacleSize = size * 0.25 + size * Math.random() * 0.05;
+    function doOSpawn() {
       let xposSpawn = gameWidth * Math.random() + margin;
       let fric = isMobile ? 0.08 : 0.05
       
+      let o = spawnFallingO(xposSpawn, engine.world,
+        cerealFilter, size, fric, cerealGrav
+      )
+      cereal.push(o);
     
-      let circleOuter = Bodies.circle(xposSpawn, -obstacleSize, obstacleSize, {
-        render: { fillStyle: "#edc55f" },
-        collisionFilter: cerealFilter,
-        density: cerealGrav,
-        frictionAir: fric,
-        isSensor: true,
-      });
-    
-      let circleInner = Bodies.circle(xposSpawn, -obstacleSize, obstacleSize / 3, {
-        render: { fillStyle: backgroundColor },
-        collisionFilter: circleOuter.collisionFilter,
-        density: cerealGrav,
-        frictionAir: fric,
-        isSensor: true,
-      });
-    
-      let cerealO = Body.create({
-        parts: [circleOuter, circleInner],
-        collisionFilter: circleOuter.collisionFilter,
-        density: cerealGrav,
-        frictionAir: fric,
-        isSensor: true,
-      });
-    
-      // Assign snake movement parameters
-      cerealO.snake = {
-        amplitude: 0.0015 + Math.random() * 0.001, // control left-right strength
-        frequency: 0.005 + Math.random() * 0.005, // how fast it oscillates
-        phase: Math.random() * Math.PI * 2,       // random start phase
-      };
-    
-      cereal.push(cerealO);
-      Composite.add(engine.world, cerealO);
+      // Composite.add(engine.world, o);
     }
     function applySnakeMotionToCereal(timestamp) {
       for (const body of cereal) {
@@ -880,7 +852,7 @@ const SpoonDropCerealShot = () => {
           }
           detectDroppedSpoons()
           if(doSpawnCheck()){
-            spawnFallingO();
+            doOSpawn();
           }
           if(gameStarted){
             setText();

@@ -19,7 +19,7 @@ import SpoonDrop from "./Physics/Freeplay.js";
 import LatestMic from "./latestMic.js";
 import { BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import Truck from "./components/Home/Truck.js";
-import SpoonshipAsteroid from './Physics/spoondropSpaceOs.js';
+import SpoonshipAsteroid from './Physics/SpaceOs.js';
 import SpoonDropGameSpeed from './Physics/SpeedClick.js';
 import SpoonDropHomerun from './Physics/Homerun.js';
 import SpoonDropMenu from './Physics/Menu.js';
@@ -53,7 +53,7 @@ class App extends React.Component {
             <Route path="/games/HotSpoontato" element={<SpoonDropHotSpoontato/>} />
             <Route path="/games/CerealShot" element={<SpoonDropCerealShot/>} />
             <Route path="/games/SpoonSaberBattle" element={<SpoonSaberBattle/>} />
-            <Route path="/game/SpaceOs" element={<SpoonshipAsteroid/>} />
+            <Route path="/games/SpaceOs" element={<SpoonshipAsteroid/>} />
           </Routes>
         </div>
       </Router>

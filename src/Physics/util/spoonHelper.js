@@ -2,9 +2,19 @@ import Matter, { Bodies, Body, Vector} from "matter-js";
 
 const segmentLength = 12;
 //const segmentThickness = 4;
+const BACKGROUND_COLOR = '#14151f';
 const CATEGORY_SPOON = 0x0002;
 const CATEGORY_ENEMY_SPOON = 0x0004;
-const CATEGORY_NOTHING = 0x0000;
+export const CATEGORY_NOTHING = 0x0000;
+const fruityColors = [
+  "#ec3b3bff",
+  "#fce76dff",
+  "#ff9e29ff", 
+  "#3ae2daff", 
+  "#5ae145ff", 
+  "#f14ae3ff"
+
+]
 
 export const enemyFilter = {
   category: CATEGORY_ENEMY_SPOON,
@@ -12,14 +22,15 @@ export const enemyFilter = {
 };
 
 export const cosmeticFilter = {
-  mask: CATEGORY_NOTHING
+  mask: CATEGORY_NOTHING,
+  group: -1
 }
 
 export const spoonFilter = {
   category: CATEGORY_SPOON,
   mask: CATEGORY_ENEMY_SPOON,
 };
-
+//gets number between 0 and max - 1 inclusive
 export function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
@@ -147,43 +158,68 @@ export function getSpoonShip(spoonSize, xposSpawn, yposSpawn, spoonFilter, color
   //SHAPES
   let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
   let leftTriangle = Bodies.fromVertices(
-  spoonSpawn[0] - halfWidth,
-  baseY,
-  [[
-    { x: 0, y: 0 },
-    { x: -triHeight/2, y: triHeight },
-    { x: 0, y: triHeight }
-  ]],
-  {
-    render: {fillStyle: "red"},
-    collisionFilter: spoonFilter,
-  },
-  true
-);
+    spoonSpawn[0] - halfWidth,
+    baseY,
+    [[
+      { x: 0, y: 0 },
+      { x: -triHeight/2, y: triHeight },
+      { x: 0, y: triHeight }
+    ]],
+    {
+      render: {fillStyle: "red"},
+      collisionFilter: spoonFilter,
+    },
+    true
+  );
 
-let rightTriangle = Bodies.fromVertices(
-  spoonSpawn[0] + halfWidth,
-  baseY,
-  [[
-    { x: 0, y: 0 },
-    { x: triHeight/2, y: triHeight },
-    { x: 0, y: triHeight }
-  ]],
-  {
-    render: {fillStyle: "red"},
-    collisionFilter: spoonFilter,
-  },
-  true
-);
+  let rightTriangle = Bodies.fromVertices(
+    spoonSpawn[0] + halfWidth,
+    baseY,
+    [[
+      { x: 0, y: 0 },
+      { x: triHeight/2, y: triHeight },
+      { x: 0, y: triHeight }
+    ]],
+    {
+      render: {fillStyle: "red"},
+      collisionFilter: spoonFilter,
+    },
+    true
+  );
+
   parts.push(rightTriangle, leftTriangle);
+
+  //indicators
+  let indicatorSize = spoonSize/25;
+  let indicatorSpacing = indicatorSize*2.5;
+  const chargeIndicator1 = Bodies.circle(xposSpawn, baseY, indicatorSize, 
+    {
+      render: {fillStyle: color}
+    }
+  )
+  const chargeIndicator2 = Bodies.circle(xposSpawn, baseY - indicatorSpacing, spoonSize/25, 
+    {
+      render: {fillStyle: color}
+    }
+  )
+  const chargeIndicator3 = Bodies.circle(xposSpawn, baseY - indicatorSpacing*2, spoonSize/25, 
+    {
+      render: {fillStyle: color}
+    }
+  )
+  chargeIndicator1.label = "c1";
+  chargeIndicator2.label = "c2";
+  chargeIndicator3.label = "c3";
+  
+  parts.push(chargeIndicator1, chargeIndicator2, chargeIndicator3)
 
   let spoon = Body.create({
     parts: parts,
     collisionFilter: spoonFilter,
   });
 
-  
-    Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] - spoonSize / 10), false);
+
+  Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] - spoonSize / 10), false);
   
   
   return spoon;
@@ -418,6 +454,11 @@ export function createDefined2DVector(magnitude, angle) {
   const y = Math.sin(angle) * magnitude;
   return Matter.Vector.create(x, y);
 }
+export function getDistanceBetween(bodyA, bodyB){
+  let xDiff = bodyA.position.x - bodyB.position.x;
+  let yDiff = bodyA.position.y - bodyB.position.y;
+  return Math.sqrt(xDiff*xDiff + yDiff*yDiff);
+}
 //used to rotate a body toward mouse
 export function rotatePlayerToward(target, dtMs, body, offsetNinety = false, offsetOneEighty = false) {
   const current = body.angle;
@@ -477,4 +518,75 @@ export function rotatePlayerToward(target, dtMs, body, offsetNinety = false, off
 
   // apply rotation
   Matter.Body.setAngle(body, current + step);
+}
+
+export function getExclamationPoint(x, y, size, blackHole = false){
+  
+  let top = Bodies.rectangle(x, y-(size*3/2), size*2/3, size*8/3, {isSensor: true, render: {fillStyle: "white"}})
+  let bottom = Bodies.circle(x, y+size, size/2, {isSensor: true, render: {fillStyle: "white"}})
+  let parts = [top, bottom]
+  if(blackHole){
+    //special bodies
+  }
+  return Body.create({parts: parts});
+}
+
+
+/*
+/ Creates a and returns an O
+/ fruity being true makes colorful Os
+*///density = cerealgrav in cerealShot
+export function createLoop(x, y, world, collisionFilter, size, fric, density, fruity, semiTransparent) {
+  
+  let color = "#edc55f";
+  if(fruity){
+    color = fruityColors.at(getRandomInt(fruityColors.length));
+  }
+  let circleOuter = Bodies.circle(x, y, size, {
+    render: { fillStyle: color },
+    collisionFilter: collisionFilter,
+    density: density,
+    frictionAir: fric,
+    isSensor: true,
+  });
+  if(semiTransparent){
+    circleOuter.render.opacity = .8
+  }
+
+  let circleInner = Bodies.circle(x, y, size / 3, {
+    render: { fillStyle: BACKGROUND_COLOR },
+    collisionFilter: collisionFilter,
+    density: density,
+    frictionAir: fric,
+    isSensor: true,
+  });
+
+  let cerealO = Body.create({
+    parts: [circleOuter, circleInner],
+    collisionFilter: collisionFilter,
+    density: density,
+    frictionAir: fric,
+    isSensor: true,
+  });
+  cerealO.color = color;
+  Matter.Composite.add(world, cerealO);
+  return cerealO;
+}
+
+export function spawnFallingO(x, world, collisionFilter, size, fric, cerealGrav){
+  let obstacleSize = size * 0.25 + size * Math.random() * 0.05;
+  let fruity = true;
+  if(getRandomInt(9) === 0){
+    fruity = true;
+  }
+  let cerealO = createLoop(x, -obstacleSize, world, collisionFilter, 
+    obstacleSize, fric, cerealGrav, fruity, false)
+  
+  // Assign snake movement parameters
+  cerealO.snake = {
+    amplitude: 0.0015 + Math.random() * 0.001, // control left-right strength
+    frequency: 0.005 + Math.random() * 0.005, // how fast it oscillates
+    phase: Math.random() * Math.PI * 2,       // random start phase
+  };
+  return cerealO;
 }
