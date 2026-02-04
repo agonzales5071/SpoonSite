@@ -28,7 +28,7 @@ import SpoonDropRescue from './Physics/Rescue.js';
 import SpoonDropHotSpoontato from './Physics/HotSpoontato.js';
 import SpoonDropCerealShot from './Physics/CerealShot.js';
 import SpoonSaberBattle from './Physics/SpoonSaberBattle.js';
-
+import SpoonBalloon from './Physics/SpoonBalloon.js';
 
 
 
@@ -54,6 +54,7 @@ class App extends React.Component {
             <Route path="/games/CerealShot" element={<SpoonDropCerealShot/>} />
             <Route path="/games/SpoonSaberBattle" element={<SpoonSaberBattle/>} />
             <Route path="/games/SpaceOs" element={<SpoonshipAsteroid/>} />
+            <Route path="/games/SpoonBalloon" element={<SpoonBalloon/>} />
           </Routes>
         </div>
       </Router>

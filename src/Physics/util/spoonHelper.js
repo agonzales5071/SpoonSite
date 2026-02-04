@@ -258,6 +258,74 @@ function getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffs
   return parts;
 }
 
+export function getSpoonBalloon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, center = "middle"){
+  if(spoonFilter === null){
+    spoonFilter = {
+      group: 0,
+      category: 0x0001,
+      mask: 0xFFFFFFFF,
+    };
+  }
+  spoonSize *= 3;
+  let spoonSpawn = [xposSpawn, yposSpawn, - spoonSize/5 + yposSpawn];
+  let spoonHeadOffset = spoonSize / 45;
+
+  //SHAPES
+  let parts = getSpoonBalloonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
+
+  let spoon = Body.create({
+    parts: parts,
+    collisionFilter: spoonFilter,
+  });
+
+  if(center === "middle"){
+    Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] - spoonSize / 10), false);
+  }
+  if(center === "bottom"){
+    Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] + spoonSize/2), false);
+  }
+  
+  return spoon;
+}
+function getSpoonBalloonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset){
+    let spoonDensity = 0.0001;
+    let gs = 0.9;
+
+    //SHAPES
+    let partA1 = Bodies.circle(spoonSpawn[0], spoonSpawn[2], spoonSize/5, {
+      density: spoonDensity,
+      render: {fillStyle: color},
+      collisionFilter: spoonFilter,
+      gravityScale: gs
+    });
+    let partA2 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - spoonHeadOffset, spoonSize/5, {
+      render: partA1.render,
+      density: spoonDensity,
+      collisionFilter: partA1.collisionFilter,
+      gravityScale: gs
+    });
+    let partA3 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 2*spoonHeadOffset, spoonSize/5, {
+      render: partA1.render,
+      density: spoonDensity,
+      collisionFilter: partA1.collisionFilter,
+      gravityScale: gs
+    });
+    let partA4 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 3*spoonHeadOffset, spoonSize/5, {
+      render: partA1.render,
+      density: spoonDensity,
+      collisionFilter: partA1.collisionFilter,
+      gravityScale: gs
+    });
+    let partB = Bodies.trapezoid(spoonSpawn[0], spoonSpawn[1], spoonSize/10, spoonSize/8, 0.4, {
+      render: partA1.render,
+      density: spoonDensity,
+      collisionFilter: partA1.collisionFilter,
+      gravityScale: gs
+    });
+    let parts = [partA1, partA2, partA3, partA4, partB] 
+  return parts;
+}
+
 export function createPlusScore(x, y, score, world, fade, color = "#ffffff") {
   const parts = [];
   let isRainbow = color === "rainbow";
