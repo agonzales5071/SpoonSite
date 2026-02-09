@@ -3,6 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
+import {getLoop, getSpoon } from "./util/spoonHelper";
 
 //bug fixes
 //same name chat room join, back buttons, 
@@ -18,10 +19,9 @@ const SpoonDropDescent = () => {
   const [message, setMessage] = useState("");
   
   useEffect( () => {
-  const oopsAllSpoons = window.location.href.includes("Leo");
-  console.log("oopsAllSpoons = " + oopsAllSpoons );
-    
+  const oopsAllSpoons = window.location.href.includes("Leo") || window.location.href.includes("leo");
     var allWalls = []; 
+    var loops = [];
     var isMobile = false;
     var width = window.innerWidth;
     var height = window.innerHeight;
@@ -33,7 +33,9 @@ const SpoonDropDescent = () => {
     let Composite = Matter.Composite;
     let Mouse = Matter.Mouse;
     let MouseConstraint = Matter.MouseConstraint;
-  
+    let sinusoidTracker = 0;
+    let closeWallSinusoidTracker = [0, 0, Math.PI/2];
+    
     let engine = Engine.create({});
     let runner = Runner.create({});
 
@@ -50,11 +52,21 @@ const SpoonDropDescent = () => {
 
     var gameWidth = width;
     var leftMargin = 0;
-
+    
     var force = 0.02;
     var fric = 0.03;
     var turnaround = 0.8;
     var size = 100; //size var for spoon
+    const obstacleFilter = {
+      group:-2,
+      category: 4, 
+      mask: 2
+    }
+    const spoonFilter = {
+      group:2,
+      category: 2, 
+      mask: 4
+    }
     //mobile augmentations
     if(width < 800){
       isMobile = true;
@@ -62,6 +74,8 @@ const SpoonDropDescent = () => {
       force = 0.002;
       fric = 0.03
       turnaround = 0.8;
+      gameWidth = width*0.75;
+      leftMargin = (width-gameWidth)/2;
     }
     else if(width >= (4/3)*height){
       
@@ -89,32 +103,10 @@ const SpoonDropDescent = () => {
     engine.world.gravity.y = 0;
     
     //making spoon
-    var curSpoon;
-    var spoonstart = [width/2, height/4, (height/4)-(3*size/5)];
-
-    let partA1 = Bodies.circle(spoonstart[0], spoonstart[2], size/5),
-      partA2 = Bodies.circle(spoonstart[0], spoonstart[2]-2, size/5,
-      { render: partA1.render }
-      ),
-      partA3 = Bodies.circle(spoonstart[0], spoonstart[2]-4, size/5,
-      { render: partA1.render }
-      ),
-      partA4 = Bodies.circle(spoonstart[0], spoonstart[2]-6, size/5,
-      { render: partA1.render }
-      ),
-      partB = Bodies.trapezoid(spoonstart[0], spoonstart[1], size / 5, size, 0.4, { render: partA1.render });
-      //var spoonTop = partA1.id;
-      //var trapBody = partB.id;
-      curSpoon = Body.create({
-        parts: [partA1, partA2, partA3, partA4, partB],
-        collisionFilter: {
-          group:2,
-          category: 2, 
-          mask: 4
-        }
-      });
+    
+    var curSpoon = getSpoon(size, width/2, height/4, spoonFilter, "silver")
     curSpoon.frictionAir = fric;
-    Body.setCentre(curSpoon, Matter.Vector.create(spoonstart[0], spoonstart[1]-size/10), false);
+    // Body.setCentre(curSpoon, Matter.Vector.create(spoonstart[0], spoonstart[1]-size/10), false);
     Composite.add(engine.world, curSpoon);
 
     var allMovements = [];
@@ -169,6 +161,9 @@ const SpoonDropDescent = () => {
       })
       // clearInterval(movement);
     });
+    Matter.Events.on(engine, "beforeUpdate", function(event){
+      stepPulsingLoops();
+    });
     
     Matter.Events.on(engine, "collisionStart", function(event) {
       //gameover
@@ -193,35 +188,6 @@ const SpoonDropDescent = () => {
         setGameOverState(true); // Show game over screen
       }, 1100)
         
-      
-      // let collisionArray = event.source.pairs.collisionActive;
-      // for(let j = 0; j < collisionArray.length; j++){
-      //   let bodyA = event.pairs[0].bodyA.id;
-      //   let bodyB = event.pairs[0].bodyB.id;
-      //   //console.log(event);
-                
-
-      //   //console.log(event);
-      //   if(bodyA === trapBody || bodyA === spoonTop){
-      //     for(let i = 0; i < allWalls.length; i++){
-      //       if(bodyB === allWalls[i].id){
-      //         clearInterval(spawnwalls);
-      //         //console.log(links[i][0]);
-      //       }
-      //     }
-      //   }
-      //   else{
-      //     if(bodyB === trapBody || bodyB === spoonTop){
-      //       for(let i = 0; i < allWalls.length; i++){
-      //         if(bodyA === allWalls[i].id){
-      //           clearInterval(spawnwalls);
-      //           //console.log(links[i][0]);
-      //           //window.location.href = links[i][link];
-      //         }
-      //       }
-      //     }
-      //   }
-      // }
     });
     var initialSpeed = 20;
     var ragdoll = false;
@@ -230,15 +196,15 @@ const SpoonDropDescent = () => {
     var wallTracker = 0;
     var speed = initialSpeed;
     var wallMoveSpeed = -5;
-    //var simplified = false; 
-    var prevCenter = gameWidth/2;
-    var defaultWalls = true;
-    var closeWalls = false; //quickwalls
-    var spoonWalls = false;
-    var closeWallSet = 0;
-    var spoonWallSet = 1;
     var speedChange = 0;
-    var oneType = false;//for obstacle set debugging
+    var oneType = oopsAllSpoons ? 3 : -1;// -1 for off, otherwise index of obstacle
+    const obstacles = [
+        spawnDefaultWalls,
+        spawnCloseWalls,
+        spawnLoopObstacles,
+        spawnSpoonObstacles
+      ];
+    var currentObstacle = spawnDefaultWalls;
     function getRandomInt(max) {
       return Math.floor(Math.random() * max);
     }
@@ -259,55 +225,16 @@ const SpoonDropDescent = () => {
               speedChange = 0;
             }
             wallTracker = 0;
-            defaultWalls = true;
-            closeWalls = false;
-            spoonWalls = oopsAllSpoons;
-            if(points > 0){
-              //console.log("may switch here");
-              defaultWalls = false;
-              if(oopsAllSpoons){
-                spoonWalls = true;
-                wallTracker++;
-              }
-              else{
-
-                  //spawn special obstacle sets
-                let spawnset = getRandomInt(3);
-                if(spawnset === closeWallSet){
-                  closeWalls = true;
-                  wallTracker++;
-                }
-                else{
-                  if(spawnset === spoonWallSet){
-                    spoonWalls = true;
-                    wallTracker++;
-                  }
-                  else{
-                    defaultWalls = true;
-                  }
-                }
-              }
+            if(points !== 0){
+              changeObstacle();
             }
-            if(oneType){
-              spoonWalls = false;
-              closeWalls = true;
-              defaultWalls = false;
-              wallTracker++;
-            }
+            
           }
-          if(spoonWalls){
-            spawnSpoonWalls();
-          }
-          else if(closeWalls){
-            //console.log("closewalls spawning");
-            //TODO:code new obstacle set
-            spawnCloseWalls();
-          }
-          else if(defaultWalls){
-            spawnDefaultWalls();
-          }
+          doObstacles();
           wallTracker++;
           points++;
+          deleteStaleObstacles();
+          setAllSpeeds();
           if( document.getElementById('dropper') === null){
             clearInterval(spawnwalls);
           }
@@ -318,27 +245,28 @@ const SpoonDropDescent = () => {
       }
 
     }
+    function doObstacles(){
+      if(oneType >= 0){
+        obstacles[oneType]();
+      }
+      else{
+        currentObstacle();
+      }
+    }
+    function changeObstacle(){
+      const index = Math.floor(Math.random() * obstacles.length);
+      currentObstacle = obstacles[index];
+    }
     // gets middle of obstacle
+    //TODO: Change interval for mobile
     function getNewCenter(){
       let pos;
-      let offset = Math.random()*(gameWidth/3) - gameWidth/6;
-      //chance for offset to be bigger
-      if(Math.random()*10 < 7 && points > 0){
-        offset = Math.random()*(gameWidth/2) - gameWidth/4;
+      pos = gameWidth/2*Math.sin(sinusoidTracker) + gameWidth/2 + leftMargin;
+      let intervalJump = isMobile ? getRandomInt(2) + 3: getRandomInt(2) + 3;
+      sinusoidTracker += Math.PI/intervalJump;
+      if(getRandomInt(3) === 0){
+        sinusoidTracker += Math.PI/2
       }
-      //if offset is too small then reroll
-      if(offset < gameWidth/10 && offset > gameWidth/(-10)){
-        offset = Math.random()*(gameWidth/3) - gameWidth/6;
-      }
-        pos = prevCenter + offset;
-        //console.log("pos = " + pos + " prevC = " + prevCenter + " offset = " + offset);
-        if(pos < gameWidth/25){
-          pos = gameWidth/25 + leftMargin;
-        }
-        if(pos > gameWidth-(width/25)){
-          pos = gameWidth-(gameWidth/25 + leftMargin);
-        }
-        prevCenter = pos;
       return pos;
     }
     function spawnDefaultWalls(){
@@ -347,95 +275,132 @@ const SpoonDropDescent = () => {
 
         let walls = [
           Bodies.rectangle(center-size-width/2, height + size + 100, width, size/2, { isStatic: false, frictionAir: 0, 
-            collisionFilter: {
-              group:-2,
-              category: 4, 
-              mask: 2
-            }}),
+            collisionFilter: obstacleFilter}),
           Bodies.rectangle(center+size+width/2, height + size + 100, width, size/2, { isStatic: false, frictionAir: 0, 
-            collisionFilter: {
-              group:-2,
-              category: 4, 
-              mask: 2
-            }}),
+            collisionFilter: obstacleFilter}),
             
         ]
-        walls.forEach(element => {
-          allWalls.push(element);
-        })
-        allWalls.forEach(element =>{
-          if(element.position.y < -100){
-            Composite.remove(engine.world, element);
-          }
-        })
-        
-        Composite.add(engine.world, walls);
-        walls.forEach(element => {
-          Body.setVelocity(element, Matter.Vector.create(0, wallMoveSpeed));
-        })
+        addWalls(walls);
       }
     }
+    //input : closewalltracker[x,y,z] where x is smallest sinusoid tracker
+    //adds 3 sinusoids for wavy obstacle
     function getCloseWallsCenter(){
-      let pos;
-      let offsetFactor = gameWidth/15;
-      if (isMobile){
-        offsetFactor = width/6;
-      }
-      let offset = Math.random()*(offsetFactor) - offsetFactor/2;
-      //reroll if small
-      if(offset < offsetFactor/5 && offset > offsetFactor/(-5)){
-        offset = Math.random()*(offsetFactor) - offsetFactor/2;
-      }
-        pos = prevCenter + offset;
-        if(pos < gameWidth/25){
-          pos = gameWidth/25 + leftMargin - offset;
-        }
-        if(pos > gameWidth-(width/25)){
-          pos = gameWidth-(gameWidth/25 + leftMargin) - offset;
-        }
+      let smallAmp = isMobile ? gameWidth*0.20 :  gameWidth*0.15;
+      let medAmp = gameWidth * 0.35;
+      let leftoverWidth = gameWidth - (smallAmp + medAmp);
+
+      let smallSine = smallAmp*Math.sin(closeWallSinusoidTracker[0]);
+      let mediumSine = medAmp*Math.sin(closeWallSinusoidTracker[1]);
+      
+      let pos = smallSine + mediumSine + leftoverWidth + leftMargin;
+      let smallInterval = isMobile ? 8 : 16;
+      closeWallSinusoidTracker[0] += Math.PI/(getRandomInt(smallInterval) + smallInterval);
+      closeWallSinusoidTracker[1] += Math.PI/(getRandomInt(16) + 100);
+
       return pos;
     }
     function spawnCloseWalls(){
       if(wallTracker%3 === 0){
         let center = getCloseWallsCenter();
-        prevCenter = center;
+        
         let thickness = 1.5;
         let walls = [
           Bodies.rectangle(center-size-width/2, height+size+100, width, size*thickness, { isStatic: false, frictionAir: 0, 
-            collisionFilter: {
-              group:-2,
-              category: 4, 
-              mask: 2
-            }}),
+            collisionFilter: obstacleFilter}),
           Bodies.rectangle(center+size+width/2, height+size+100, width, size*thickness, { isStatic: false, frictionAir: 0, 
-            collisionFilter: {
-              group:-2,
-              category: 4, 
-              mask: 2
-            }}),
+            collisionFilter: obstacleFilter}),
         ]
-
-        walls.forEach(element => {
-          allWalls.push(element);
-        })
-        allWalls.forEach(element =>{
-          if(element.position.y < -100){
-            Composite.remove(engine.world, element);
-          }
-        })
-        
-        Composite.add(engine.world, walls);
-        walls.forEach(element => {
-          Body.setVelocity(element, Matter.Vector.create(0, wallMoveSpeed));
-        })
-        //end obstacle
-        if(wallTracker === 0){
-          closeWalls = false;
-        }
+        addWalls(walls);
       }
     }
-    function spawnSpoonWalls(){
-      let wallFrequency = 5;
+    function addWalls(walls){
+      walls.forEach(element => {
+        addObstacle(element);
+      })
+    }
+    function addObstacle(obstacle){
+      allWalls.push(obstacle);
+      Composite.add(engine.world, obstacle);
+      Body.setVelocity(obstacle, Matter.Vector.create(0, wallMoveSpeed));
+    }
+    function deleteStaleObstacles(){
+      let count = 0;
+      let loopCount = 0;
+      allWalls.forEach(element =>{
+        if(element.position.y < -height/2){
+          Composite.remove(engine.world, element);
+          count++;
+          if(element.isLoop === true){
+            loopCount++;
+          }
+        }
+      })
+      allWalls.splice(0, count);
+      loops.splice(0, loopCount);
+    }
+    function clearScreen(){
+      allWalls.forEach(element =>{ 
+        Composite.remove(engine.world, element);
+      })
+      allWalls.splice(0, allWalls.length);
+      loops.forEach(element =>{ 
+        Composite.remove(engine.world, element.body);
+      })
+      loops.splice(0, loops.length);
+    }
+    function setAllSpeeds(){
+      allWalls.forEach(element =>{
+        Body.setVelocity(element, Matter.Vector.create(0, wallMoveSpeed));
+      })
+    }
+    function stepPulsingLoops(){
+      loops.forEach(loop => { 
+        if(loop.pulses === true){
+          resizeLoop(loop);
+        }
+      })
+    }
+    //scale = nextSize/currentSize | nextSize = Math.abs(sin(tracker))*maxFlux + baseSize
+    function resizeLoop(loop){
+      
+      let nextSize = Math.abs(Math.sin(loop.sineTracker)*loop.maxFlux + loop.baseSize)
+      let scale = nextSize/loop.currentSize;
+      loop.currentSize = nextSize;
+      loop.body.parts.forEach(part => {
+        if(loop.body !== part){
+          Body.scale(part, scale, scale);
+        }
+      })
+      // Body.scale(loop.body, scale, scale);
+      loop.sineTracker += loop.sineInterval;
+      // Composite.remove(engine.world, loop);
+      // Composite.add(engine.world, loop);
+    }
+    function spawnLoopObstacles(){
+      let wallFrequency = 2;
+      let baseInterval = 32;
+      if(isMobile){
+        wallFrequency = 2;
+      }
+      if(wallTracker%wallFrequency === 0){
+      let obstacleSize = size*Math.random()/4 + size/4;
+      let xposSpawn = width*Math.random();
+      let yposSpawn = height + 100; 
+      let loopObstacle = {};
+      loopObstacle.body = getLoop(xposSpawn, yposSpawn, obstacleFilter, obstacleSize, 0.001, 0.1, true, false, false) 
+      addObstacle(loopObstacle.body);  
+      loopObstacle.pulses = true;
+      loopObstacle.sineTracker = 0;
+      loopObstacle.sineInterval = Math.PI/(baseInterval + getRandomInt(baseInterval));
+      loopObstacle.currentSize = obstacleSize;
+      loopObstacle.baseSize = obstacleSize;
+      loopObstacle.maxFlux = size*Math.random()/4;
+      loops.push(loopObstacle)
+    }
+    }
+    function spawnSpoonObstacles(loops = false){
+      let wallFrequency = loops ? 2 : 5;
       if(isMobile){
         wallFrequency = 5;
       }
@@ -456,41 +421,12 @@ const SpoonDropDescent = () => {
             xposSpawn = width - xOffset;
           }
         }
-        let spoonWallSpawn = [xposSpawn, height+100, height-(3*obstacleSize)+100];
-        let spoonHeadOffset = obstacleSize/10; 
+        let yposSpawn = height + 100; 
+        let spoonWallSpawn = [xposSpawn, yposSpawn, height-(3*obstacleSize)+100];
 
-        let partA1 = Bodies.circle(spoonWallSpawn[0], spoonWallSpawn[2], obstacleSize,
-          {collisionFilter: {
-            group:-2,
-            category: 4, 
-            mask: 2
-          }
-        }),
-          partA2 = Bodies.circle(spoonWallSpawn[0], spoonWallSpawn[2]-spoonHeadOffset, obstacleSize,
-          { render: partA1.render,
-            collisionFilter: partA1.collisionFilter}
-          ),
-          partA3 = Bodies.circle(spoonWallSpawn[0], spoonWallSpawn[2]-(2*spoonHeadOffset), obstacleSize,
-          { render: partA1.render,
-            collisionFilter: partA1.collisionFilter}
-          ),
-          partA4 = Bodies.circle(spoonWallSpawn[0], spoonWallSpawn[2]-(3*spoonHeadOffset), obstacleSize,
-          { render: partA1.render,
-            collisionFilter: partA1.collisionFilter}
-          ),
-          partB = Bodies.trapezoid(spoonWallSpawn[0], spoonWallSpawn[1], obstacleSize, obstacleSize*5, 0.4, { render: partA1.render });
-          //var spoonTop = partA1.id;
-          //var trapBody = partB.id;
-        let spoonObstacle = Body.create({
-          parts: [partA1, partA2, partA3, partA4, partB],
-          collisionFilter: partA1.collisionFilter
-        });
-        allWalls.push(spoonObstacle);
-        allWalls.forEach(element =>{
-          if(element.position.y < -100){
-            Composite.remove(engine.world, element);
-          }
-        })
+        let spoonObstacle = loops ? getLoop(xposSpawn, yposSpawn, obstacleFilter, obstacleSize, 0.001, 0.1, true, false, false) 
+          : getSpoon(obstacleSize*5, xposSpawn, yposSpawn, obstacleFilter)
+        
         Body.setCentre(spoonObstacle, Matter.Vector.create(spoonWallSpawn[0], spoonWallSpawn[1]-obstacleSize/10), false);
         let angle = Math.random(90)-45;
         //flip is spoon head down randomly or if spoon is big to avoid weird load ins
@@ -511,14 +447,12 @@ const SpoonDropDescent = () => {
         if(Math.random()*2 < 1 && obstacleSize < size*0.4){
           Body.setAngularVelocity(spoonObstacle, ((obstacleSize-Math.random()*obstacleSize)/600)*(getRandomInt(3)-1))
         }
-        Composite.add(engine.world, spoonObstacle);
+        addObstacle(spoonObstacle);
           
         //Body.setCentre(spoonObstacle, Matter.Vector.create(spoonWallSpawn[0], spoonWallSpawn[1]-size/10), false);
       }
       //move the spoons
-      allWalls.forEach(element =>{
-        Body.setVelocity(element, Matter.Vector.create(0, wallMoveSpeed));
-        })
+     
     }
 
     function restartGame(){
@@ -527,12 +461,14 @@ const SpoonDropDescent = () => {
         allWalls.forEach(element =>{
             Composite.remove(engine.world, element);
         })
+        clearScreen();
+        changeObstacle();
         points = 0;
         setScoreText(points);            // reset score
         wallTracker = 0;
         speed = initialSpeed;
         ragdoll = false;
-        let resetPos = Matter.Vector.create(curSpoon.position.x, spoonstart[1]);
+        let resetPos = Matter.Vector.create(curSpoon.position.x, height/4);
         Body.setPosition(curSpoon, resetPos);
         startGame();
       }

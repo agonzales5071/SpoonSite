@@ -527,6 +527,12 @@ export function getDistanceBetween(bodyA, bodyB){
   let yDiff = bodyA.position.y - bodyB.position.y;
   return Math.sqrt(xDiff*xDiff + yDiff*yDiff);
 }
+//gets the angle from the right triangle at bodyA point
+export function getAngleBetween(bodyA, bodyB) {
+  const xDiff = bodyB.position.x - bodyA.position.x;
+  const yDiff = bodyB.position.y - bodyA.position.y;
+  return Math.atan2(yDiff, xDiff);
+}
 //used to rotate a body toward mouse
 export function rotatePlayerToward(target, dtMs, body, offsetNinety = false, offsetOneEighty = false) {
   const current = body.angle;
@@ -606,16 +612,23 @@ export function getExclamationPoint(x, y, size, blackHole = false){
 *///density = cerealgrav in cerealShot
 export function createLoop(x, y, world, collisionFilter, size, fric, density, fruity, semiTransparent) {
   
-  let color = "#edc55f";
-  if(fruity){
-    color = fruityColors.at(getRandomInt(fruityColors.length));
+  let cerealO = getLoop(x, y, collisionFilter, size, fric, density, fruity, semiTransparent);
+  Matter.Composite.add(world, cerealO);
+  return cerealO;
+}
+export function getLoop(x, y, collisionFilter, size, fric, density, fruity, semiTransparent, isSensor = true, color = null){
+  if(color === null){
+    color = "#edc55f";
+    if(fruity){
+      color = fruityColors.at(getRandomInt(fruityColors.length));
+    }
   }
   let circleOuter = Bodies.circle(x, y, size, {
     render: { fillStyle: color },
     collisionFilter: collisionFilter,
     density: density,
     frictionAir: fric,
-    isSensor: true,
+    isSensor: isSensor,
   });
   if(semiTransparent){
     circleOuter.render.opacity = .8
@@ -626,7 +639,7 @@ export function createLoop(x, y, world, collisionFilter, size, fric, density, fr
     collisionFilter: collisionFilter,
     density: density,
     frictionAir: fric,
-    isSensor: true,
+    isSensor: isSensor,
   });
 
   let cerealO = Body.create({
@@ -634,10 +647,9 @@ export function createLoop(x, y, world, collisionFilter, size, fric, density, fr
     collisionFilter: collisionFilter,
     density: density,
     frictionAir: fric,
-    isSensor: true,
+    isSensor: isSensor,
   });
   cerealO.color = color;
-  Matter.Composite.add(world, cerealO);
   return cerealO;
 }
 

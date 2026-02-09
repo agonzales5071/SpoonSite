@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import { spoonFilter, getSpoonBalloon, getRandomInt } from "./util/spoonHelper";
+import { spoonFilter, getSpoonBalloon, getRandomInt, getAngleBetween, createDefined2DVector } from "./util/spoonHelper";
 
 const SpoonBalloon = () => {
   const boxRef = useRef(null);
@@ -73,6 +73,8 @@ const SpoonBalloon = () => {
 
     var gameStarted = false;
     var resettable = false;
+    var isMouseDown = false;
+    var blowing = false;
 
     Matter.Events.on(engine, 'beforeUpdate', function() {
       const g = engine.gravity;
@@ -83,29 +85,67 @@ const SpoonBalloon = () => {
         x: 0,
         y: -player.mass * gravityForce * gravCancel
       });
+      let blowForce = player.mass * gravityForce * gravCancel / 6;
+      let forceVector = createDefined2DVector(blowForce, getAngleBetween(player, mouse) - Math.PI/2)
+      if(blowing){
+        createHand(player, "#d1d1d15a", 50);
+        Body.applyForce(player, player.position, {
+        x: forceVector.x,
+        y: forceVector.y
+      });
+      }
     });
-
+    var blowingTimeout;
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
-      restartGame();
-      resettable = false;
-      startGame();      
+      if(!isMouseDown){
+        isMouseDown = true;
+        blowingTimeout = setTimeout(() => {blowing = true}, 200)  
+      }
     });
 
     Matter.Events.on(mouseConstraint, "mouseup", function(event){
-      
+      isMouseDown = false;
+      if(!blowing){
+        let bumpForce = isMobile ? 0.02 : 0.1; 
+        let forceVector = createDefined2DVector(bumpForce, getAngleBetween(player, mouse) - Math.PI/2)
+        applyBump(player, forceVector.x, forceVector.y);
+        createHand(player);
+      }
+      blowing = false;
+      clearTimeout(blowingTimeout);
     });
     
     Matter.Events.on(engine, "collisionStart", function(event) {
 
     });
 
-    function initialBump(){
-      let xForce = (getRandomInt(10)-4.5)/50//cool variable name
-      let yForce = isMobile ? -0.04 : -0.08;
+    function applyBump(player, xForce, yForce){
       Body.applyForce(player, player.position,{
         x: xForce,
         y: yForce
       });
+    }
+    function createHand(player, color = "#fbd633", timeout = 400){
+      let angle = getAngleBetween(player, mouse);
+      const handOffset = size*3/5 
+
+      const handX = player.position.x + Math.cos(angle) * handOffset;
+      const handY = player.position.y + Math.sin(angle) * handOffset;
+      let chamfer = isMobile ? 6 : 10;
+      let hand = Bodies.rectangle(handX, handY - size/3,
+         size*2/4, size*1/5, {isSensor: true, isStatic: true, render: {fillStyle: color}, chamfer: { radius: chamfer }});
+      Body.rotate(hand, angle + Math.PI/2);
+      Composite.add(engine.world, hand);
+      setTimeout(() => {
+        Composite.remove(engine.world, hand);
+      }, timeout)
+    }
+
+    function initialBump(){
+      let xForce = (getRandomInt(10)-4.5)/50//cool variable name
+      xForce = isMobile ? xForce/7 : xForce;
+      let yForce = isMobile ? -0.015 : -0.08;
+      applyBump(player, xForce, yForce)
     }
     
     function startGame() {
