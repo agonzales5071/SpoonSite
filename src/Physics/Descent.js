@@ -190,6 +190,7 @@ const SpoonDropDescent = () => {
         
     });
     var initialSpeed = 20;
+    var obstacleSetNumber = 10;
     var ragdoll = false;
     var spawnwalls;
     var points = 0;
@@ -197,7 +198,7 @@ const SpoonDropDescent = () => {
     var speed = initialSpeed;
     var wallMoveSpeed = -5;
     var speedChange = 0;
-    var oneType = oopsAllSpoons ? 3 : -1;// -1 for off, otherwise index of obstacle
+    var oneType = oopsAllSpoons ? 3 : -3;// -1 for off, otherwise index of obstacle
     const obstacles = [
         spawnDefaultWalls,
         spawnCloseWalls,
@@ -218,7 +219,7 @@ const SpoonDropDescent = () => {
           if( document.getElementById('dropper') === null){
             clearInterval(spawnwalls);
           }
-          else if(wallTracker%(10*speed) === 0){
+          else if(wallTracker%(obstacleSetNumber*speed) === 0){
             speedChange++;
             if(speedChange === 2){
               speed--;
@@ -244,6 +245,10 @@ const SpoonDropDescent = () => {
         }, 100);
       }
 
+    }
+    //return value between 0 and 1
+    function getObstaclePercentDone(){
+      return wallTracker/(obstacleSetNumber*speed) 
     }
     function doObstacles(){
       if(oneType >= 0){
@@ -295,13 +300,17 @@ const SpoonDropDescent = () => {
       
       let pos = smallSine + mediumSine + leftoverWidth + leftMargin;
       let smallInterval = isMobile ? 8 : 16;
-      closeWallSinusoidTracker[0] += Math.PI/(getRandomInt(smallInterval) + smallInterval);
-      closeWallSinusoidTracker[1] += Math.PI/(getRandomInt(16) + 100);
+      let curveFasterSmall = Math.abs(Math.sin(closeWallSinusoidTracker[0])) > 0.9 ? 3 : 1;
+      let curveFasterMed = Math.abs(Math.sin(closeWallSinusoidTracker[1])) > 0.9 ? 3 : 1;
+      closeWallSinusoidTracker[0] += Math.PI/(getRandomInt(smallInterval) + smallInterval/curveFasterSmall);
+      closeWallSinusoidTracker[1] += Math.PI/(getRandomInt(16/curveFasterMed) + 100);
 
       return pos;
     }
     function spawnCloseWalls(){
-      if(wallTracker%3 === 0){
+      let percentDone = getObstaclePercentDone()
+      let safetyMargin = percentDone > .95 || percentDone < 0.05 
+      if(wallTracker%3 === 0 && !safetyMargin){
         let center = getCloseWallsCenter();
         
         let thickness = 1.5;
@@ -351,7 +360,7 @@ const SpoonDropDescent = () => {
     }
     function setAllSpeeds(){
       allWalls.forEach(element =>{
-        Body.setVelocity(element, Matter.Vector.create(0, wallMoveSpeed));
+        Body.setVelocity(element, Matter.Vector.create(element.velocity.x, wallMoveSpeed));
       })
     }
     function stepPulsingLoops(){
@@ -399,18 +408,20 @@ const SpoonDropDescent = () => {
       loops.push(loopObstacle)
     }
     }
-    function spawnSpoonObstacles(loops = false){
-      let wallFrequency = loops ? 2 : 5;
+    function spawnSpoonObstacles(){
+      let wallFrequency = 5;
       if(isMobile){
         wallFrequency = 5;
       }
       if(wallTracker%wallFrequency === 0){
-        let obstacleSize = size*Math.random();
+        let maxSize = wallTracker/((obstacleSetNumber-3)*speed) >= 1 ? size*2/3 : size;
+        let minSize = size/3;
+        let obstacleSize = maxSize*Math.random()/2 + minSize;
         if(obstacleSize > size*0.5 || obstacleSize < size*0.05){
-          obstacleSize = size*Math.random();
+          obstacleSize = maxSize*Math.random()/2 + minSize;
         }
         if(obstacleSize > size*0.8){
-          obstacleSize = size*Math.random();
+          obstacleSize = maxSize*Math.random()/2 + minSize;
         }
         let xposSpawn = width*Math.random();
         //balancing huge spoon spawn
@@ -421,11 +432,10 @@ const SpoonDropDescent = () => {
             xposSpawn = width - xOffset;
           }
         }
-        let yposSpawn = height + 100; 
+        let yposSpawn = height + obstacleSize*3.5; 
         let spoonWallSpawn = [xposSpawn, yposSpawn, height-(3*obstacleSize)+100];
 
-        let spoonObstacle = loops ? getLoop(xposSpawn, yposSpawn, obstacleFilter, obstacleSize, 0.001, 0.1, true, false, false) 
-          : getSpoon(obstacleSize*5, xposSpawn, yposSpawn, obstacleFilter)
+        let spoonObstacle = getSpoon(obstacleSize*5, xposSpawn, yposSpawn, obstacleFilter)
         
         Body.setCentre(spoonObstacle, Matter.Vector.create(spoonWallSpawn[0], spoonWallSpawn[1]-obstacleSize/10), false);
         let angle = Math.random(90)-45;
