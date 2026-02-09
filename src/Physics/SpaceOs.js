@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from './util/gameoverPopup.js'
-import { CATEGORY_NOTHING, cosmeticFilter, createDefined2DVector, getDistanceBetween, getExclamationPoint, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
+import {createDefined2DVector, getExclamationPoint, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
 
 const SpoonshipAsteroid = () => {
   const boxRef = useRef(null);
@@ -12,7 +12,7 @@ const SpoonshipAsteroid = () => {
   const [playButtonText, setPlayButtonText] = useState("Play")
 
   const [gameOverState, setGameOverState] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("You are the pilot of a SpoonShip (trademark pending). tap to shoot, hold to charge.");
   const [scoreText, setScoreText] = useState("");
   
   useEffect( () => {
@@ -47,7 +47,7 @@ const SpoonshipAsteroid = () => {
     var gameWidth = width;
     var marginV = height/6;
     var marginH = gameWidth/6;
-    var points = 0;
+    // var points = 0;
     var size = 50; //size var for spoon
     var maxThrustForce = 0.02;
     var playerScreenWrapOffset = size/2;
@@ -586,50 +586,51 @@ const SpoonshipAsteroid = () => {
         //cleanup and reset
         resettable = false
         setScoreText(0);            // reset score
+        setMessage("")
       }
     }
-    function gameOver() {
-      setScoreText(points);
-      let endMessage = getPopupMessage()
-      setMessage(endMessage)        
-      gameStarted = false;
-      resettable = true;
-      //set text
-      //leaderboards
-      setTimeout(() => {
-        setGameOverState(true); // Show game over screen
-      }, 1100)
-    }
+    // function gameOver() {
+    //   setScoreText(points);
+    //   let endMessage = getPopupMessage()
+    //   setMessage(endMessage)        
+    //   gameStarted = false;
+    //   resettable = true;
+    //   //set text
+    //   //leaderboards
+    //   setTimeout(() => {
+    //     setGameOverState(true); // Show game over screen
+    //   }, 1100)
+    // }
 
-    function doPointIncrement(spoon, cerealPos) {
-      //points+= 10*(spoonState.cerealHits+1);
-      //createPlusScore(cerealPos.x, cerealPos.y, spoonState.cerealHits*10)
-    }
-    function setText() {
-      const dropperEl = document.getElementById("dropper");
-      //point tracking messages
-      if(points >= 2500){
-        if (dropperEl) dropperEl.innerHTML = "Whoa! " + points + " points";
-      }
-      else if(points >= 1000){
-        if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " points"; 
-      }
-      else{
-        if (dropperEl) dropperEl.innerHTML = points + " points";
-      }
-      //if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
-    }
-    function getPopupMessage(isStart){
-      if(isStart){
-        return "context!"
-      }
-      let message;
-      if(points >= 2500){
-        message = "great";
-      }
-      else message = "good";
-      return message;
-    }
+    // function doPointIncrement(spoon, cerealPos) {
+    //   //points+= 10*(spoonState.cerealHits+1);
+    //   //createPlusScore(cerealPos.x, cerealPos.y, spoonState.cerealHits*10)
+    // }
+    // function setText() {
+    //   const dropperEl = document.getElementById("dropper");
+    //   //point tracking messages
+    //   if(points >= 2500){
+    //     if (dropperEl) dropperEl.innerHTML = "Whoa! " + points + " points";
+    //   }
+    //   else if(points >= 1000){
+    //     if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " points"; 
+    //   }
+    //   else{
+    //     if (dropperEl) dropperEl.innerHTML = points + " points";
+    //   }
+    //   //if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
+    // }
+    // function getPopupMessage(isStart){
+    //   if(isStart){
+    //     return "context!"
+    //   }
+    //   let message;
+    //   if(points >= 2500){
+    //     message = "great";
+    //   }
+    //   else message = "good";
+    //   return message;
+    // }
       
     function startRestart(){
       if(!gameStarted && !resettable){startGame()}

@@ -12,8 +12,8 @@ const SpoonBalloon = () => {
   const [playButtonText, setPlayButtonText] = useState("Play")
 
   const [gameOverState, setGameOverState] = useState(false);
-  const [message, setMessage] = useState("");
-  const [scoreText, setScoreText] = useState("");
+  const [message, setMessage] = useState("if the balloon touches the ground you die (death not implemented yet).");
+  const [scoreText, setScoreText] = useState("Tap to bump balloon, hold to blow.");
   
   useEffect( () => {
 
@@ -43,9 +43,9 @@ const SpoonBalloon = () => {
       }
     });
 
-    var gameWidth = width;
-    var leftMargin = (width-gameWidth)/2;
-    var points = 0;
+    // var gameWidth = width;
+    // var leftMargin = (width-gameWidth)/2;
+    // var points = 0;
     var size = 100; //size var for spoon
     //mobile augmentations
     if(width < 800){
@@ -163,48 +163,48 @@ const SpoonBalloon = () => {
         setScoreText(0);            // reset score
       }
     }
-    function gameOver() {
-      setScoreText(points);
-      let endMessage = getPopupMessage()
-      setMessage(endMessage)        
-      gameStarted = false;
-      resettable = true;
-      //set text
-      //leaderboards
-      setTimeout(() => {
-        setGameOverState(true); // Show game over screen
-      }, 1100)
-    }
+    // function gameOver() {
+    //   setScoreText(points);
+    //   let endMessage = getPopupMessage()
+    //   setMessage(endMessage)        
+    //   gameStarted = false;
+    //   resettable = true;
+    //   //set text
+    //   //leaderboards
+    //   setTimeout(() => {
+    //     setGameOverState(true); // Show game over screen
+    //   }, 1100)
+    // }
 
-    function doPointIncrement(spoon, cerealPos) {
-      //points+= 10*(spoonState.cerealHits+1);
-      //createPlusScore(cerealPos.x, cerealPos.y, spoonState.cerealHits*10)
-    }
-    function setText() {
-      const dropperEl = document.getElementById("dropper");
-      //point tracking messages
-      if(points >= 2500){
-        if (dropperEl) dropperEl.innerHTML = "Whoa! " + points + " points";
-      }
-      else if(points >= 1000){
-        if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " points"; 
-      }
-      else{
-        if (dropperEl) dropperEl.innerHTML = points + " points";
-      }
-      //if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
-    }
-    function getPopupMessage(isStart){
-      if(isStart){
-        return "context!"
-      }
-      let message;
-      if(points >= 2500){
-        message = "great";
-      }
-      else message = "good";
-      return message;
-    }
+    // function doPointIncrement(spoon, cerealPos) {
+    //   //points+= 10*(spoonState.cerealHits+1);
+    //   //createPlusScore(cerealPos.x, cerealPos.y, spoonState.cerealHits*10)
+    // }
+    // function setText() {
+    //   const dropperEl = document.getElementById("dropper");
+    //   //point tracking messages
+    //   if(points >= 2500){
+    //     if (dropperEl) dropperEl.innerHTML = "Whoa! " + points + " points";
+    //   }
+    //   else if(points >= 1000){
+    //     if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " points"; 
+    //   }
+    //   else{
+    //     if (dropperEl) dropperEl.innerHTML = points + " points";
+    //   }
+    //   //if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
+    // }
+    // function getPopupMessage(isStart){
+    //   if(isStart){
+    //     return "context!"
+    //   }
+    //   let message;
+    //   if(points >= 2500){
+    //     message = "great";
+    //   }
+    //   else message = "good";
+    //   return message;
+    // }
       
     function startRestart(){
       if(!gameStarted && !resettable){startGame()}
@@ -212,6 +212,7 @@ const SpoonBalloon = () => {
         restartGame();
       }
       setPlayButtonText("Restart")
+      setMessage("")
     }
     restartRef.current = startRestart;
 
