@@ -75,6 +75,7 @@ const SpoonBalloon = () => {
     var resettable = false;
     var isMouseDown = false;
     var blowing = false;
+    const maxVelocity = 5
 
     Matter.Events.on(engine, 'beforeUpdate', function() {
       const g = engine.gravity;
@@ -94,6 +95,14 @@ const SpoonBalloon = () => {
         y: forceVector.y
       });
       }
+      //cap velocity
+      if(Math.abs(player.velocity.x) > maxVelocity || Math.abs(player.velocity.y) > maxVelocity){
+        let sign = player.velocity.x >= 0 ? 1 : -1
+        player.frictionAir = 0.1;
+        player.velocity.x = maxVelocity*sign;
+        console.log("max x hit")
+      }
+      else{player.frictionAir = 0.01 }
     });
     var blowingTimeout;
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {

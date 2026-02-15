@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import {getLoop, getSpoon } from "./util/spoonHelper";
+import {createDefined2DVector, getAngleBetween, getLoop, getSpoon } from "./util/spoonHelper";
 
 //bug fixes
 //same name chat room join, back buttons, 
@@ -20,6 +20,9 @@ const SpoonDropDescent = () => {
   
   useEffect( () => {
   const oopsAllSpoons = window.location.href.includes("Leo") || window.location.href.includes("leo");
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const debugVal = urlParams.get("debug");
     var allWalls = []; 
     var loops = [];
     var isMobile = false;
@@ -50,8 +53,8 @@ const SpoonDropDescent = () => {
       }
     });
 
-    var gameWidth = width;
-    var leftMargin = 0;
+    var gameWidth = width*4/5;
+    var leftMargin = (width-gameWidth)/2;
     
     var force = 0.02;
     var fric = 0.03;
@@ -198,13 +201,17 @@ const SpoonDropDescent = () => {
     var speed = initialSpeed;
     var wallMoveSpeed = -5;
     var speedChange = 0;
-    var oneType = oopsAllSpoons ? 3 : -3;// -1 for off, otherwise index of obstacle
+    var oneType = oopsAllSpoons ? 3 : -1;// -1 for off, otherwise index of obstacle
     const obstacles = [
-        spawnDefaultWalls,
-        spawnCloseWalls,
-        spawnLoopObstacles,
-        spawnSpoonObstacles
-      ];
+      spawnDefaultWalls,
+      spawnCloseWalls,
+      spawnLoopObstacles,
+      spawnSpoonObstacles,
+      spawnShootingLoops
+    ];
+    if (debugVal && parseInt(debugVal) >= 0 && parseInt(debugVal) < obstacles.length){
+      oneType = parseInt(debugVal);
+    }
     var currentObstacle = spawnDefaultWalls;
     function getRandomInt(max) {
       return Math.floor(Math.random() * max);
@@ -338,11 +345,11 @@ const SpoonDropDescent = () => {
       let loopCount = 0;
       allWalls.forEach(element =>{
         if(element.position.y < -height/2){
-          Composite.remove(engine.world, element);
-          count++;
           if(element.isLoop === true){
             loopCount++;
           }
+          Composite.remove(engine.world, element);
+          count++;
         }
       })
       allWalls.splice(0, count);
@@ -360,27 +367,59 @@ const SpoonDropDescent = () => {
     }
     function setAllSpeeds(){
       allWalls.forEach(element =>{
-        Body.setVelocity(element, Matter.Vector.create(element.velocity.x, wallMoveSpeed));
+        let trueSpeed = element.velocity.y !== wallMoveSpeed ? element.velocity.y : wallMoveSpeed
+        Body.setVelocity(element, Matter.Vector.create(element.velocity.x, trueSpeed));
       })
     }
     function stepPulsingLoops(){
       loops.forEach(loop => { 
-        if(loop.pulses === true){
-          resizeLoop(loop);
+        if(loop.body.position.y >= 0){
+          //only resize loop clusters when game is ongoing
+          if(loop.children){
+            if(gameStarted && loop.pulses){
+              resizeLoop(loop)
+            }
+          }
+          else{
+            if(loop.pulses === true){
+              resizeLoop(loop);
+            }
+          }
+          if(loop.isPeakSize && loop.children){
+            childLoopPush(loop);
+          }
         }
       })
     }
+    function childLoopPush(loop){
+      loop.children.forEach(loopChild => {
+        let bumpForce = 3;
+        let forceVector = createDefined2DVector(bumpForce, getAngleBetween(loop.body, loopChild) + Math.PI/2)
+        // Body.applyForce(loopChild, loopChild.position, forceVector)
+        Body.setVelocity(loopChild, 
+          Matter.Vector.create(loopChild.velocity.x + forceVector.x, wallMoveSpeed + forceVector.y));
+      })
+      loop.children = spawnLoopChildren(loop);
+    } 
     //scale = nextSize/currentSize | nextSize = Math.abs(sin(tracker))*maxFlux + baseSize
     function resizeLoop(loop){
-      
-      let nextSize = Math.abs(Math.sin(loop.sineTracker)*loop.maxFlux + loop.baseSize)
+      let absSine = Math.abs(Math.sin(loop.sineTracker));
+      let nextSize = absSine*loop.maxFlux + loop.baseSize;
       let scale = nextSize/loop.currentSize;
+      let isMaxSize = absSine >= Math.abs(Math.sin(loop.sineTracker - loop.sineInterval)) &&
+          absSine > Math.abs(Math.sin(loop.sineTracker + loop.sineInterval))
       loop.currentSize = nextSize;
       loop.body.parts.forEach(part => {
         if(loop.body !== part){
           Body.scale(part, scale, scale);
         }
       })
+      if(isMaxSize){
+        loop.isPeakSize = true;
+      }
+      else{
+        loop.isPeakSize = false;
+      }
       // Body.scale(loop.body, scale, scale);
       loop.sineTracker += loop.sineInterval;
       // Composite.remove(engine.world, loop);
@@ -388,26 +427,37 @@ const SpoonDropDescent = () => {
     }
     function spawnLoopObstacles(){
       let wallFrequency = 2;
-      let baseInterval = 32;
       if(isMobile){
         wallFrequency = 2;
       }
       if(wallTracker%wallFrequency === 0){
-      let obstacleSize = size*Math.random()/4 + size/4;
-      let xposSpawn = width*Math.random();
-      let yposSpawn = height + 100; 
+        let obstacleSize = size*Math.random()/4 + size/4;
+        let xposSpawn = width*Math.random();
+        let yposSpawn = height + 100; 
+        let loopObstacle = createPulsingLoopObstacle(xposSpawn, yposSpawn, obstacleSize);
+        addObstacle(loopObstacle.body);  
+        loops.push(loopObstacle)
+      }
+    }
+    function createPulsingLoopObstacle(xposSpawn, yposSpawn, obstacleSize, isCluster = false){
+      let baseInterval = 32;
       let loopObstacle = {};
       loopObstacle.body = getLoop(xposSpawn, yposSpawn, obstacleFilter, obstacleSize, 0.001, 0.1, true, false, false) 
-      addObstacle(loopObstacle.body);  
       loopObstacle.pulses = true;
+      loopObstacle.isPeakSize = false;
+      loopObstacle.isCluster = isCluster;
       loopObstacle.sineTracker = 0;
       loopObstacle.sineInterval = Math.PI/(baseInterval + getRandomInt(baseInterval));
       loopObstacle.currentSize = obstacleSize;
       loopObstacle.baseSize = obstacleSize;
       loopObstacle.maxFlux = size*Math.random()/4;
-      loops.push(loopObstacle)
+      if(isCluster){
+        loopObstacle.sineInterval = Math.PI/(baseInterval*3 + getRandomInt(baseInterval)/2);
+        loopObstacle.maxFlux = size/6 + size*Math.random()/16;
+      }
+      return loopObstacle;
     }
-    }
+    
     function spawnSpoonObstacles(){
       let wallFrequency = 5;
       if(isMobile){
@@ -458,13 +508,54 @@ const SpoonDropDescent = () => {
           Body.setAngularVelocity(spoonObstacle, ((obstacleSize-Math.random()*obstacleSize)/600)*(getRandomInt(3)-1))
         }
         addObstacle(spoonObstacle);
-          
-        //Body.setCentre(spoonObstacle, Matter.Vector.create(spoonWallSpawn[0], spoonWallSpawn[1]-size/10), false);
       }
-      //move the spoons
-     
     }
 
+    function spawnShootingLoops(){
+      let wallFrequency = 10;
+      // if(isMobile){
+      //   wallFrequency = 5;
+      // }
+      if(wallTracker%wallFrequency === 0){
+        let loopSpawnX = gameWidth*Math.random() + leftMargin;
+        let loopSpawnY = height + size;
+        // let loopCluster = {xpos: loopSpawnX, ypos: loopSpawnY};
+        let obstacleSize = size/5 + Math.random()*size/5
+        
+        let loopCluster = createPulsingLoopObstacle(loopSpawnX, loopSpawnY, obstacleSize, true);
+        loopCluster.body.isLoop = true;
+        loops.push(loopCluster);
+        loopCluster.children = spawnLoopChildren(loopCluster)
+        addObstacle(loopCluster.body);
+      }
+    }
+    function spawnLoopChildren(loopCluster){
+      let loopChildren = []
+      let angleVariance = Math.PI/6;
+      let xpos = loopCluster.body.position.x;
+      let ypos = loopCluster.body.position.y;
+      let offset = loopCluster.baseSize*3/2;
+      let loopChildHeightMap = new Map();
+      for(let i = 0; i <= Math.PI; i += Math.PI/3){
+        let loopAngle = i;
+        if(i % Math.PI !== 0){
+          loopAngle += angleVariance- 2*angleVariance*Math.random()
+        }
+        let loopChild = getLoop(xpos + Math.cos(loopAngle)*offset, ypos - Math.sin(loopAngle)*offset, 
+          obstacleFilter, loopCluster.baseSize/2, 0.001, 0.1, true, false, false, loopCluster.body.color)
+        loopChild.angle = loopAngle;
+        loopChildren.push(loopChild)
+        loopChildHeightMap.set(loopChild, ypos - Math.sin(loopAngle)*offset)
+      }
+      //need to add in order so deletes correctly
+      const sortedChildren = new Map(
+        [...loopChildHeightMap.entries()].sort((a, b) => a[1] - b[1])
+      );
+      sortedChildren.keys().forEach(loopChild =>{
+        addObstacle(loopChild);
+      })
+      return loopChildren;
+    }
     function restartGame(){
       if (resettable === true){
         resettable = false;
