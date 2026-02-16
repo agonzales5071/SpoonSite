@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import {createDefined2DVector, getAngleBetween, getLoop, getSpoon } from "./util/spoonHelper";
+import {BACKGROUND_COLOR, createDefined2DVector, fruityColors, getAngleBetween, getLoop, getSpoon } from "./util/spoonHelper";
 
 //bug fixes
 //same name chat room join, back buttons, 
@@ -24,6 +24,7 @@ const SpoonDropDescent = () => {
     const urlParams = new URLSearchParams(queryString);
     const debugVal = urlParams.get("debug");
     var allWalls = []; 
+    var atoms =[];
     var loops = [];
     var isMobile = false;
     var width = window.innerWidth;
@@ -167,6 +168,9 @@ const SpoonDropDescent = () => {
     Matter.Events.on(engine, "beforeUpdate", function(event){
       stepPulsingLoops();
     });
+    Matter.Events.on(engine, "afterUpdate", function(event){
+      stepLoopAtoms();
+    });
     
     Matter.Events.on(engine, "collisionStart", function(event) {
       //gameover
@@ -207,7 +211,8 @@ const SpoonDropDescent = () => {
       spawnCloseWalls,
       spawnLoopObstacles,
       spawnSpoonObstacles,
-      spawnShootingLoops
+      spawnShootingLoops,
+      spawnLoopAtoms
     ];
     if (debugVal && parseInt(debugVal) >= 0 && parseInt(debugVal) < obstacles.length){
       oneType = parseInt(debugVal);
@@ -343,6 +348,7 @@ const SpoonDropDescent = () => {
     function deleteStaleObstacles(){
       let count = 0;
       let loopCount = 0;
+      let atomCount = 0;
       allWalls.forEach(element =>{
         if(element.position.y < -height/2){
           if(element.isLoop === true){
@@ -352,8 +358,21 @@ const SpoonDropDescent = () => {
           count++;
         }
       })
+      atoms.forEach(element => {
+        if(element.center.position.y < -height/2){
+          element.nucleus.forEach(proton => {
+            Composite.remove(engine.world, proton);
+          });
+          element.electrons.forEach(electron => {
+            Composite.remove(engine.world, electron);
+          });
+          Composite.remove(engine.world, element);
+          atomCount++;
+        }
+      })
       allWalls.splice(0, count);
       loops.splice(0, loopCount);
+      atoms.splice(0, atomCount);
     }
     function clearScreen(){
       allWalls.forEach(element =>{ 
@@ -364,6 +383,15 @@ const SpoonDropDescent = () => {
         Composite.remove(engine.world, element.body);
       })
       loops.splice(0, loops.length);
+      atoms.forEach(element => {
+        element.nucleus.forEach(proton => {
+          Composite.remove(engine.world, proton);
+        });
+        element.electrons.forEach(electron => {
+          Composite.remove(engine.world, electron);
+        });
+      })
+      atoms.splice(0, atoms.length);
     }
     function setAllSpeeds(){
       allWalls.forEach(element =>{
@@ -385,7 +413,7 @@ const SpoonDropDescent = () => {
               resizeLoop(loop);
             }
           }
-          if(loop.isPeakSize && loop.children){
+          if(loop.isPeakSize && loop.children && gameStarted){
             childLoopPush(loop);
           }
         }
@@ -548,6 +576,84 @@ const SpoonDropDescent = () => {
         loopChildHeightMap.set(loopChild, ypos - Math.sin(loopAngle)*offset)
       }
       //need to add in order so deletes correctly
+      const sortedChildren = new Map(
+        [...loopChildHeightMap.entries()].sort((a, b) => a[1] - b[1])
+      );
+      sortedChildren.keys().forEach(loopChild =>{
+        addObstacle(loopChild);
+      })
+      return loopChildren;
+    }
+    function spawnLoopAtoms(){
+      let wallFrequency = 10;
+      // if(isMobile){
+      //   wallFrequency = 5;
+      // }
+      if(wallTracker%wallFrequency === 0){
+        let loopSpawnX = gameWidth*Math.random() + leftMargin;
+        let loopSpawnY = height + size;
+        let count = getRandomInt(4) + 3;
+        // let loopCluster = {xpos: loopSpawnX, ypos: loopSpawnY};
+        let obstacleSize = size/5 + Math.random()*size/5
+        
+        let loopAtom = {};
+        loopAtom.center = getLoop(loopSpawnX, loopSpawnY, 
+          obstacleFilter, 1, 0.001, 0.1, true, false, false, BACKGROUND_COLOR);
+        addObstacle(loopAtom.center)
+        loopAtom.nucleus = spawnLoopAtomChildren(loopSpawnX, loopSpawnY, obstacleSize, count, false);
+        loopAtom.electronRadius =  size*2 + Math.random()*size/2;
+        loopAtom.sineTracker = 0;
+        loopAtom.sineInterval = getRandomInt(10)/1000; 
+        loopAtom.electrons = spawnLoopAtomChildren(loopSpawnX, loopSpawnY, obstacleSize, count, true);
+        atoms.push(loopAtom);
+        // loop.electrons = spawnLoopElectrons()
+        // addObstacle(loopCluster.body);
+      }
+    }
+    function stepLoopAtoms(){
+      atoms.forEach(atom => {
+
+        const center = atom.center.position;
+
+        atom.electrons.forEach(electron => {
+
+          // stop physics influence
+          Body.setVelocity(electron, { x: 0, y: 0 });
+          Body.setAngularVelocity(electron, 0);
+
+          const offset = Math.sin(atom.sineTracker + electron.angleOffset) * atom.electronRadius;
+
+          const nextPos = {
+            x: center.x + Math.cos(electron.angle) * offset,
+            y: center.y + Math.sin(electron.angle) * offset
+          };
+
+          Body.setPosition(electron, nextPos);
+        });
+        // let slowingFactor = Math.sin(atom.sineTracker) > .9 || Math.sin(atom.sineTracker) < -.9 ? 1 : 2 
+        atom.sineTracker += (0.02 + atom.sineInterval); // slow and stable
+      });
+    }
+    function spawnLoopAtomChildren(xpos, ypos, size, count, isElectron){
+      let loopChildren = []
+      let initialAngle = Math.PI*Math.random();
+      let angleIncrement = Math.PI*2/count;
+      if(isElectron && count%2 === 0){angleIncrement = Math.PI/count}
+      let offset = isElectron ? 0 : size/2;
+      let loopChildHeightMap = new Map();
+      // count = isElectron ? 1 : count;
+      let color = fruityColors.at(getRandomInt(fruityColors.length))
+      for(let i = 0; i < count; i++){
+        let loopAngle = i*angleIncrement + initialAngle;
+        let angleOffset = i*Math.PI/count;
+        let loopChild = getLoop(xpos + Math.cos(loopAngle)*offset*Math.sin(angleOffset), 
+        ypos - Math.sin(loopAngle)*offset*Math.sin(angleOffset), 
+        obstacleFilter, size/2, 0.001, 0.1, true, false, false, color)
+        loopChild.angle = loopAngle;
+        loopChild.angleOffset = angleOffset;
+        loopChildren.push(loopChild)
+        loopChildHeightMap.set(loopChild, ypos - Math.sin(loopAngle)*offset)
+      }
       const sortedChildren = new Map(
         [...loopChildHeightMap.entries()].sort((a, b) => a[1] - b[1])
       );
