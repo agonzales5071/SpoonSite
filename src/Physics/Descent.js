@@ -174,8 +174,13 @@ const SpoonDropDescent = () => {
     
     Matter.Events.on(engine, "collisionStart", function(event) {
       //gameover
+      if(gameStarted){
         allWalls.forEach(element => {
           Body.setStatic(element, true);
+        });
+        //sometimes the loop shooter is spliced out of all walls so need to set loops to static as backup
+        loops.forEach(element => {
+          Body.setStatic(element.body, true);
         });
         setScoreText(points + "m fallen");
         let endMessage = getPopupMessage();
@@ -191,9 +196,10 @@ const SpoonDropDescent = () => {
         if( document.getElementById('dropper') !== null){
           document.getElementById("dropper").innerHTML = "";
         }
-      setTimeout(() => {
-        setGameOverState(true); // Show game over screen
-      }, 1100)
+        setTimeout(() => {
+          setGameOverState(true); // Show game over screen
+        }, 1100)
+      }
         
     });
     var initialSpeed = 20;
@@ -223,7 +229,7 @@ const SpoonDropDescent = () => {
     }
     function startGame() {
       if(gameStarted === false){
-        setGameOverState(false); // Show game over screen
+        setGameOverState(false); // hide game over screen
         gameStarted = true;     
         document.getElementById('descenttut').innerHTML = "";
 
@@ -322,7 +328,8 @@ const SpoonDropDescent = () => {
     function spawnCloseWalls(){
       let percentDone = getObstaclePercentDone()
       let safetyMargin = percentDone > .95 || percentDone < 0.05 
-      if(wallTracker%3 === 0 && !safetyMargin){
+      let wallFrequency = isMobile ? 2 : 3;
+      if(wallTracker%wallFrequency === 0 && !safetyMargin){
         let center = getCloseWallsCenter();
         
         let thickness = 1.5;
@@ -585,13 +592,15 @@ const SpoonDropDescent = () => {
       return loopChildren;
     }
     function spawnLoopAtoms(){
-      let wallFrequency = 10;
-      // if(isMobile){
-      //   wallFrequency = 5;
-      // }
-      if(wallTracker%wallFrequency === 0){
+      let percentDone = getObstaclePercentDone()
+      let safetyMargin = percentDone > .9 || percentDone < 0.02
+      let wallFrequency = 8;
+      if(isMobile){
+        wallFrequency = 10;
+      }
+      if(wallTracker%wallFrequency === 0 && !safetyMargin){
         let loopSpawnX = gameWidth*Math.random() + leftMargin;
-        let loopSpawnY = height + size;
+        let loopSpawnY = height + size*2.5;
         let count = getRandomInt(4) + 3;
         // let loopCluster = {xpos: loopSpawnX, ypos: loopSpawnY};
         let obstacleSize = size/5 + Math.random()*size/5
@@ -638,6 +647,7 @@ const SpoonDropDescent = () => {
       let loopChildren = []
       let initialAngle = Math.PI*Math.random();
       let angleIncrement = Math.PI*2/count;
+      angleIncrement = getRandomInt(2) === 0 ? angleIncrement : angleIncrement * -1  
       if(isElectron && count%2 === 0){angleIncrement = Math.PI/count}
       let offset = isElectron ? 0 : size/2;
       let loopChildHeightMap = new Map();
@@ -645,7 +655,7 @@ const SpoonDropDescent = () => {
       let color = fruityColors.at(getRandomInt(fruityColors.length))
       for(let i = 0; i < count; i++){
         let loopAngle = i*angleIncrement + initialAngle;
-        let angleOffset = i*Math.PI/count;
+        let angleOffset = count%2 === 0 ? i*Math.PI/(1 + count) : i*Math.PI/count;
         let loopChild = getLoop(xpos + Math.cos(loopAngle)*offset*Math.sin(angleOffset), 
         ypos - Math.sin(loopAngle)*offset*Math.sin(angleOffset), 
         obstacleFilter, size/2, 0.001, 0.1, true, false, false, color)
