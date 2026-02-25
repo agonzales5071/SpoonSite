@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from './util/gameoverPopup.js'
-import {createDefined2DVector, getExclamationPoint, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
+import {createDefined2DVector, getAngleBetween, getDistanceBetween, getExclamationPoint, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
 
 const SpoonshipAsteroid = () => {
   const boxRef = useRef(null);
@@ -75,6 +75,11 @@ const SpoonshipAsteroid = () => {
       maxThrustForce = 0.005;
       playerScreenWrapOffset = 15;
     }
+    const obstacleFilter = {
+      group:-2,
+      category: 4, 
+      mask: 2
+    }
 
     // add mouse control
     var mouse = Mouse.create(render.canvas),
@@ -90,9 +95,11 @@ const SpoonshipAsteroid = () => {
       });
       // --- Keyboard handling lives here too ---
     function handleKey(e) {
+      if (e.code === "e"){
+        console.log("e pressed")
+        spawnAsteroid();
+      }
       if (e.code === "Space") {
-
-        // Call any game logic functions you want here
         if(holeOn){
           eraseBlackHoles();
           holeOn = false;
@@ -571,6 +578,27 @@ const SpoonshipAsteroid = () => {
         // Auto-remove after a short time
         setTimeout(() => Composite.remove(engine.world, particle), 250);
       }
+    }
+    function spawnAsteroid(){
+      let segmentCount = getRandomInt(3) + 5;
+      let asteroidSize = size;
+      let xSpawn = width/2;
+      let ySpawn = height/2;  
+      let points = [];
+      let segments = [];
+      for(let i = 0; i < 2*Math.PI; i+= (2*Math.PI/segmentCount)){
+        points.push({x: xSpawn + asteroidSize*Math.cos(i), y: ySpawn + asteroidSize*Math.sin(i)});
+      }
+      for(let i = 0; i < segmentCount; i++){
+        let nextPoint = i === segmentCount - 1 ? points[0] : points[i+1];
+        let angle = getAngleBetween({position: points[i]},{position: nextPoint});
+        let distance = getDistanceBetween({position: points[i]},{position: nextPoint});
+        let segment = Bodies.rectangle(points[i].x + distance*Math.cos(angle), points[i].y + distance*Math.sin(angle), 10, distance+12,
+          {render: { fillStyle: "white"}, filter: obstacleFilter, isSensor: true});
+        Body.rotate(segment, angle-Math.PI*33/100)
+        segments.push(segment);
+      }
+      Composite.add(engine.world, segments);
     }
 
     

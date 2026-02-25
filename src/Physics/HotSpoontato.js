@@ -617,6 +617,10 @@ const SpoonDropHotSpoontato = () => {
          allSpoons.splice(0, allSpoons.length);
         }
       }
+      //if there are no spoons change spawn one sooner
+      if(allSpoons.length ===0 && droppedSpoons){
+        tracker = 1.4*speed
+      }
     }
 
     // Game control vars
