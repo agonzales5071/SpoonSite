@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from './util/gameoverPopup.js'
-import {createDefined2DVector, getAngleBetween, getDistanceBetween, getExclamationPoint, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
+import {BACKGROUND_COLOR, createDefined2DVector, enemyFilter, getAngleBetween, getDistanceBetween, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
 
 const SpoonshipAsteroid = () => {
   const boxRef = useRef(null);
@@ -100,6 +100,7 @@ const SpoonshipAsteroid = () => {
         spawnAsteroid();
       }
       if (e.code === "Space") {
+        spawnAsteroid();
         if(holeOn){
           eraseBlackHoles();
           holeOn = false;
@@ -233,6 +234,8 @@ const SpoonshipAsteroid = () => {
     }
     function doCaptureLogic(holeObject, dt){
       const inHole = checkPlayerInHole(playerShip, holeObject);
+      //reset hole shrink
+      
       if (!playerCaptured) {
         if (inHole) {
           playerCaptureTimer += dt;
@@ -250,6 +253,9 @@ const SpoonshipAsteroid = () => {
       playerCaptured = true;
       Body.setVelocity(player, { x: 0, y: 0 });
       captureHole = holeObject;
+      if(holeObject.shrinking){
+        resetShrinkCosmetics(holeObject);
+      }
     }
 
     function stickToHole(holeBody) {
@@ -473,16 +479,22 @@ const SpoonshipAsteroid = () => {
         {isSensor: true, render:{fillStyle: "black"}, density: 10, label: "blackHole", collisionFilter: col});
       let holeOutline = Bodies.circle(x, y, size/2 + size/16, 
         {isSensor: true, render:{fillStyle: "white"}});
-      let holeObject = {body: holeBody, outline: holeOutline, particleSpawn: null, 
-        lifeTimer: blackHoleDefaultTimeout, deleteInterval: null, captureReset: false};
+      let holeCover = Bodies.circle(x, y, size/2 + size/16, 
+        {isSensor: true, render:{fillStyle: "rgba(255, 255, 255, 0)"}});
+      let shrinker = Bodies.circle(x, y, size/2, 
+        {isSensor: true, render:{fillStyle: "black"}});
+      let holeObject = {body: holeBody, outline: holeOutline, cover: holeCover, shrinkBody: shrinker, particleSpawn: null, 
+        lifeTimer: blackHoleDefaultTimeout, deleteInterval: null, captureReset: false, shrinking: false, shrinkInterval: null};
       holeObject.deleteInterval = setInterval(() => {
-        console.log("hole health = " + holeObject.lifeTimer);
         if(captureHole === holeObject && !holeObject.captureReset){
           holeObject.captureReset = true;
           holeObject.lifeTimer = blackHoleDefaultTimeout;
         }
         if(holeObject.lifeTimer > 0){
           holeObject.lifeTimer -= 1;
+          if(holeObject.lifeTimer === 1){
+            shrinkHole(holeObject);
+          }
         }
         else{
           clearInterval(holeObject.deleteInterval);
@@ -492,16 +504,45 @@ const SpoonshipAsteroid = () => {
       activeBlackHoles.push(holeObject);
       Composite.add(engine.world, holeObject.outline);
       Composite.add(engine.world, holeObject.body);
+      Composite.add(engine.world, holeCover);
+      Composite.add(engine.world, shrinker);
       holeObject.particleSpawn = setInterval(() => {
         spawnGravParticles(x, y);
       }, 100);
     }
+
+    function shrinkHole(h){
+      h.cover.render.fillStyle = BACKGROUND_COLOR;
+      h.shrinking = true;
+      h.shrinkInterval = setInterval(() => {
+      Body.scale(h.shrinkBody, 99/100, 99/100);
+      }, 10);
+    }
+
+    function resetShrinkCosmetics(holeObject){
+      holeObject.cover.render.fillStyle = "#FFFFFF00"
+      holeObject.shrinking = false;
+      holeObject.shrinkTracker = 0
+      clearInterval(holeObject.shrinkInterval);
+      Composite.remove(engine.world, holeObject.shrinkBody);
+      let shrinker = Bodies.circle(holeObject.body.x, holeObject.body.y, size/2, 
+        {isSensor: true, render:{fillStyle: "black"}});
+      holeObject.shrinkBody = shrinker;
+      Composite.add(engine.world, holeObject.shrinkBody);
+    }
+
+    function eraseBlackHole(h){
+      Composite.remove(engine.world, h.body);
+      Composite.remove(engine.world, h.outline);
+      Composite.remove(engine.world, h.cover);
+      Composite.remove(engine.world, h.shrinkBody);
+      clearInterval(h.particleSpawn);
+      clearInterval(h.shrinkInterval);
+    }
     //clears all black holes
     function eraseBlackHoles(){
       activeBlackHoles.forEach(h => {
-        Composite.remove(engine.world, h.body);
-        Composite.remove(engine.world, h.outline);
-        clearInterval(h.particleSpawn);
+        eraseBlackHole(h);
         if(h.deleteInterval){
           clearInterval(h.deleteInterval)
         }
@@ -511,10 +552,9 @@ const SpoonshipAsteroid = () => {
       clearPendingBlackHoles();
     }
     //clears single black hole
+    //TODO: make it look like the black hole shrinks as it despawns to telegraph
     function blackHoleTimeout(holeObject){
-      Composite.remove(engine.world, holeObject.body);
-      Composite.remove(engine.world, holeObject.outline);
-      clearInterval(holeObject.particleSpawn);
+      eraseBlackHole(holeObject);
       activeBlackHoles.splice(0, activeBlackHoles.length);
       if(holeObject === captureHole){
         captureHole = null;
@@ -532,27 +572,27 @@ const SpoonshipAsteroid = () => {
       });
     }
     function doGravity(holeBody, body, G = 0.0005){
+      const dx = holeBody.position.x - body.position.x;
+      const dy = holeBody.position.y - body.position.y;
+
+      const distSq = dx * dx + dy * dy;
+      let dist = Math.sqrt(distSq);
       
-          const dx = holeBody.position.x - body.position.x;
-          const dy = holeBody.position.y - body.position.y;
+      // Prevent divide-by-zero or infinite accelerations
+      const minDist = size; 
+      if (dist < minDist) return;
+      
 
-          const distSq = dx * dx + dy * dy;
-          let dist = Math.sqrt(distSq);
-          
-          // Prevent divide-by-zero or infinite accelerations
-          const minDist = size; 
-          if (dist < minDist) return;
-          
+      // Force magnitude
+      const forceMag = G * (body.mass * holeBody.mass) / distSq;
+      
+      // Normalize direction
+      const fx = (dx / dist) * forceMag;
+      const fy = (dy / dist) * forceMag;
 
-          // Force magnitude
-          const forceMag = G * (body.mass * holeBody.mass) / distSq;
-          
-          // Normalize direction
-          const fx = (dx / dist) * forceMag;
-          const fy = (dy / dist) * forceMag;
-
-          Body.applyForce(body, body.position, { x: fx, y: fy });
+      Body.applyForce(body, body.position, { x: fx, y: fy });
     }
+
     function spawnGravParticles(x, y, count = 1) {
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -580,25 +620,26 @@ const SpoonshipAsteroid = () => {
       }
     }
     function spawnAsteroid(){
-      let segmentCount = getRandomInt(3) + 5;
-      let asteroidSize = size;
-      let xSpawn = width/2;
-      let ySpawn = height/2;  
-      let points = [];
-      let segments = [];
-      for(let i = 0; i < 2*Math.PI; i+= (2*Math.PI/segmentCount)){
-        points.push({x: xSpawn + asteroidSize*Math.cos(i), y: ySpawn + asteroidSize*Math.sin(i)});
+      let side = getRandomInt(4);
+      let x;
+      let y;
+      let mult = Math.random()/10
+      if(side % 2 === 0) {// top or bottom
+        x = gameWidth*Math.random();
+        y = mult*height
+        if(side > 0){
+          y = height - height*mult
+        }
       }
-      for(let i = 0; i < segmentCount; i++){
-        let nextPoint = i === segmentCount - 1 ? points[0] : points[i+1];
-        let angle = getAngleBetween({position: points[i]},{position: nextPoint});
-        let distance = getDistanceBetween({position: points[i]},{position: nextPoint});
-        let segment = Bodies.rectangle(points[i].x + distance*Math.cos(angle), points[i].y + distance*Math.sin(angle), 10, distance+12,
-          {render: { fillStyle: "white"}, filter: obstacleFilter, isSensor: true});
-        Body.rotate(segment, angle-Math.PI*33/100)
-        segments.push(segment);
+      else {//sides
+        y = height*Math.random();
+        x = mult*gameWidth;
+        if(side > 1){
+          x = gameWidth - mult*gameWidth
+        }
       }
-      Composite.add(engine.world, segments);
+      let asteroid = getLoop(x, y, enemyFilter, size, 0, 1, true, false, false);
+      Composite.add(engine.world, asteroid);
     }
 
     

@@ -2,7 +2,7 @@ import Matter, { Bodies, Body, Vector} from "matter-js";
 
 const segmentLength = 12;
 //const segmentThickness = 4;
-export const BACKGROUND_COLOR = '#14151f';
+export const BACKGROUND_COLOR = '#14151fFF';
 const CATEGORY_SPOON = 0x0002;
 const CATEGORY_ENEMY_SPOON = 0x0004;
 export const CATEGORY_NOTHING = 0x0000;
