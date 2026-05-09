@@ -190,15 +190,15 @@ const SpoonshipAsteroid = () => {
       else if(bodyB.label.includes("bounds")){ boundaryCheck(bodyB, bodyA, isStart)}
       else if(!isStart){return;}
       //TODO Asteroid hit by projectile code. make unique identifiers for asteroids that will be given to it's children so that one asteroid can only be
+      if(bodyA.label.includes("asteroid")){ hitAsteroid(bodyA, bodyB)}
+      else if(bodyB.label.includes("asteroid")){ hitAsteroid(bodyB, bodyA)}
       //hit by a single shot once 
     }
     function boundaryCheck(bounds, otherBody, isStart){
       //projectile met bounds so we check if it can wrap or destroy it
       projectiles.forEach( p => {
         if(p.body && p.body === otherBody.parent){
-          console.log("first statement")
           if(p.isLive === true && isStart){
-            console.log("needOOBCheck")
             p.isOOB = true;
             needProjectileOOBCheck = true;
           }
@@ -208,8 +208,18 @@ const SpoonshipAsteroid = () => {
           }
         }
       });
-      
       //may need to do same for asteroids
+    }
+
+    function hitAsteroid(asteroid, otherBody){
+      projectiles.forEach( p => {
+        if(p.body && p.body === otherBody.parent){
+          if(checkIfVulnerable(asteroid, otherBody)){
+            p.isOOB = true;
+            needProjectileOOBCheck = true;
+          }
+        }
+      });
     }
     function checkPlayerInHole(player, holeObject) {
       let holeBody = holeObject.body;
