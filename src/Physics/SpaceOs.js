@@ -174,53 +174,42 @@ const SpoonshipAsteroid = () => {
     
     Matter.Events.on(engine, "collisionStart", function(event) {
       event.pairs.forEach(pair => {
-        boundaryCheck(pair, true);
+        collisionLogic(pair, true);
       });
     });
     Matter.Events.on(engine, "collisionEnd", function(event) {
       event.pairs.forEach(pair => {
-        boundaryCheck(pair, false);
+        collisionLogic(pair, false);
       });
     });
-    function boundaryCheck(pair, isStart){
+    function collisionLogic(pair, isStart){
       var { bodyA, bodyB } = pair;
       bodyA = bodyA.parent;
       bodyB = bodyB.parent;
-      let projectile = null;
-      let bounds = null;
-      let blackHole = null;
-      if(bodyA.label.includes("projectile") && bodyB.label.includes("projectile")){ return; }
-      
-      if(bodyA.label.includes("projectile")){projectile = bodyA.parent;}
-      else if(bodyB.label.includes("projectile")){projectile = bodyB.parent;}
-      
-      if(bodyA.label.includes("bounds")){ bounds = bodyA}
-      else if(bodyB.label.includes("bounds")){ bounds = bodyB}
-
-      if(bodyA.label.includes(blackHoleLabel)){ blackHole = bodyA}
-      else if(bodyB.label.includes(blackHoleLabel)){ blackHole = bodyB}
+      if(bodyA.label.includes("bounds")){ boundaryCheck(bodyA, bodyB, isStart)}
+      else if(bodyB.label.includes("bounds")){ boundaryCheck(bodyB, bodyA, isStart)}
+      else if(!isStart){return;}
+      //TODO Asteroid hit by projectile code. make unique identifiers for asteroids that will be given to it's children so that one asteroid can only be
+      //hit by a single shot once 
+    }
+    function boundaryCheck(bounds, otherBody, isStart){
       //projectile met bounds so we check if it can wrap or destroy it
-      if(bounds && projectile){
-        projectiles.forEach( p => {
-          if(p.body && p.body === projectile){
-            if(p.isLive === true && isStart){
-              p.isOOB = true;
-              needProjectileOOBCheck = true;
-            }
-            if(p.isLive && !isStart){
-              //projectile is coming back into gameview
-              p.isOOB = false;
-            }
+      projectiles.forEach( p => {
+        if(p.body && p.body === otherBody.parent){
+          console.log("first statement")
+          if(p.isLive === true && isStart){
+            console.log("needOOBCheck")
+            p.isOOB = true;
+            needProjectileOOBCheck = true;
           }
-        });
-      }
-      if(blackHole && projectile){
-        // projectiles.forEach( p => {
-        //   if(p.body && p.body === projectile){
-        //   p.deletable = true;
-        //   }
-        // });
-      }
+          if(p.isLive && !isStart){
+            //projectile is coming back into gameview
+            p.isOOB = false;
+          }
+        }
+      });
+      
+      //may need to do same for asteroids
     }
     function checkPlayerInHole(player, holeObject) {
       let holeBody = holeObject.body;
@@ -476,25 +465,24 @@ const SpoonshipAsteroid = () => {
     function createHoleObject(x, y){
       let col = {category: 0x0002, group: 1}
       let holeBody = Bodies.circle(x, y, size/2, 
-        {isSensor: true, render:{fillStyle: "black"}, density: 10, label: "blackHole", collisionFilter: col});
+        {isSensor: true, render:{fillStyle: BACKGROUND_COLOR}, density: 10, label: "blackHole", collisionFilter: col});
       let holeOutline = Bodies.circle(x, y, size/2 + size/16, 
         {isSensor: true, render:{fillStyle: "white"}});
-      let holeCover = Bodies.circle(x, y, size/2 + size/16, 
-        {isSensor: true, render:{fillStyle: "rgba(255, 255, 255, 0)"}});
       let shrinker = Bodies.circle(x, y, size/2, 
         {isSensor: true, render:{fillStyle: "black"}});
-      let holeObject = {body: holeBody, outline: holeOutline, cover: holeCover, shrinkBody: shrinker, particleSpawn: null, 
-        lifeTimer: blackHoleDefaultTimeout, deleteInterval: null, captureReset: false, shrinking: false, shrinkInterval: null};
+      let holeObject = {body: holeBody, outline: holeOutline, shrinkBody: shrinker, particleSpawn: null, 
+        lifeTimer: blackHoleDefaultTimeout, deleteInterval: null, captureReset: false, shrinking: false, shrinkInterval: null, shrinkTracker: Math.PI/2};
       holeObject.deleteInterval = setInterval(() => {
+        console.log("hole life: " + holeObject.lifeTimer)
         if(captureHole === holeObject && !holeObject.captureReset){
           holeObject.captureReset = true;
           holeObject.lifeTimer = blackHoleDefaultTimeout;
         }
         if(holeObject.lifeTimer > 0){
-          holeObject.lifeTimer -= 1;
           if(holeObject.lifeTimer === 1){
             shrinkHole(holeObject);
           }
+          holeObject.lifeTimer -= 1;
         }
         else{
           clearInterval(holeObject.deleteInterval);
@@ -502,9 +490,8 @@ const SpoonshipAsteroid = () => {
         }
       }, 1000);
       activeBlackHoles.push(holeObject);
-      Composite.add(engine.world, holeObject.outline);
       Composite.add(engine.world, holeObject.body);
-      Composite.add(engine.world, holeCover);
+      Composite.add(engine.world, holeObject.outline);
       Composite.add(engine.world, shrinker);
       holeObject.particleSpawn = setInterval(() => {
         spawnGravParticles(x, y);
@@ -512,29 +499,37 @@ const SpoonshipAsteroid = () => {
     }
 
     function shrinkHole(h){
-      h.cover.render.fillStyle = BACKGROUND_COLOR;
+      // h.cover.render.fillStyle = "white";
+      let interval = 10;
       h.shrinking = true;
       h.shrinkInterval = setInterval(() => {
-      Body.scale(h.shrinkBody, 99/100, 99/100);
-      }, 10);
+      let newSize = Math.abs(Math.sin(h.shrinkTracker)*size);
+      let scale = newSize/size;
+      h.shrinkTracker += Math.PI/(10000/interval)
+      Body.scale(h.shrinkBody, scale, scale);
+      Body.scale(h.outline, scale, scale);
+      }, interval);
     }
 
     function resetShrinkCosmetics(holeObject){
-      holeObject.cover.render.fillStyle = "#FFFFFF00"
+      // holeObject.cover.render.fillStyle = "#FFFFFF00"
       holeObject.shrinking = false;
-      holeObject.shrinkTracker = 0
       clearInterval(holeObject.shrinkInterval);
       Composite.remove(engine.world, holeObject.shrinkBody);
-      let shrinker = Bodies.circle(holeObject.body.x, holeObject.body.y, size/2, 
+      Composite.remove(engine.world, holeObject.outline);
+      let shrinker = Bodies.circle(holeObject.body.position.x, holeObject.body.position.y, size/2, 
         {isSensor: true, render:{fillStyle: "black"}});
+      let holeOutline = Bodies.circle(holeObject.body.position.x, holeObject.body.position.y, size/2 + size/16, 
+        {isSensor: true, render:{fillStyle: "white"}});
       holeObject.shrinkBody = shrinker;
+      holeObject.outline = holeOutline;
+      Composite.add(engine.world, holeObject.outline);
       Composite.add(engine.world, holeObject.shrinkBody);
     }
 
     function eraseBlackHole(h){
       Composite.remove(engine.world, h.body);
       Composite.remove(engine.world, h.outline);
-      Composite.remove(engine.world, h.cover);
       Composite.remove(engine.world, h.shrinkBody);
       clearInterval(h.particleSpawn);
       clearInterval(h.shrinkInterval);
