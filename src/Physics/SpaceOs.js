@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from './util/gameoverPopup.js'
-import {BACKGROUND_COLOR, createDefined2DVector, enemyFilter, getAngleBetween, getDistanceBetween, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
+import {BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, enemyFilter, getAngleBetween, getAngleBetweenPos, getDistanceBetween, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
 
 const SpoonshipAsteroid = () => {
   const boxRef = useRef(null);
@@ -118,13 +118,13 @@ const SpoonshipAsteroid = () => {
       Composite.add(engine.world, [
         // walls
         Bodies.rectangle(width/2, height+size, width*2, size*2, { 
-         isSensor: true, isStatic: true, collisionFilter:{group: 0}, label: boundaryLabel}),
+         isSensor: true, isStatic: true, collisionFilter:enemyFilter, label: boundaryLabel}),
         Bodies.rectangle(width/2, -size, width*2, size*2, { 
-         isSensor: true, isStatic: true, collisionFilter:{group: 0}, label: boundaryLabel}),
+         isSensor: true, isStatic: true, collisionFilter:enemyFilter, label: boundaryLabel}),
         Bodies.rectangle(-size, height/2, size*2, height*2, { 
-         isSensor: true, isStatic: true, collisionFilter:{group: 0}, label: boundaryLabel}),
+         isSensor: true, isStatic: true, collisionFilter:enemyFilter, label: boundaryLabel}),
         Bodies.rectangle(width+size, 0, size*2, height*2, { 
-         isSensor: true, isStatic: true, collisionFilter:{group: 0}, label: boundaryLabel})
+         isSensor: true, isStatic: true, collisionFilter:enemyFilter, label: boundaryLabel})
       ]);
     }
     createBoundingBox();
@@ -139,6 +139,7 @@ const SpoonshipAsteroid = () => {
     var resettable = false;
     var isCharging = false;
     var projectiles = [];
+    var asteroids = [];
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
       isCharging = true;
     });
@@ -146,6 +147,9 @@ const SpoonshipAsteroid = () => {
     Matter.Events.on(mouseConstraint, "mouseup", function(event){
       isCharging = false;
       applyThrust();
+      // asteroids.forEach(asteroid => {
+      //   explodeAsteroid(asteroid);
+      // });
     });
     Matter.Events.on(engine, "beforeUpdate", (evt) => {
       const dt = evt.delta;  // ms between frames
@@ -170,6 +174,7 @@ const SpoonshipAsteroid = () => {
       if(needProjectileOOBCheck){
         offScreenCheckProjectiles();
       }
+      offScreenCheckAsteroids();
     });
     
     Matter.Events.on(engine, "collisionStart", function(event) {
@@ -212,14 +217,27 @@ const SpoonshipAsteroid = () => {
     }
 
     function hitAsteroid(asteroid, otherBody){
+      if(otherBody.parent === playerShip){
+        gameOver();
+        //deathAnimation()
+        explodeAsteroid(asteroid)
+
+      }
       projectiles.forEach( p => {
         if(p.body && p.body === otherBody.parent){
           if(checkIfVulnerable(asteroid, otherBody)){
-            p.isOOB = true;
-            needProjectileOOBCheck = true;
+            explodeAsteroid(asteroid);
+            demoteProjectile(p);
           }
         }
       });
+    }
+    function checkIfVulnerable(asteroid){
+      let vulnerable = !asteroid.hasBeenHit;
+      if(vulnerable){
+        asteroid.hasBeenHit = true;
+      }
+      return vulnerable;
     }
     function checkPlayerInHole(player, holeObject) {
       let holeBody = holeObject.body;
@@ -269,6 +287,13 @@ const SpoonshipAsteroid = () => {
       playerCaptureTimer = 0;
     }
 
+    function demoteProjectile(p){
+      if(p.pierceLeft > 0){
+        p.pierceLeft = p.pierceLeft - 1;
+      }
+      else{destroyProjectile(p)}
+    }
+
     function destroyProjectile(p, i = 0){
       Composite.remove(engine.world, p.body);
       if(p.deleteTimeout){
@@ -286,7 +311,7 @@ const SpoonshipAsteroid = () => {
       shotSize = powerPercentage < chargeThreshold1 ? size/4 : powerPercentage < chargeThreshold2 ? size/3 : size/2
       let shotCharge = powerPercentage < chargeThreshold1 ? "NoCharge" : powerPercentage < chargeThreshold2 ? "HalfCharge" : "FullCharge"
       let color = powerPercentage > chargeThreshold2 ? fullChargeColor : secondaryShipColor
-      let shotSpoon = getSpoon(shotSize, playerShip.position.x, playerShip.position.y, {group: 0}, color);
+      let shotSpoon = getSpoon(shotSize, playerShip.position.x, playerShip.position.y, spoonFilter, color);
       shotSpoon.label = "projectile" + shotCharge;
       shotSpoon.frictionAir = 0;
       Body.setAngle(shotSpoon, angle + Math.PI);
@@ -294,12 +319,16 @@ const SpoonshipAsteroid = () => {
       Body.setAngularVelocity(shotSpoon, 0);
       Body.setAngularSpeed(shotSpoon, 0);
       let projectile = createProjectile(shotSpoon, shotCharge);
+      projectile.angle = angle + Math.PI;
       spaceForce(shotSpoon, true, projectile.escapeBoosted);
       resetCharge();
     }
     function createProjectile(body, charge){
       let loopsLeft = charge === "FullCharge" ? 1 : 0;
       let pierceLeft = !(charge === "NoCharge") ? 2 : 0;
+      if(charge === "HalfCharge"){
+        pierceLeft = 1;
+      }
       let projectile = {
         body: body,
         charge: charge,
@@ -394,6 +423,11 @@ const SpoonshipAsteroid = () => {
       }
       if(x < -screenWrapOffset || x > width + screenWrapOffset){
         screenWrapX(body, screenWrapOffset);
+      }
+    }
+    function offScreenCheckAsteroids(){
+      for(let i = 0; i < asteroids.length; i++){
+        offScreenCheck(asteroids[i], defaultScreenWrapOffset);
       }
     }
     //handles all projectile deletes via p.deletable
@@ -557,7 +591,6 @@ const SpoonshipAsteroid = () => {
       clearPendingBlackHoles();
     }
     //clears single black hole
-    //TODO: make it look like the black hole shrinks as it despawns to telegraph
     function blackHoleTimeout(holeObject){
       eraseBlackHole(holeObject);
       activeBlackHoles.splice(0, activeBlackHoles.length);
@@ -575,6 +608,7 @@ const SpoonshipAsteroid = () => {
           doGravity(holeObject.body, p.body)
         }
       });
+      asteroids.forEach(a => {doGravity(holeObject.body, a)});
     }
     function doGravity(holeBody, body, G = 0.0005){
       const dx = holeBody.position.x - body.position.x;
@@ -643,8 +677,105 @@ const SpoonshipAsteroid = () => {
           x = gameWidth - mult*gameWidth
         }
       }
-      let asteroid = getLoop(x, y, enemyFilter, size, 0, 1, true, false, false);
+      let asteroid = getLoop(x, y, enemyFilter, size, 0, 1, true, false, true, null, "asteroid");
+      
+      asteroid.level = 3;
       Composite.add(engine.world, asteroid);
+      asteroids.push(asteroid);
+      pushAsteroid(asteroid);
+    }
+    function spawnAsteroidChild(asteroid, moveAngle){
+      let childSize = asteroid.level > 2 ? size*2/3 : size/3;
+      let child  = getLoop(asteroid.position.x, asteroid.position.y, enemyFilter, childSize, 0, 1, false, false, true, asteroid.color, "asteroid");
+      child.level = asteroid.level - 1;
+      Composite.add(engine.world, child);
+      asteroids.push(child);
+      pushAsteroid(child, moveAngle);
+    }
+
+    function pushAsteroid(asteroid, moveAngle = null){
+      if(moveAngle === null){
+        let destination = getAsteroidDestination();
+        moveAngle = getAngleBetweenPos(destination, asteroid.position)-Math.PI/2;
+        asteroid.angle = moveAngle;
+      }
+      else{
+        asteroid.angle = moveAngle;
+      }
+      let baseForce = isMobile ? 3 : 10;
+      baseForce *= asteroid.level; 
+      let force = baseForce + baseForce*Math.random()
+      Body.applyForce(asteroid, asteroid.position, createDefined2DVector(force, moveAngle));
+    }
+
+    function getAsteroidDestination()
+    {
+      let possibleW = 1/3*width;
+      let possibleH = 1/3*height;
+      let marginX = (width-possibleW)/2
+      let marginY = (height-possibleH)/2
+      let destinationPos = {x: marginX + possibleW*Math.random(), y: marginY + possibleH*Math.random()};
+      return destinationPos;
+    }
+
+    function explodeAsteroid(asteroid){
+      let childCount = 0;
+      spawnCrumbBurst(asteroid)
+      Composite.remove(engine.world, asteroid);
+      asteroids.splice(asteroids.indexOf(asteroid), 1);
+      if(asteroid.level > 1){
+        childCount = 2 + getRandomInt(asteroid.level);
+      }
+      for(let i = 0; i < childCount; i++){
+        let angleSelector = getRandomInt(4)
+        let angle = angleSelector > 0 ? asteroid.angle + Math.random()*Math.PI*2/3 - Math.PI/3 : Math.random()*Math.PI*2;
+        spawnAsteroidChild(asteroid, angle);
+      }
+    }
+
+    function spawnCrumbBurst(asteroid) {
+      const { x, y } = asteroid.position;
+      const radius =  20;
+      const color = asteroid.color;
+    
+      const crumbCount = getRandomInt(8) + 8;
+      for (let i = 0; i < crumbCount; i++) {
+        const angle = (i / crumbCount) * Math.PI * 2;
+        const offsetX = Math.cos(angle) * radius;
+        const offsetY = Math.sin(angle) * radius;
+    
+        // Random size between 2 and 4
+        const crumbRadius = 2 + Math.random() * 2;
+        const crumbDensity = 0.12 + 0.04*Math.random() - crumbRadius*0.025
+        const crumb = Bodies.circle(x + offsetX, y + offsetY, crumbRadius, {
+          isSensor: true,
+          frictionAir: .03,
+          density: crumbDensity,
+          render: {
+            fillStyle: color,
+            opacity: 1,
+          },
+          collisionFilter: cosmeticFilter,
+        });
+    
+        crumb.fadeTime = 0;
+        
+        // Random fade duration between 800–1200ms
+        crumb.fadeDuration = 1600 + Math.random() * 800;
+        crumb.fadeInterval = setInterval(() => {
+          if(crumb.fadeTime >= crumb.fadeDuration){
+            Composite.remove(engine.world, crumb);
+            clearInterval(crumb.fadeInterval);
+          }
+          let newOpacity = (crumb.fadeDuration - crumb.fadeTime) / crumb.fadeDuration;
+          crumb.render.opacity = newOpacity;
+          crumb.fadeTime += 100;
+        }, 100);
+        Composite.add(engine.world, crumb);
+        let randomForce = isMobile ? 0.005 : 0.025;
+        randomForce = randomForce/2 + Math.random()*randomForce;
+        Body.applyForce(crumb, crumb.position, createDefined2DVector(randomForce, angle + Math.PI/2))
+      }
     }
 
     
@@ -658,23 +789,33 @@ const SpoonshipAsteroid = () => {
     function restartGame(){
       if (resettable === true){
         //cleanup and reset
+        asteroids.forEach(asteroid => {
+          Composite.remove(engine.world, asteroid)
+        });
+        asteroids.splice(0, asteroids.length);
+        projectiles.forEach(projectile => {
+          Composite.remove(engine.world, projectile);
+        })
+        projectiles.splice(0, projectiles.length);
+        eraseBlackHoles()
+
         resettable = false
         setScoreText(0);            // reset score
         setMessage("")
       }
     }
-    // function gameOver() {
-    //   setScoreText(points);
-    //   let endMessage = getPopupMessage()
-    //   setMessage(endMessage)        
-    //   gameStarted = false;
-    //   resettable = true;
-    //   //set text
-    //   //leaderboards
-    //   setTimeout(() => {
-    //     setGameOverState(true); // Show game over screen
-    //   }, 1100)
-    // }
+    function gameOver() {
+      // setScoreText(points);
+      // let endMessage = getPopupMessage()
+      // setMessage(endMessage)        
+      gameStarted = false;
+      resettable = true;
+      //set text
+      //leaderboards
+      setTimeout(() => {
+        setGameOverState(true); // Show game over screen
+      }, 1100)
+    }
 
     // function doPointIncrement(spoon, cerealPos) {
     //   //points+= 10*(spoonState.cerealHits+1);

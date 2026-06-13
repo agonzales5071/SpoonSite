@@ -533,6 +533,11 @@ export function getAngleBetween(bodyA, bodyB) {
   const yDiff = bodyB.position.y - bodyA.position.y;
   return Math.atan2(yDiff, xDiff);
 }
+export function getAngleBetweenPos(posA, posB) {
+  const xDiff = posB.x - posA.x;
+  const yDiff = posB.y - posA.y;
+  return Math.atan2(yDiff, xDiff);
+}
 //used to rotate a body toward mouse
 export function rotatePlayerToward(target, dtMs, body, offsetNinety = false, offsetOneEighty = false) {
   const current = body.angle;
@@ -616,7 +621,7 @@ export function createLoop(x, y, world, collisionFilter, size, fric, density, fr
   Matter.Composite.add(world, cerealO);
   return cerealO;
 }
-export function getLoop(x, y, collisionFilter, size, fric, density, fruity, semiTransparent, isSensor = true, color = null){
+export function getLoop(x, y, collisionFilter, size, fric, density, fruity, semiTransparent, isSensor = true, color = null, label = "loop"){
   if(color === null){
     color = "#edc55f";
     if(fruity){
@@ -629,6 +634,7 @@ export function getLoop(x, y, collisionFilter, size, fric, density, fruity, semi
     density: density,
     frictionAir: fric,
     isSensor: isSensor,
+    label: label
   });
   if(semiTransparent){
     circleOuter.render.opacity = .8
@@ -650,6 +656,7 @@ export function getLoop(x, y, collisionFilter, size, fric, density, fruity, semi
     isSensor: isSensor,
   });
   cerealO.color = color;
+  cerealO.label = label;
   return cerealO;
 }
 
