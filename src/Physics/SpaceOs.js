@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from './util/gameoverPopup.js'
-import {BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, enemyFilter, getAngleBetween, getAngleBetweenPos, getDistanceBetween, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
+import {BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
 
 const SpoonshipAsteroid = () => {
   const boxRef = useRef(null);
@@ -63,7 +63,7 @@ const SpoonshipAsteroid = () => {
     var chargeThreshold2 = 0.85;
     var chargeIncrement = 0.01;
     var boundaryLabel = "bounds";
-    const blackHoleLabel = "blackHole"
+    // const blackHoleLabel = "blackHole"
     var captureHole = null;
     var needProjectileOOBCheck = false;
     var holeOn = false;
@@ -74,11 +74,6 @@ const SpoonshipAsteroid = () => {
       size = 30;
       maxThrustForce = 0.005;
       playerScreenWrapOffset = 15;
-    }
-    const obstacleFilter = {
-      group:-2,
-      category: 4, 
-      mask: 2
     }
 
     // add mouse control
