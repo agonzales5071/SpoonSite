@@ -4,6 +4,23 @@ import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from './util/gameoverPopup.js'
 import {BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
+async function lockPortrait() {
+    try {
+        if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen();
+        }
+        await window.screen.orientation.lock('portrait');
+        console.log("Orientation locked successfully!");
+    } catch (error) {
+        console.error("Orientation lock failed: ", error);
+    }
+}
+
+function unlockOrientation() {
+    // Release the orientation lock
+    window.screen.orientation.unlock();
+    console.log("Orientation unlocked.");
+}
 
 const SpoonshipAsteroid = () => {
   const boxRef = useRef(null);
@@ -16,7 +33,6 @@ const SpoonshipAsteroid = () => {
   const [scoreText, setScoreText] = useState("");
   
   useEffect( () => {
-
     var isMobile = false;
     var width = window.innerWidth;
     var height = window.innerHeight;
@@ -64,7 +80,9 @@ const SpoonshipAsteroid = () => {
     var chargeIncrement = 0.01;
     var boundaryLabel = "bounds";
     // const blackHoleLabel = "blackHole"
+    var enemyInterval = null;
     var captureHole = null;
+    var score = 0;
     var needProjectileOOBCheck = false;
     var holeOn = false;
     const blackHoleDefaultTimeout = 15;
@@ -223,6 +241,7 @@ const SpoonshipAsteroid = () => {
           if(checkIfVulnerable(asteroid, otherBody)){
             explodeAsteroid(asteroid);
             demoteProjectile(p);
+            score += 100;
           }
         }
       });
@@ -681,7 +700,7 @@ const SpoonshipAsteroid = () => {
     }
     function spawnAsteroidChild(asteroid, moveAngle){
       let childSize = asteroid.level > 2 ? size*2/3 : size/3;
-      let child  = getLoop(asteroid.position.x, asteroid.position.y, enemyFilter, childSize, 0, 1, false, false, true, asteroid.color, "asteroid");
+      let child  = getLoop(asteroid.position.x, asteroid.position.y, enemyFilter, childSize, 0.01, 1, false, false, true, asteroid.color, "asteroid");
       child.level = asteroid.level - 1;
       Composite.add(engine.world, child);
       asteroids.push(child);
@@ -719,7 +738,7 @@ const SpoonshipAsteroid = () => {
       Composite.remove(engine.world, asteroid);
       asteroids.splice(asteroids.indexOf(asteroid), 1);
       if(asteroid.level > 1){
-        childCount = 2 + getRandomInt(asteroid.level);
+        childCount = 1 + getRandomInt(3);
       }
       for(let i = 0; i < childCount; i++){
         let angleSelector = getRandomInt(4)
@@ -730,7 +749,7 @@ const SpoonshipAsteroid = () => {
 
     function spawnCrumbBurst(asteroid) {
       const { x, y } = asteroid.position;
-      const radius =  20;
+      const radius = isMobile ? 8 : 20;
       const color = asteroid.color;
     
       const crumbCount = getRandomInt(8) + 8;
@@ -740,7 +759,8 @@ const SpoonshipAsteroid = () => {
         const offsetY = Math.sin(angle) * radius;
     
         // Random size between 2 and 4
-        const crumbRadius = 2 + Math.random() * 2;
+        const radBase = isMobile ? 1 : 2
+        const crumbRadius = radBase + Math.random() * radBase;
         const crumbDensity = 0.12 + 0.04*Math.random() - crumbRadius*0.025
         const crumb = Bodies.circle(x + offsetX, y + offsetY, crumbRadius, {
           isSensor: true,
@@ -773,16 +793,30 @@ const SpoonshipAsteroid = () => {
       }
     }
 
+    function startEnemy(){
+      // let round = 1;
+      enemyInterval = setInterval(() => {
+        if(asteroids.length === 0){
+          for (let i = getRandomInt(3) + 1; i > 0; i--){
+            spawnAsteroid()
+          }
+        }
+        if(getRandomInt(60) === 0){
+          summonBlackHole();
+        }
+      }, 1000)
+    }
     
     function startGame() {
       if (gameStarted === false) {
         setGameOverState(false); // Show game over screen
         gameStarted = true;
-        // startEnemy();
+        startEnemy();
       }
     }
     function restartGame(){
       if (resettable === true){
+        console.log("restarting")
         //cleanup and reset
         asteroids.forEach(asteroid => {
           Composite.remove(engine.world, asteroid)
@@ -795,18 +829,21 @@ const SpoonshipAsteroid = () => {
         eraseBlackHoles()
 
         resettable = false
+        score = 0;
         setScoreText(0);            // reset score
         setMessage("")
       }
     }
     function gameOver() {
-      // setScoreText(points);
+      setScoreText(score);
       // let endMessage = getPopupMessage()
       // setMessage(endMessage)        
       gameStarted = false;
       resettable = true;
+      releasePlayer()
       //set text
       //leaderboards
+      clearInterval(enemyInterval);
       setTimeout(() => {
         setGameOverState(true); // Show game over screen
       }, 1100)
@@ -847,6 +884,9 @@ const SpoonshipAsteroid = () => {
       else{
         restartGame();
       }
+      if(isMobile){
+        lockPortrait();
+      }
       setPlayButtonText("Restart")
     }
     restartRef.current = startRestart;
@@ -859,6 +899,7 @@ const SpoonshipAsteroid = () => {
       Render.stop(render);
       Runner.stop(runner);
       window.removeEventListener("keydown", handleKey);
+      unlockOrientation()
       clearPendingBlackHoles();
       eraseBlackHoles();
       projectiles.forEach(p => {
