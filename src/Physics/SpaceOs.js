@@ -27,7 +27,7 @@ const SpoonshipAsteroid = () => {
   const [playButtonText, setPlayButtonText] = useState("Play")
 
   const [gameOverState, setGameOverState] = useState(false);
-  const [message, setMessage] = useState("You are the pilot of a SpoonShip (trademark pending). Destroy the Space O's before they destroy you! Tap to shoot, hold to charge a more powerful shot.");
+  const [message, setMessage] = useState("You are the pilot of a SpoonShip (trademark pending). Destroy the Space O's before they destroy you!");
   const [scoreText, setScoreText] = useState("");
   
   useEffect( () => {
@@ -90,7 +90,9 @@ const SpoonshipAsteroid = () => {
       maxThrustForce = 0.005;
       playerScreenWrapOffset = 15;
     }
-
+    if(isMobile){
+      setScoreText("On mobile, locking screen orientation and playing horizontally is recommended.");
+    }
     // add mouse control
     var mouse = Mouse.create(render.canvas),
       mouseConstraint = MouseConstraint.create(engine, {
@@ -794,16 +796,22 @@ const SpoonshipAsteroid = () => {
     }
 
     function startEnemy(){
-      // let round = 1;
+      let round = 1;
+      let baseRoundTimer = 30;
+      let roundTimer = baseRoundTimer;
       enemyInterval = setInterval(() => {
-        if(asteroids.length === 0){
+        if(asteroids.length === 0 || roundTimer <= 0){
           for (let i = getRandomInt(3) + 1; i > 0; i--){
             spawnAsteroid()
           }
+          let roundTimeModifier = Math.floor(round/2);
+          roundTimer = baseRoundTimer - roundTimeModifier;
+          if(roundTimer < 20) { roundTimer = 20}
         }
         if(getRandomInt(60) === 0){
           summonBlackHole();
         }
+        roundTimer--;
       }, 1000)
     }
     
@@ -833,15 +841,15 @@ const SpoonshipAsteroid = () => {
 
         resettable = false
         points = 0;
-        setScoreText(0);            // reset score
+        setScoreText(0 + " points");            // reset score
         setMessage("")
         startGame();
       }
     }
     function gameOver() {
-      setScoreText(points);
-      // let endMessage = getPopupMessage()
-      // setMessage(endMessage)        
+      setScoreText(points + " points");
+      let endMessage = getPopupMessage()
+      setMessage(endMessage)        
       gameStarted = false;
       resettable = true;
       releasePlayer()
@@ -857,7 +865,18 @@ const SpoonshipAsteroid = () => {
       projectile.asteroidHits += 1
       points+= 100*(projectile.asteroidHits);
       let mutlihitOffset = projectile.asteroidHits*size*0.8
-      createPlusScore(asteroidPos.x + mutlihitOffset, asteroidPos.y - mutlihitOffset, projectile.asteroidHits*100, engine.world, true)
+      let color = "#FFFFFF"
+        if(projectile.asteroidHits > 1){
+          color = "#3df13d"
+        }
+        if(projectile.asteroidHits > 2){
+          color = "rainbow"
+        }
+        let posX = asteroidPos.x + mutlihitOffset;
+        let posY = asteroidPos.y - mutlihitOffset;
+        if(posX > width - size){posX = width - size}
+        if(posY < size){posY = size}
+      createPlusScore(posX, posY, projectile.asteroidHits*100, engine.world, true, color)
       setText()
     }
     function setText() {
@@ -875,8 +894,8 @@ const SpoonshipAsteroid = () => {
         if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " points"; 
       }
       else if(points === 0){
-        if (dropperEl) dropperEl.innerHTML = "Ready yourself pilot."
-        if (tutEl) tutEl.innerHTML = "We're headed straight into a Cereal field!"
+        if (dropperEl) dropperEl.innerHTML = "Ready yourself pilot. We're headed straight into a Cereal field!"
+        if (tutEl) tutEl.innerHTML = "Tap to shoot, hold to charge a more powerful shot."
       }
       else{
         if (dropperEl) dropperEl.innerHTML = points + " points";
@@ -884,17 +903,15 @@ const SpoonshipAsteroid = () => {
       }
       //if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
     }
-    // function getPopupMessage(isStart){
-    //   if(isStart){
-    //     return "context!"
-    //   }
-    //   let message;
-    //   if(points >= 2500){
-    //     message = "great";
-    //   }
-    //   else message = "good";
-    //   return message;
-    // }
+    function getPopupMessage(){
+      
+      let message;
+      if(points >= 6900){
+        message = "Wow you really ate that cereal for breakfast! Score:";
+      }
+      else message = "O nO! The ship has been cOmprOmised... but yOur scOre is:";
+      return message;
+    }
       
     function startRestart(){
       if(!gameStarted && !resettable){startGame()}
