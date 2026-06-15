@@ -3,14 +3,13 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from './util/gameoverPopup.js'
-import {BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
+import {BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
 async function lockPortrait() {
     try {
         if (!document.fullscreenElement) {
             await document.documentElement.requestFullscreen();
         }
         await window.screen.orientation.lock('portrait');
-        console.log("Orientation locked successfully!");
     } catch (error) {
         console.error("Orientation lock failed: ", error);
     }
@@ -19,7 +18,6 @@ async function lockPortrait() {
 function unlockOrientation() {
     // Release the orientation lock
     window.screen.orientation.unlock();
-    console.log("Orientation unlocked.");
 }
 
 const SpoonshipAsteroid = () => {
@@ -29,7 +27,7 @@ const SpoonshipAsteroid = () => {
   const [playButtonText, setPlayButtonText] = useState("Play")
 
   const [gameOverState, setGameOverState] = useState(false);
-  const [message, setMessage] = useState("You are the pilot of a SpoonShip (trademark pending). tap to shoot, hold to charge.");
+  const [message, setMessage] = useState("You are the pilot of a SpoonShip (trademark pending). Destroy the Space O's before they destroy you! Tap to shoot, hold to charge a more powerful shot.");
   const [scoreText, setScoreText] = useState("");
   
   useEffect( () => {
@@ -63,7 +61,7 @@ const SpoonshipAsteroid = () => {
     var gameWidth = width;
     var marginV = height/6;
     var marginH = gameWidth/6;
-    // var points = 0;
+    var points = 0;
     var size = 50; //size var for spoon
     var maxThrustForce = 0.02;
     var playerScreenWrapOffset = size/2;
@@ -82,9 +80,8 @@ const SpoonshipAsteroid = () => {
     // const blackHoleLabel = "blackHole"
     var enemyInterval = null;
     var captureHole = null;
-    var score = 0;
     var needProjectileOOBCheck = false;
-    var holeOn = false;
+    // var holeOn = false; //debug
     const blackHoleDefaultTimeout = 15;
     //mobile augmentations
     if(width < 800){
@@ -108,21 +105,18 @@ const SpoonshipAsteroid = () => {
       });
       // --- Keyboard handling lives here too ---
     function handleKey(e) {
-      if (e.code === "e"){
-        console.log("e pressed")
-        spawnAsteroid();
-      }
-      if (e.code === "Space") {
-        spawnAsteroid();
-        if(holeOn){
-          eraseBlackHoles();
-          holeOn = false;
-        }
-        else{
-          summonBlackHole();
-          holeOn = true;
-        }
-      }
+      //debug stuff
+      // if (e.code === "Space") {
+      //   spawnAsteroid();
+      //   if(holeOn){
+      //     eraseBlackHoles();
+      //     holeOn = false;
+      //   }
+      //   else{
+      //     summonBlackHole();
+      //     holeOn = true;
+      //   }
+      // }
     }
 
     window.addEventListener("keydown", handleKey);
@@ -231,7 +225,9 @@ const SpoonshipAsteroid = () => {
 
     function hitAsteroid(asteroid, otherBody){
       if(otherBody.parent === playerShip){
-        gameOver();
+        if(gameStarted){
+          gameOver();
+        }
         //deathAnimation()
         explodeAsteroid(asteroid)
 
@@ -240,8 +236,8 @@ const SpoonshipAsteroid = () => {
         if(p.body && p.body === otherBody.parent){
           if(checkIfVulnerable(asteroid, otherBody)){
             explodeAsteroid(asteroid);
+            doPointIncrement(p, asteroid.position);
             demoteProjectile(p);
-            score += 100;
           }
         }
       });
@@ -352,7 +348,8 @@ const SpoonshipAsteroid = () => {
         isLive: true,
         isOOB: false,
         escapeBoosted: playerCaptured,
-        deleteTimeout: null
+        deleteTimeout: null,
+        asteroidHits: 0
       };
       projectile.deleteTimeout = setTimeout(() => {
         destroyProjectile(projectile);
@@ -441,7 +438,8 @@ const SpoonshipAsteroid = () => {
     }
     function offScreenCheckAsteroids(){
       for(let i = 0; i < asteroids.length; i++){
-        offScreenCheck(asteroids[i], defaultScreenWrapOffset);
+        let a = asteroids[i];
+        offScreenCheck(a, defaultScreenWrapOffset/(4-a.level));
       }
     }
     //handles all projectile deletes via p.deletable
@@ -737,13 +735,15 @@ const SpoonshipAsteroid = () => {
       spawnCrumbBurst(asteroid)
       Composite.remove(engine.world, asteroid);
       asteroids.splice(asteroids.indexOf(asteroid), 1);
-      if(asteroid.level > 1){
-        childCount = 1 + getRandomInt(3);
-      }
-      for(let i = 0; i < childCount; i++){
-        let angleSelector = getRandomInt(4)
-        let angle = angleSelector > 0 ? asteroid.angle + Math.random()*Math.PI*2/3 - Math.PI/3 : Math.random()*Math.PI*2;
-        spawnAsteroidChild(asteroid, angle);
+      if(gameStarted){
+        if(asteroid.level > 1){
+          childCount = 1 + getRandomInt(3);
+        }
+        for(let i = 0; i < childCount; i++){
+          let angleSelector = getRandomInt(4)
+          let angle = angleSelector > 0 ? asteroid.angle + Math.random()*Math.PI*2/3 - Math.PI/3 : Math.random()*Math.PI*2;
+          spawnAsteroidChild(asteroid, angle);
+        }
       }
     }
 
@@ -812,15 +812,18 @@ const SpoonshipAsteroid = () => {
         setGameOverState(false); // Show game over screen
         gameStarted = true;
         startEnemy();
+        setText();
       }
     }
     function restartGame(){
       if (resettable === true){
-        console.log("restarting")
         //cleanup and reset
-        asteroids.forEach(asteroid => {
-          Composite.remove(engine.world, asteroid)
-        });
+        Composite.allBodies(engine.world)
+          .forEach(body => {
+            if (body.label === "asteroid") {
+              Composite.remove(engine.world, body);
+            }
+          });
         asteroids.splice(0, asteroids.length);
         projectiles.forEach(projectile => {
           Composite.remove(engine.world, projectile);
@@ -829,19 +832,20 @@ const SpoonshipAsteroid = () => {
         eraseBlackHoles()
 
         resettable = false
-        score = 0;
+        points = 0;
         setScoreText(0);            // reset score
         setMessage("")
+        startGame();
       }
     }
     function gameOver() {
-      setScoreText(score);
+      setScoreText(points);
       // let endMessage = getPopupMessage()
       // setMessage(endMessage)        
       gameStarted = false;
       resettable = true;
       releasePlayer()
-      //set text
+      setText()
       //leaderboards
       clearInterval(enemyInterval);
       setTimeout(() => {
@@ -849,24 +853,37 @@ const SpoonshipAsteroid = () => {
       }, 1100)
     }
 
-    // function doPointIncrement(spoon, cerealPos) {
-    //   //points+= 10*(spoonState.cerealHits+1);
-    //   //createPlusScore(cerealPos.x, cerealPos.y, spoonState.cerealHits*10)
-    // }
-    // function setText() {
-    //   const dropperEl = document.getElementById("dropper");
-    //   //point tracking messages
-    //   if(points >= 2500){
-    //     if (dropperEl) dropperEl.innerHTML = "Whoa! " + points + " points";
-    //   }
-    //   else if(points >= 1000){
-    //     if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " points"; 
-    //   }
-    //   else{
-    //     if (dropperEl) dropperEl.innerHTML = points + " points";
-    //   }
-    //   //if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
-    // }
+    function doPointIncrement(projectile, asteroidPos) {
+      projectile.asteroidHits += 1
+      points+= 100*(projectile.asteroidHits);
+      let mutlihitOffset = projectile.asteroidHits*size*0.8
+      createPlusScore(asteroidPos.x + mutlihitOffset, asteroidPos.y - mutlihitOffset, projectile.asteroidHits*100, engine.world, true)
+      setText()
+    }
+    function setText() {
+      const dropperEl = document.getElementById("dropper");
+      const tutEl = document.getElementById("descenttut");
+      //point tracking messages
+      if(!gameStarted){
+        if (dropperEl) dropperEl.innerHTML = "";
+        if (tutEl) tutEl.innerHTML = ""
+      }
+      else if(points >= 2500){
+        if (dropperEl) dropperEl.innerHTML = "Whoa! " + points + " points";
+      }
+      else if(points >= 1000){
+        if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " points"; 
+      }
+      else if(points === 0){
+        if (dropperEl) dropperEl.innerHTML = "Ready yourself pilot."
+        if (tutEl) tutEl.innerHTML = "We're headed straight into a Cereal field!"
+      }
+      else{
+        if (dropperEl) dropperEl.innerHTML = points + " points";
+        if (tutEl) tutEl.innerHTML = ""
+      }
+      //if (dropperEl && debug) dropperEl.innerHTML = "Whoa! " + points + " points. Speed = " + speed;
+    }
     // function getPopupMessage(isStart){
     //   if(isStart){
     //     return "context!"
@@ -926,8 +943,8 @@ const SpoonshipAsteroid = () => {
         <button className='back-button' style={{ display: gameOverState ? "none" : "block" }}/>
       </Link>
       <div id="menutext">
-        <p id="dropper">instructions</p>
-        <p id="descenttut"className="droppertext">do it!</p>
+        <p id="dropper"></p>
+        <p id="descenttut"className="droppertext"></p>
       </div>
     </div>
   )
