@@ -151,41 +151,13 @@ export function getDualSidedSaber(spoonSize, x, y, spoonFilter, color, gap = 0) 
 export function getSpoonShip(spoonSize, xposSpawn, yposSpawn, spoonFilter, color){
   let spoonSpawn = [xposSpawn, yposSpawn, - spoonSize/2 + yposSpawn];
   let spoonHeadOffset = spoonSize / 50;
-  let triHeight = spoonSize/4
-  let halfWidth = spoonSize/8;
   let baseY = yposSpawn + spoonSize/3
 
   //SHAPES
   let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
-  let leftTriangle = Bodies.fromVertices(
-    spoonSpawn[0] - halfWidth,
-    baseY,
-    [[
-      { x: 0, y: 0 },
-      { x: -triHeight/2, y: triHeight },
-      { x: 0, y: triHeight }
-    ]],
-    {
-      render: {fillStyle: "red"},
-      collisionFilter: spoonFilter,
-    },
-    true
-  );
+  let leftTriangle = getShipWing(xposSpawn, yposSpawn, spoonSize, true)
 
-  let rightTriangle = Bodies.fromVertices(
-    spoonSpawn[0] + halfWidth,
-    baseY,
-    [[
-      { x: 0, y: 0 },
-      { x: triHeight/2, y: triHeight },
-      { x: 0, y: triHeight }
-    ]],
-    {
-      render: {fillStyle: "red"},
-      collisionFilter: spoonFilter,
-    },
-    true
-  );
+  let rightTriangle = getShipWing(xposSpawn, yposSpawn, spoonSize, false)
 
   parts.push(rightTriangle, leftTriangle);
 
@@ -217,6 +189,7 @@ export function getSpoonShip(spoonSize, xposSpawn, yposSpawn, spoonFilter, color
     parts: parts,
     collisionFilter: spoonFilter,
   });
+  spoon.label = "spoonShip"
 
 
   Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] - spoonSize / 10), false);
@@ -224,6 +197,29 @@ export function getSpoonShip(spoonSize, xposSpawn, yposSpawn, spoonFilter, color
   
   return spoon;
 }
+export function getShipWing(xposSpawn, yposSpawn, spoonSize, isLeft){
+  let spoonSpawn = [xposSpawn, yposSpawn, - spoonSize/2 + yposSpawn];
+  let triHeight = spoonSize/4;
+  let halfWidth = spoonSize/8;
+  let baseY = yposSpawn + spoonSize/3
+  let sideModifier = isLeft ? -1 : 1;
+  let wing = Bodies.fromVertices(
+    spoonSpawn[0] + sideModifier*halfWidth,
+    baseY,
+    [[
+      { x: 0, y: 0 },
+      { x: sideModifier*triHeight/2, y: triHeight },
+      { x: 0, y: triHeight }
+    ]],
+    {
+      render: {fillStyle: "red"},
+      collisionFilter: spoonFilter,
+    },
+    true
+  );
+  return wing;
+}
+
 
 function getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset){
     let spoonDensity = 0.0011;

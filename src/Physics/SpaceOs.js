@@ -3,7 +3,8 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from './util/gameoverPopup.js'
-import {BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter } from "./util/spoonHelper.js";
+import {BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, getShipWing, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter, createRandom2DVector } from "./util/spoonHelper.js";
+
 async function lockPortrait() {
     try {
         if (!document.fullscreenElement) {
@@ -77,6 +78,7 @@ const SpoonshipAsteroid = () => {
     var chargeThreshold2 = 0.85;
     var chargeIncrement = 0.01;
     var boundaryLabel = "bounds";
+    var deathCosmetics = [];
     // const blackHoleLabel = "blackHole"
     var enemyInterval = null;
     var captureHole = null;
@@ -108,17 +110,17 @@ const SpoonshipAsteroid = () => {
       // --- Keyboard handling lives here too ---
     function handleKey(e) {
       //debug stuff
-      // if (e.code === "Space") {
-      //   spawnAsteroid();
-      //   if(holeOn){
-      //     eraseBlackHoles();
-      //     holeOn = false;
-      //   }
-      //   else{
-      //     summonBlackHole();
-      //     holeOn = true;
-      //   }
-      // }
+      if (e.code === "Space") {
+        // spawnAsteroid();
+        // if(holeOn){
+        //   eraseBlackHoles();
+        //   // holeOn = false;
+        // }
+        // else{
+          summonBlackHole();
+          // holeOn = true;
+        // }
+      }
     }
 
     window.addEventListener("keydown", handleKey);
@@ -174,11 +176,15 @@ const SpoonshipAsteroid = () => {
       else if (playerCaptured){
         releasePlayer()
       }
-      rotatePlayerToward(target, dt, playerShip, false, true);
+      if(!isMobile || (isMobile && isCharging)){
+        rotatePlayerToward(target, dt, playerShip, false, true);
+      }
       
     });
     Matter.Events.on(engine, "afterUpdate", (evt) => {
-      redrawPlayer();
+      if(gameStarted){
+        redrawPlayer();
+      }
       offScreenCheck(playerShip, playerScreenWrapOffset);
       if(needProjectileOOBCheck){
         offScreenCheckProjectiles();
@@ -230,19 +236,28 @@ const SpoonshipAsteroid = () => {
         if(gameStarted){
           gameOver();
         }
-        //deathAnimation()
         explodeAsteroid(asteroid)
 
       }
-      projectiles.forEach( p => {
-        if(p.body && p.body === otherBody.parent){
-          if(checkIfVulnerable(asteroid, otherBody)){
-            explodeAsteroid(asteroid);
-            doPointIncrement(p, asteroid.position);
-            demoteProjectile(p);
+      Composite.allBodies(engine.world)
+        .forEach(body => {
+          if (otherBody.parent === body && body.label.includes("projectile") ) {
+            if(checkIfVulnerable(asteroid, otherBody)){
+              explodeAsteroid(asteroid);
+              for(let i = projectiles.length-1; i >= 0; i--){
+                let p = projectiles[i];
+                if(p.body && p.body === otherBody.parent){
+                  doPointIncrement(p, asteroid.position);
+                  if(demoteProjectile(p)){
+                    i--;
+                  }        
+                }
+              }
+              projectiles.forEach( p => {
+              });
+            }
           }
-        }
-      });
+        });
     }
     function checkIfVulnerable(asteroid){
       let vulnerable = !asteroid.hasBeenHit;
@@ -298,12 +313,33 @@ const SpoonshipAsteroid = () => {
       playerCaptured = false;
       playerCaptureTimer = 0;
     }
+    function deathAnimation(player){
+      Composite.remove(engine.world, player)
+      let rightWing = getShipWing(player.position.x, player.position.y, size, false);
+      let leftWing = getShipWing(player.position.x, player.position.y, size, true);
+      deathCosmetics.push(rightWing);
+      deathCosmetics.push(leftWing);
+      spawnCrumbBurst(player, primaryShipColor);
+      spawnCrumbBurst(player, primaryShipColor);
+      spawnCrumbBurst(player, secondaryShipColor);
+      Composite.add(engine.world, [rightWing, leftWing])
+      Body.applyForce(leftWing, leftWing.position, createRandom2DVector(.0005))
+      Body.applyForce(rightWing, rightWing.position, createRandom2DVector(.0005))
+      Body.setAngularSpeed(leftWing, .5 + Math.random()/2)
+      Body.setAngularSpeed(rightWing, .5 + Math.random()/2)
+    }
 
+    //returns true if projectile is destroyed
     function demoteProjectile(p){
+      let destroyed = false;
       if(p.pierceLeft > 0){
         p.pierceLeft = p.pierceLeft - 1;
       }
-      else{destroyProjectile(p)}
+      else{
+        destroyProjectile(p);
+        destroyed = true;
+      }
+      return destroyed;
     }
 
     function destroyProjectile(p, i = 0){
@@ -531,7 +567,7 @@ const SpoonshipAsteroid = () => {
       let holeObject = {body: holeBody, outline: holeOutline, shrinkBody: shrinker, particleSpawn: null, 
         lifeTimer: blackHoleDefaultTimeout, deleteInterval: null, captureReset: false, shrinking: false, shrinkInterval: null, shrinkTracker: Math.PI/2};
       holeObject.deleteInterval = setInterval(() => {
-        console.log("hole life: " + holeObject.lifeTimer)
+        // console.log("hole life: " + holeObject.lifeTimer)
         if(captureHole === holeObject && !holeObject.captureReset){
           holeObject.captureReset = true;
           holeObject.lifeTimer = blackHoleDefaultTimeout;
@@ -547,6 +583,7 @@ const SpoonshipAsteroid = () => {
           blackHoleTimeout(holeObject);
         }
       }, 1000);
+      holeBody.holeObject = holeObject;
       activeBlackHoles.push(holeObject);
       Composite.add(engine.world, holeObject.body);
       Composite.add(engine.world, holeObject.outline);
@@ -607,7 +644,7 @@ const SpoonshipAsteroid = () => {
     //clears single black hole
     function blackHoleTimeout(holeObject){
       eraseBlackHole(holeObject);
-      activeBlackHoles.splice(0, activeBlackHoles.length);
+      activeBlackHoles.splice(activeBlackHoles.indexOf(holeObject), 1);
       if(holeObject === captureHole){
         captureHole = null;
         releasePlayer();
@@ -622,7 +659,8 @@ const SpoonshipAsteroid = () => {
           doGravity(holeObject.body, p.body)
         }
       });
-      asteroids.forEach(a => {doGravity(holeObject.body, a)});
+      let g = playerCaptured ? 0.0002 : 0.0005
+      asteroids.forEach(a => {if(a.isActive){doGravity(holeObject.body, a, g)}});
     }
     function doGravity(holeBody, body, G = 0.0005){
       const dx = holeBody.position.x - body.position.x;
@@ -691,17 +729,43 @@ const SpoonshipAsteroid = () => {
           x = gameWidth - mult*gameWidth
         }
       }
-      let asteroid = getLoop(x, y, enemyFilter, size, 0, 1, true, false, true, null, "asteroid");
+      let asteroid = getLoop(x, y, cosmeticFilter, size, 0, 1, true, false, true, null, "asteroid");
       
       asteroid.level = 3;
+      asteroid.isActive = false;
+      let fadeCover = Bodies.circle(x, y, size, {
+        collisionFilter: cosmeticFilter,
+        isSensor: true,
+        isStatic: true,
+        render: {fillStyle: BACKGROUND_COLOR, opacity: 1}
+      }) 
       Composite.add(engine.world, asteroid);
+      Composite.add(engine.world, fadeCover);
       asteroids.push(asteroid);
-      pushAsteroid(asteroid);
+      let fadeInterval = setInterval(() => {
+        let op = fadeCover.render.opacity;
+        if(op <= 1/30){
+          Composite.remove(engine.world, fadeCover);
+          if(asteroid){
+            pushAsteroid(asteroid);
+            asteroid.isActive = true;
+          }
+          clearInterval(fadeInterval);
+        }
+        else{
+          op -= 1/30;
+          fadeCover.render.opacity = op;
+        }
+        if(op <= 2/30){
+          asteroid.collisionFilter = enemyFilter;
+        }
+      }, 100)
     }
     function spawnAsteroidChild(asteroid, moveAngle){
       let childSize = asteroid.level > 2 ? size*2/3 : size/3;
       let child  = getLoop(asteroid.position.x, asteroid.position.y, enemyFilter, childSize, 0.01, 1, false, false, true, asteroid.color, "asteroid");
       child.level = asteroid.level - 1;
+      child.isActive = true;
       Composite.add(engine.world, child);
       asteroids.push(child);
       pushAsteroid(child, moveAngle);
@@ -749,10 +813,12 @@ const SpoonshipAsteroid = () => {
       }
     }
 
-    function spawnCrumbBurst(asteroid) {
+    function spawnCrumbBurst(asteroid, color = null) {
       const { x, y } = asteroid.position;
       const radius = isMobile ? 8 : 20;
-      const color = asteroid.color;
+      if(color === null){
+        color = asteroid.color;
+      }
     
       const crumbCount = getRandomInt(8) + 8;
       for (let i = 0; i < crumbCount; i++) {
@@ -826,19 +892,29 @@ const SpoonshipAsteroid = () => {
     function restartGame(){
       if (resettable === true){
         //cleanup and reset
+        let playerRemoved = true;
         Composite.allBodies(engine.world)
           .forEach(body => {
             if (body.label === "asteroid") {
               Composite.remove(engine.world, body);
             }
+            if (body.label === "spoonShip") {
+              playerRemoved = false;
+            }
           });
+        if(playerRemoved){
+          Composite.add(engine.world, playerShip)
+        }
         asteroids.splice(0, asteroids.length);
         projectiles.forEach(projectile => {
           Composite.remove(engine.world, projectile);
         })
         projectiles.splice(0, projectiles.length);
         eraseBlackHoles()
-
+        deathCosmetics.forEach(c => {
+          Composite.remove(engine.world, c);  
+        })
+        deathCosmetics.splice(0, deathCosmetics.length)
         resettable = false
         points = 0;
         setScoreText(0 + " points");            // reset score
@@ -847,7 +923,8 @@ const SpoonshipAsteroid = () => {
       }
     }
     function gameOver() {
-      setScoreText(points + " points");
+      deathAnimation(playerShip)
+      setScoreText("Score: " + points + " points");
       let endMessage = getPopupMessage()
       setMessage(endMessage)        
       gameStarted = false;
@@ -887,10 +964,10 @@ const SpoonshipAsteroid = () => {
         if (dropperEl) dropperEl.innerHTML = "";
         if (tutEl) tutEl.innerHTML = ""
       }
-      else if(points >= 2500){
+      else if(points >= 10000){
         if (dropperEl) dropperEl.innerHTML = "Whoa! " + points + " points";
       }
-      else if(points >= 1000){
+      else if(points >= 2000){
         if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " points"; 
       }
       else if(points === 0){
@@ -906,10 +983,16 @@ const SpoonshipAsteroid = () => {
     function getPopupMessage(){
       
       let message;
-      if(points >= 6900){
-        message = "Wow you really ate that cereal for breakfast! Score:";
+      if(points >= 100000){
+        message = "Always shoot for the Moon. Even if you miss you'll end up among the stars. Did I say moon? I meant spoon."
       }
-      else message = "O nO! The ship has been cOmprOmised... but yOur scOre is:";
+      else if(points >= 20000){
+        message = "Wow you really ate that cereal for breakfast!";
+      }
+      else if(points >= 6900){
+        message = "Not too bad pilot. You turned those O's into Exes (explosions)";
+      }
+      else message = "O nO! The ship has been cOmprOmised...";
       return message;
     }
       
