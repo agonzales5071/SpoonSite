@@ -322,19 +322,20 @@ function getSpoonBalloonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonH
   return parts;
 }
 
-export function createPlusScore(x, y, score, world, fade, color = "#ffffff") {
+export function createPlusScore(x, y, score, world, fade, color = "#ffffff", halfSize = false) {
   const parts = [];
   let isRainbow = color === "rainbow";
   if(isRainbow){
     color = "#FFFFFF"
   }
+  let mobileMod = halfSize ? 0.5 : 1;
   // "+" sign
   parts.push(
-    Matter.Bodies.rectangle(x, y, 20, 5, {
+    Matter.Bodies.rectangle(x, y, 20*mobileMod, 5*mobileMod, {
       isStatic: true,
       render: { fillStyle: color }
     }),
-    Matter.Bodies.rectangle(x, y, 5, 20, {
+    Matter.Bodies.rectangle(x, y, 5*mobileMod, 20*mobileMod, {
       isStatic: true,
       render: { fillStyle: color }
     })
@@ -342,9 +343,15 @@ export function createPlusScore(x, y, score, world, fade, color = "#ffffff") {
 
   let offsetX = x + 25;
   const digits = score.toString();
-
+  
   for (const digit of digits) {
-    const digitParts = getDigitBodies(digit, offsetX, y, color);
+    let digitParts;
+    if(halfSize){
+      digitParts = getDigitBodies(digit, offsetX, y, color, 6, 2);
+    }
+    else{
+      digitParts = getDigitBodies(digit, offsetX, y, color);
+    }
     parts.push(...digitParts);
     offsetX += segmentLength + 10;
   }

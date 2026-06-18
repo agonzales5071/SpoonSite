@@ -243,27 +243,34 @@ const SpoonshipAsteroid = () => {
         .forEach(body => {
           if (otherBody.parent === body && body.label.includes("projectile") ) {
             if(checkIfVulnerable(asteroid, otherBody)){
-              explodeAsteroid(asteroid);
               for(let i = projectiles.length-1; i >= 0; i--){
                 let p = projectiles[i];
-                if(p.body && p.body === otherBody.parent){
+                if(p.body && p.body === otherBody.parent && !p.onCooldown){
+                  p.onCooldown = true;
+                  asteroid.hasBeenHit = true;
+                  p.bufferedSpeed = {
+                    x: p.body.velocity.x,
+                    y: p.body.velocity.y
+                  };
+                  Body.setVelocity(p.body, {x:0, y:0})
+                  p.cooldownTimeOut = setTimeout(() => {
+                    p.onCooldown = false;
+                    Body.setVelocity(p.body, p.bufferedSpeed)
+                  }, 50)
                   doPointIncrement(p, asteroid.position);
+                  explodeAsteroid(asteroid, p.asteroidHits);
                   if(demoteProjectile(p)){
                     i--;
                   }        
                 }
               }
-              projectiles.forEach( p => {
-              });
             }
           }
         });
     }
     function checkIfVulnerable(asteroid){
       let vulnerable = !asteroid.hasBeenHit;
-      if(vulnerable){
-        asteroid.hasBeenHit = true;
-      }
+      
       return vulnerable;
     }
     function checkPlayerInHole(player, holeObject) {
@@ -387,7 +394,10 @@ const SpoonshipAsteroid = () => {
         isOOB: false,
         escapeBoosted: playerCaptured,
         deleteTimeout: null,
-        asteroidHits: 0
+        asteroidHits: 0,
+        onCooldown: false,
+        cooldownTimeOut: null,
+        bufferedSpeed: 0
       };
       projectile.deleteTimeout = setTimeout(() => {
         destroyProjectile(projectile);
@@ -797,9 +807,11 @@ const SpoonshipAsteroid = () => {
       return destinationPos;
     }
 
-    function explodeAsteroid(asteroid){
+    function explodeAsteroid(asteroid, crumbBursts = 1){
       let childCount = 0;
-      spawnCrumbBurst(asteroid)
+      for(let i = 0; i < crumbBursts; i++){
+        spawnCrumbBurst(asteroid)
+      }
       Composite.remove(engine.world, asteroid);
       asteroids.splice(asteroids.indexOf(asteroid), 1);
       if(gameStarted){
@@ -954,7 +966,7 @@ const SpoonshipAsteroid = () => {
         let posY = asteroidPos.y - mutlihitOffset;
         if(posX > width - size){posX = width - size}
         if(posY < size){posY = size}
-      createPlusScore(posX, posY, projectile.asteroidHits*100, engine.world, true, color)
+      createPlusScore(posX, posY, projectile.asteroidHits*100, engine.world, true, color, isMobile)
       setText()
     }
     function setText() {
