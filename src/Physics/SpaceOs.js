@@ -117,7 +117,7 @@ const SpoonshipAsteroid = () => {
         //   // holeOn = false;
         // }
         // else{
-          summonBlackHole();
+          // summonBlackHole();
           // holeOn = true;
         // }
       }
@@ -477,7 +477,8 @@ const SpoonshipAsteroid = () => {
     function offScreenCheckAsteroids(){
       for(let i = 0; i < asteroids.length; i++){
         let a = asteroids[i];
-        offScreenCheck(a, defaultScreenWrapOffset/(4-a.level));
+        let mobileMod = isMobile ? .5 : 1;
+        offScreenCheck(a, mobileMod*defaultScreenWrapOffset/(4-a.level));
       }
     }
     //handles all projectile deletes via p.deletable
