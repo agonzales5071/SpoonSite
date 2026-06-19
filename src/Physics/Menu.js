@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import Matter from 'matter-js'
 import './spoondrop.css';
-import { getDigitBodies } from './util/spoonHelper';
+import { getDigitBodies, getSpoon, BACKGROUND_COLOR} from './util/spoonHelper';
 
 const SpoonDropMenu = () => {
     const boxRef = useRef(null);
@@ -42,6 +42,7 @@ const SpoonDropMenu = () => {
         segmentLength = 12;
         segmentThickness = 6;
       }
+      let tutBodies = [];
       const links = [
         ["/games/SpeedClick", "SpeedClick", "#77c2abff", "#74EE15"], 
         ["/games/CerealShot", "CerealShot", "#fff2d1", "#006FFF"], 
@@ -82,13 +83,37 @@ const SpoonDropMenu = () => {
 
       Matter.Composite.add(engine.world, composite);
     }
-    
+    function animateNavTutorial(){
+      var y =  isMobile ? 2*height/6 : height/6;
+      let x = width/2;
+      let innerTouchPad = Bodies.circle(x, y, size/5 , {render: {fillStyle: BACKGROUND_COLOR}, isSensor: true, isStatic: true});
+      let outerTouchPad = Bodies.circle(x, y, size/5+ size/50, {render: {fillStyle: "white"}, isSensor: true, isStatic: true});
+      tutBodies.push(innerTouchPad, outerTouchPad);
+      setTimeout(() => {
+        if(engine && engine.world){
+          Composite.add(engine.world, [outerTouchPad, innerTouchPad ])
+        }
+      }, 300)
+      setTimeout(() => {
+        if(engine && engine.world){
+          innerTouchPad.render.fillStyle = "grey"
+          let spoonTut = getSpoon(size, x, y, {group: 0})
+          spoonTut.label = "tut"
+          Composite.add(engine.world, spoonTut);
+        }
+      }, 600)
+      setTimeout(() => {
+        if(engine && engine.world){
+          innerTouchPad.render.fillStyle = BACKGROUND_COLOR;
+        }
+      }, 1000)
+    }
       function buckets(){
         var h = isMobile ? height/10 : height/6;
         let linkTracker = 0;
         var result = [];
         const layerMax = 4;
-        var spoonSpawnXs = [];
+        // var spoonSpawnXs = [];
         var upperMargin = isMobile ? 3*height/7 : height/4;
         var usableY = height - upperMargin;
         var numPerLayer = splitAlternating(routes, layerMax);
@@ -125,31 +150,35 @@ const SpoonDropMenu = () => {
               render: {fillStyle: links[linkTracker][theme]}})); //right
             result.push(Bodies.rectangle(xpos-(w/2), ypos - h/2 + size/4, size/5, h, {isStatic: true, 
               render: {fillStyle: links[linkTracker][theme]}})); //left
-            if(!spoonSpawnXs.includes(xpos)){
-              //let spawnx = xpos + w,
-              let spawnx = xpos,
-              y = height/3,
-              partA1 = Bodies.circle(spawnx, y-(3*size/5), size/5),
-              partA2 = Bodies.circle(spawnx, y-(3*size/5)-2, size/5,
-              { render: partA1.render }
-              ),
-              partA3 = Bodies.circle(spawnx, y-(3*size/5)-4, size/5,
-              { render: partA1.render }
-              ),
-              partA4 = Bodies.circle(spawnx, y-(3*size/5)-6, size/5,
-              { render: partA1.render }
-              ),
-              partB = Bodies.trapezoid(spawnx, y, size / 5, size, 0.4, { render: partA1.render }),
-              sidespoon = Body.create({parts: [partA1, partA2, partA3, partA4, partB], collisionFilter:{group: 1, category: 2, mask: 4}});
+            
+            // if(!spoonSpawnXs.includes(xpos)){
+            //   //let spawnx = xpos + w,
+            //   let spawnx = xpos,
+            //   y = height/3,
+            //   partA1 = Bodies.circle(spawnx, y-(3*size/5), size/5),
+            //   partA2 = Bodies.circle(spawnx, y-(3*size/5)-2, size/5,
+            //   { render: partA1.render }
+            //   ),
+            //   partA3 = Bodies.circle(spawnx, y-(3*size/5)-4, size/5,
+            //   { render: partA1.render }
+            //   ),
+            //   partA4 = Bodies.circle(spawnx, y-(3*size/5)-6, size/5,
+            //   { render: partA1.render }
+            //   ),
+            //   partB = Bodies.trapezoid(spawnx, y, size / 5, size, 0.4, { render: partA1.render }),
+            //   sidespoon = Body.create({parts: [partA1, partA2, partA3, partA4, partB], collisionFilter:{group: 1, category: 2, mask: 4}});
               
-              spoonSpawnXs.push(spawnx);
+            //   spoonSpawnXs.push(spawnx);
     
-              result.push(sidespoon);
-              spoons.push(sidespoon);
+            //   result.push(sidespoon);
+            //   spoons.push(sidespoon);
       
-            }
+            // }
             linkTracker++;
           }
+          // let innerTouchPad = Bodies.circle(width/2, height/5, size/4, {render: "black", isSensor: true, isStatic: true});
+            // let outerTouchPad = Bodies.circle(width/2, height/5, size/5, {render: "white", isSensor: true, isStatic: true});
+            // Composite.add(engine.world, [innerTouchPad, outerTouchPad])
         }
           return result;
         }
@@ -210,6 +239,7 @@ const SpoonDropMenu = () => {
       
     
       Composite.add(engine.world, buckets());
+      animateNavTutorial();
       spoons.forEach(element => {
         Body.setAngle(element, getRandomAngle());
       });
@@ -280,6 +310,7 @@ const SpoonDropMenu = () => {
         for (const pair of pairs) {
           const { bodyA, bodyB } = pair;
           // Check if one is a cereal and the other is a spoon
+          let doTut = false;
           if(bodyA.parent !== null && bodyB.parent !== null)
           {
           //console.log(event);
@@ -292,6 +323,23 @@ const SpoonDropMenu = () => {
               // console.log(bodyA.link)
               cleanupSpoons();
               window.location.href = bodyA.link;
+            }
+            if(bodyA.parent.label === "tut" && bodyB.label === "hatch"){  
+              // console.log(bodyB.link)
+              doTut = true;
+            }
+            else if(bodyA.label === "hatch" && bodyB.parent.label === "tut"){
+              // console.log(bodyA.link)
+              doTut = true
+            }
+            if(doTut){
+              let tutBody = bodyA.parent.label === "tut" ? bodyA.parent : bodyB.parent;
+              Composite.remove(engine.world, tutBodies)
+              setTimeout(() => {
+                if(engine && engine.world){
+                  Composite.remove(engine.world, tutBody)
+                }
+              }, 750)
             }
           }
         }

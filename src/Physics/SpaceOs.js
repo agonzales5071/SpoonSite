@@ -321,6 +321,7 @@ const SpoonshipAsteroid = () => {
       playerCaptureTimer = 0;
     }
     function deathAnimation(player){
+      Body.setVelocity(player, {x:0, y:0})
       Composite.remove(engine.world, player)
       let rightWing = getShipWing(player.position.x, player.position.y, size, false);
       let leftWing = getShipWing(player.position.x, player.position.y, size, true);
@@ -883,6 +884,7 @@ const SpoonshipAsteroid = () => {
           for (let i = getRandomInt(3) + 1; i > 0; i--){
             spawnAsteroid()
           }
+          round++;
           let roundTimeModifier = Math.floor(round/2);
           roundTimer = baseRoundTimer - roundTimeModifier;
           if(roundTimer < 20) { roundTimer = 20}
