@@ -400,9 +400,10 @@ const SpoonshipAsteroid = () => {
         cooldownTimeOut: null,
         bufferedSpeed: 0
       };
+      let lifetime = charge === "NoCharge" ? isMobile ? 750 : 1000 : 10000
       projectile.deleteTimeout = setTimeout(() => {
         destroyProjectile(projectile);
-      }, 10000);
+      }, lifetime);
       projectiles.push(projectile);
       return projectile;
     }
@@ -780,6 +781,11 @@ const SpoonshipAsteroid = () => {
       child.isActive = true;
       Composite.add(engine.world, child);
       asteroids.push(child);
+      setTimeout(() => {
+        if(child){
+          child.frictionAir = 0;
+        }
+      },200*(3-child.level));
       pushAsteroid(child, moveAngle);
     }
 
