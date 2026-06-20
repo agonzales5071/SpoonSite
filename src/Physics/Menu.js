@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import Matter from 'matter-js'
 import './spoondrop.css';
-import { getDigitBodies, getSpoon, BACKGROUND_COLOR} from './util/spoonHelper';
+import { getDigitBodies, getSpoon, BACKGROUND_COLOR, getRandomInt} from './util/spoonHelper';
 
 const SpoonDropMenu = () => {
     const boxRef = useRef(null);
@@ -58,6 +58,8 @@ const SpoonDropMenu = () => {
       var routes = links.length;
       var hatches  = []; //list of bodies that need to be checked for collision
       var spoons = [];  
+      var spoonSpawnXs = [];
+      var topRowOnly = false;
 
 
 
@@ -85,7 +87,8 @@ const SpoonDropMenu = () => {
     }
     function animateNavTutorial(){
       var y =  isMobile ? 2*height/6 : height/6;
-      let x = width/2;
+      let collumnIndex = getRandomInt(spoonSpawnXs.length);
+      let x = spoonSpawnXs[collumnIndex];
       let innerTouchPad = Bodies.circle(x, y, size/5 , {render: {fillStyle: BACKGROUND_COLOR}, isSensor: true, isStatic: true});
       let outerTouchPad = Bodies.circle(x, y, size/5+ size/50, {render: {fillStyle: "white"}, isSensor: true, isStatic: true});
       tutBodies.push(innerTouchPad, outerTouchPad);
@@ -151,7 +154,7 @@ const SpoonDropMenu = () => {
             result.push(Bodies.rectangle(xpos-(w/2), ypos - h/2 + size/4, size/5, h, {isStatic: true, 
               render: {fillStyle: links[linkTracker][theme]}})); //left
             
-            // if(!spoonSpawnXs.includes(xpos)){
+            if(!spoonSpawnXs.includes(xpos)){
             //   //let spawnx = xpos + w,
             //   let spawnx = xpos,
             //   y = height/3,
@@ -167,21 +170,27 @@ const SpoonDropMenu = () => {
             //   ),
             //   partB = Bodies.trapezoid(spawnx, y, size / 5, size, 0.4, { render: partA1.render }),
             //   sidespoon = Body.create({parts: [partA1, partA2, partA3, partA4, partB], collisionFilter:{group: 1, category: 2, mask: 4}});
-              
-            //   spoonSpawnXs.push(spawnx);
+              if(topRowOnly){
+                if(rowNum === 0){
+                  spoonSpawnXs.push(xpos);    
+                }
+              }
+              else{
+                spoonSpawnXs.push(xpos);
+              }
     
             //   result.push(sidespoon);
             //   spoons.push(sidespoon);
       
-            // }
+            }
             linkTracker++;
           }
           // let innerTouchPad = Bodies.circle(width/2, height/5, size/4, {render: "black", isSensor: true, isStatic: true});
             // let outerTouchPad = Bodies.circle(width/2, height/5, size/5, {render: "white", isSensor: true, isStatic: true});
             // Composite.add(engine.world, [innerTouchPad, outerTouchPad])
         }
-          return result;
-        }
+        return result;
+      }
       
       function getRandomAngle() {
         let angle = 100*Math.PI;
