@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import { spoonFilter, getSpoonBalloon, getRandomInt, getAngleBetween, createDefined2DVector } from "./util/spoonHelper";
+import { spoonFilter, getSpoonBalloon, getRandomInt, getAngleBetween, createDefined2DVector, spawnParticleBurst, enemyFilter } from "./util/spoonHelper";
 
 const SpoonBalloon = () => {
   const boxRef = useRef(null);
@@ -43,6 +43,8 @@ const SpoonBalloon = () => {
       }
     });
 
+    const HAZARD_LABEL = "hazard";
+    const PLAYER_COLOR = "silver";
     // var gameWidth = width;
     // var leftMargin = (width-gameWidth)/2;
     // var points = 0;
@@ -66,9 +68,10 @@ const SpoonBalloon = () => {
       });
     
     Composite.add(engine.world, mouseConstraint);
-    var player = getSpoonBalloon(size, width/2, height/2, spoonFilter, "silver");
+    var player = getSpoonBalloon(size, width/2, height/2, spoonFilter, PLAYER_COLOR);
     // player.isSleeping = true;
     Composite.add(engine.world, player);
+    setupBorder();
     
 
     var gameStarted = false;
@@ -81,11 +84,15 @@ const SpoonBalloon = () => {
       const g = engine.gravity;
       const gravityForce = g.y * g.scale;
       let gravCancel = gameStarted ? 0.9 : 1;
-      // for each balloon spoon
-      Body.applyForce(player, player.position, {
-        x: 0,
-        y: -player.mass * gravityForce * gravCancel
-      });
+      let spoonInPlay = false;
+      Composite.allBodies(engine.world)
+        .forEach(body => {if(body.label.includes("balloon")){spoonInPlay = true}})
+      if(spoonInPlay){
+        Body.applyForce(player, player.position, {
+          x: 0,
+          y: -player.mass * gravityForce * gravCancel
+        });
+      }
       let blowForce = player.mass * gravityForce * gravCancel / 6;
       let forceVector = createDefined2DVector(blowForce, getAngleBetween(player, mouse) - Math.PI/2)
       if(blowing){
@@ -95,6 +102,7 @@ const SpoonBalloon = () => {
         y: forceVector.y
       });
       }
+      
       //cap velocity
       if(Math.abs(player.velocity.x) > maxVelocity || Math.abs(player.velocity.y) > maxVelocity){
         let sign = player.velocity.x >= 0 ? 1 : -1
@@ -117,17 +125,44 @@ const SpoonBalloon = () => {
       if(!blowing){
         let bumpForce = isMobile ? 0.02 : 0.1; 
         let forceVector = createDefined2DVector(bumpForce, getAngleBetween(player, mouse) - Math.PI/2)
-        applyBump(player, forceVector.x, forceVector.y);
-        createHand(player);
+        if(gameStarted){
+          applyBump(player, forceVector.x, forceVector.y);
+          createHand(player);
+        }
       }
       blowing = false;
       clearTimeout(blowingTimeout);
     });
     
     Matter.Events.on(engine, "collisionStart", function(event) {
-
+      event.pairs.forEach(pair => {
+        collisionLogic(pair, true);
+      });
     });
 
+    function collisionLogic(pair, isStart){
+      var { bodyA, bodyB } = pair;
+      bodyA = bodyA.parent;
+      bodyB = bodyB.parent;
+      if(bodyA.label.includes("balloon")){ balloonInteraction(bodyA, bodyB)}
+      else if(bodyB.label.includes("balloon")){ balloonInteraction(bodyB, bodyA)}
+    }
+    function balloonInteraction(balloon, otherBody){
+      if(otherBody.label.includes(HAZARD_LABEL)){
+        if(gameStarted){
+          deathAnimation();
+          gameOver()
+        }
+      }
+    }
+    function deathAnimation(){
+      let count = 3 + getRandomInt(3)
+      while(count >= 0){
+        count--;
+        spawnParticleBurst(player, PLAYER_COLOR, isMobile, engine, Composite, size/25);
+      }
+      Composite.remove(engine.world, player);
+    }
     function applyBump(player, xForce, yForce){
       Body.applyForce(player, player.position,{
         x: xForce,
@@ -152,9 +187,34 @@ const SpoonBalloon = () => {
 
     function initialBump(){
       let xForce = (getRandomInt(10)-4.5)/50//cool variable name
-      xForce = isMobile ? xForce/7 : xForce;
+      xForce = isMobile ? xForce/10 : xForce;
       let yForce = isMobile ? -0.015 : -0.08;
       applyBump(player, xForce, yForce)
+    }
+    function setupBorder(){
+      //sides
+      for(let i = 0; i < height/(size/5); i++){
+        let spike1 = getSpike(0, i*size/2);
+        let spike2 = getSpike(width, i*size/2);
+        Body.rotate(spike1, Math.PI);
+        Composite.add(engine.world, [spike1, spike2]);
+      }
+      //bottom
+      for(let i = 0; i < height/(size/5); i++){
+        let spike = getSpike(i*size/2, height );
+        Body.rotate(spike, Math.PI/2);
+        Composite.add(engine.world, spike);
+      }
+    }
+    function getSpike(x, y){
+      return Bodies.polygon(x, y, 3, size/5,
+        {isSensor: true,
+          isStatic: true,
+          render: {fillStyle: "white"},
+          label: HAZARD_LABEL,
+          collisionFilter: enemyFilter
+        }
+      );
     }
     
     function startGame() {
@@ -169,21 +229,26 @@ const SpoonBalloon = () => {
       if (resettable === true){
         //cleanup and reset
         resettable = false
+        Composite.add(engine.world, player);
+        Body.setSpeed(player, {x:0, y:0})
+        Body.setVelocity(player, {x:0, y:0});
+        Body.setPosition(player, {x: width/2, y: height/2})
         setScoreText(0);            // reset score
+        startGame();
       }
     }
-    // function gameOver() {
-    //   setScoreText(points);
-    //   let endMessage = getPopupMessage()
-    //   setMessage(endMessage)        
-    //   gameStarted = false;
-    //   resettable = true;
-    //   //set text
-    //   //leaderboards
-    //   setTimeout(() => {
-    //     setGameOverState(true); // Show game over screen
-    //   }, 1100)
-    // }
+    function gameOver() {
+      // setScoreText(points);
+      // let endMessage = getPopupMessage()
+      // setMessage(endMessage)        
+      gameStarted = false;
+      resettable = true;
+      //set text
+      //leaderboards
+      setTimeout(() => {
+        setGameOverState(true); // Show game over screen
+      }, 1100)
+    }
 
     // function doPointIncrement(spoon, cerealPos) {
     //   //points+= 10*(spoonState.cerealHits+1);

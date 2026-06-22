@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from './util/gameoverPopup.js'
-import {BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, getShipWing, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter, createRandom2DVector } from "./util/spoonHelper.js";
+import {BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, spawnParticleBurst, getShipWing, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter, createRandom2DVector } from "./util/spoonHelper.js";
 
 async function lockPortrait() {
     try {
@@ -335,6 +335,10 @@ const SpoonshipAsteroid = () => {
       Body.applyForce(rightWing, rightWing.position, createRandom2DVector(.0005))
       Body.setAngularSpeed(leftWing, .5 + Math.random()/2)
       Body.setAngularSpeed(rightWing, .5 + Math.random()/2)
+    }
+
+    function spawnCrumbBurst(body, color = null){
+      spawnParticleBurst(body, color, isMobile, engine, Composite);
     }
 
     //returns true if projectile is destroyed
@@ -833,53 +837,7 @@ const SpoonshipAsteroid = () => {
       }
     }
 
-    function spawnCrumbBurst(asteroid, color = null) {
-      const { x, y } = asteroid.position;
-      const radius = isMobile ? 8 : 20;
-      if(color === null){
-        color = asteroid.color;
-      }
     
-      const crumbCount = getRandomInt(8) + 8;
-      for (let i = 0; i < crumbCount; i++) {
-        const angle = (i / crumbCount) * Math.PI * 2;
-        const offsetX = Math.cos(angle) * radius;
-        const offsetY = Math.sin(angle) * radius;
-    
-        // Random size between 2 and 4
-        const radBase = isMobile ? 1 : 2
-        const crumbRadius = radBase + Math.random() * radBase;
-        const crumbDensity = 0.12 + 0.04*Math.random() - crumbRadius*0.025
-        const crumb = Bodies.circle(x + offsetX, y + offsetY, crumbRadius, {
-          isSensor: true,
-          frictionAir: .03,
-          density: crumbDensity,
-          render: {
-            fillStyle: color,
-            opacity: 1,
-          },
-          collisionFilter: cosmeticFilter,
-        });
-    
-        crumb.fadeTime = 0;
-        
-        // Random fade duration between 800–1200ms
-        crumb.fadeDuration = 1600 + Math.random() * 800;
-        crumb.fadeInterval = setInterval(() => {
-          if(crumb.fadeTime >= crumb.fadeDuration){
-            Composite.remove(engine.world, crumb);
-            clearInterval(crumb.fadeInterval);
-          }
-          let newOpacity = (crumb.fadeDuration - crumb.fadeTime) / crumb.fadeDuration;
-          crumb.render.opacity = newOpacity;
-          crumb.fadeTime += 100;
-        }, 100);
-        Composite.add(engine.world, crumb);
-        let randomForce = isMobile ? 0.005 : 0.025;
-        randomForce = randomForce/2 + Math.random()*randomForce;
-        Body.applyForce(crumb, crumb.position, createDefined2DVector(randomForce, angle + Math.PI/2))
-      }
-    }
 
     function startEnemy(){
       let round = 1;

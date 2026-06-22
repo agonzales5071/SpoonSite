@@ -269,11 +269,14 @@ export function getSpoonBalloon(spoonSize, xposSpawn, yposSpawn, spoonFilter, co
   //SHAPES
   let parts = getSpoonBalloonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
 
+  parts.forEach(part => {
+    part.label = "balloon";
+  });
   let spoon = Body.create({
     parts: parts,
     collisionFilter: spoonFilter,
   });
-
+  spoon.label = "balloon";
   if(center === "middle"){
     Body.setCentre(spoon, Vector.create(spoonSpawn[0], spoonSpawn[1] - spoonSize / 10), false);
   }
@@ -679,4 +682,52 @@ export function spawnFallingO(x, world, collisionFilter, size, fric, cerealGrav)
     phase: Math.random() * Math.PI * 2,       // random start phase
   };
   return cerealO;
+}
+
+export function spawnParticleBurst(body, color = null, isMobile, engine, Composite, size = null) {
+  const { x, y } = body.position;
+  const radius = isMobile ? 8 : 20;
+  if(color === null){
+    color = body.color;
+  }
+
+  const crumbCount = getRandomInt(8) + 8;
+  for (let i = 0; i < crumbCount; i++) {
+    const angle = (i / crumbCount) * Math.PI * 2;
+    const offsetX = Math.cos(angle) * radius;
+    const offsetY = Math.sin(angle) * radius;
+
+    // Random size between 2 and 4
+    const radBase = size === null ? isMobile ? 1 : 2 : size;
+    const crumbRadius = radBase + Math.random() * radBase;
+    const crumbDensity = size === null ? 0.12 + 0.04*Math.random() - crumbRadius*0.025 : .005;
+    const crumb = Bodies.circle(x + offsetX, y + offsetY, crumbRadius, {
+      isSensor: true,
+      frictionAir: .03,
+      density: crumbDensity,
+      render: {
+        fillStyle: color,
+        opacity: 1,
+      },
+      collisionFilter: cosmeticFilter,
+    });
+
+    crumb.fadeTime = 0;
+    
+    // Random fade duration between 800–1200ms
+    crumb.fadeDuration = 1600 + Math.random() * 800;
+    crumb.fadeInterval = setInterval(() => {
+      if(crumb.fadeTime >= crumb.fadeDuration){
+        Composite.remove(engine.world, crumb);
+        clearInterval(crumb.fadeInterval);
+      }
+      let newOpacity = (crumb.fadeDuration - crumb.fadeTime) / crumb.fadeDuration;
+      crumb.render.opacity = newOpacity;
+      crumb.fadeTime += 100;
+    }, 100);
+    Composite.add(engine.world, crumb);
+    let randomForce = isMobile ? 0.005 : 0.025;
+    randomForce = randomForce/2 + Math.random()*randomForce;
+    Body.applyForce(crumb, crumb.position, createDefined2DVector(randomForce, angle + Math.PI/2))
+  }
 }

@@ -551,7 +551,7 @@ const SpoonDropDescent = () => {
       // if(isMobile){
       //   wallFrequency = 5;
       // }
-      if(wallTracker%wallFrequency === 0){
+      if(wallTracker%wallFrequency === 0 && wallTracker !== 0){
         let loopSpawnX = gameWidth*Math.random() + leftMargin;
         let loopSpawnY = height + size;
         // let loopCluster = {xpos: loopSpawnX, ypos: loopSpawnY};
