@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import { spoonFilter, getSpoonBalloon, getRandomInt, getAngleBetween, createDefined2DVector, spawnParticleBurst, enemyFilter } from "./util/spoonHelper";
+import { spoonFilter, getSpoonBalloon, getRandomInt, getAngleBetween, createDefined2DVector, spawnParticleBurst, enemyFilter, getFork } from "./util/spoonHelper";
 
 const SpoonBalloon = () => {
   const boxRef = useRef(null);
@@ -26,6 +26,7 @@ const SpoonBalloon = () => {
     let Bodies = Matter.Bodies;
     let Body = Matter.Body;
     let Composite = Matter.Composite;
+    let Constraint = Matter.Constraint;
     let Mouse = Matter.Mouse;
     let MouseConstraint = Matter.MouseConstraint;
   
@@ -72,13 +73,13 @@ const SpoonBalloon = () => {
     // player.isSleeping = true;
     Composite.add(engine.world, player);
     setupBorder();
-    
+    spawnFork();
 
     var gameStarted = false;
     var resettable = false;
     var isMouseDown = false;
     var blowing = false;
-    const maxVelocity = 5
+    const maxVelocity = 5;
 
     Matter.Events.on(engine, 'beforeUpdate', function() {
       const g = engine.gravity;
@@ -86,13 +87,22 @@ const SpoonBalloon = () => {
       let gravCancel = gameStarted ? 0.9 : 1;
       let spoonInPlay = false;
       Composite.allBodies(engine.world)
-        .forEach(body => {if(body.label.includes("balloon")){spoonInPlay = true}})
+        .forEach(body => {
+          if(body.label.includes("balloon")){spoonInPlay = true}
+          else{
+              Body.applyForce(body, body.position, {
+              x: 0,
+              y: -body.mass * gravityForce 
+            });
+          }
+        })
       if(spoonInPlay){
         Body.applyForce(player, player.position, {
           x: 0,
           y: -player.mass * gravityForce * gravCancel
         });
       }
+      
       let blowForce = player.mass * gravityForce * gravCancel / 6;
       let forceVector = createDefined2DVector(blowForce, getAngleBetween(player, mouse) - Math.PI/2)
       if(blowing){
@@ -111,6 +121,7 @@ const SpoonBalloon = () => {
         console.log("max x hit")
       }
       else{player.frictionAir = 0.01 }
+
     });
     var blowingTimeout;
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
@@ -215,6 +226,11 @@ const SpoonBalloon = () => {
           collisionFilter: enemyFilter
         }
       );
+    }
+    
+    function spawnFork(){
+      let fork = getFork(width/2, height/5, size, "silver", isMobile, HAZARD_LABEL, true);
+      Composite.add(engine.world, fork);
     }
     
     function startGame() {

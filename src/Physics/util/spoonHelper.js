@@ -325,6 +325,87 @@ function getSpoonBalloonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonH
   return parts;
 }
 
+export function getFork(x, y, size, color, isMobile, label, stat = false){
+      let forkSize = size*.5
+      let segOffset = isMobile ? 2 : forkSize/10
+      let sideSlope = 1
+      let pointPosMod = 0.12;
+      let outerPointPosMod = 2.85;
+      let pointVals = [y-forkSize/4, forkSize*.3, forkSize*1.5, sideSlope];
+      let segTop = Bodies.trapezoid(x, y+forkSize*0.08, forkSize, forkSize/3, .05,
+        {
+          isSensor: true,
+          render: {fillStyle: color},
+          density:2,
+          frictionAir: 0.08,
+          // chamfer: {
+          //   radius: [10,10,0,0]
+          // }
+        }
+      );
+      let segBottom = Bodies.trapezoid(x, y+forkSize/3+segOffset, forkSize, forkSize/2, .5,
+        {
+          isSensor: true,
+          render: {fillStyle: color},
+          density:2,
+          frictionAir: 0.08,
+          chamfer: {
+            radius: [0,5,5,0]
+          }
+        }
+      );
+      let grip = Bodies.trapezoid(x, y+forkSize*1.6, forkSize/2, forkSize*2.5, 0.3, {
+        isSensor: true,
+        render: {fillStyle: color},
+      });
+      let point1 = Bodies.trapezoid(x-forkSize*outerPointPosMod*pointPosMod, pointVals[0], pointVals[1], pointVals[2], pointVals[3],
+        {
+          isSensor: true,
+          render: {fillStyle: color},
+          density:2,
+          frictionAir: 0.08
+        }
+      );
+      let point2 = Bodies.trapezoid(x-forkSize*pointPosMod, pointVals[0], pointVals[1], pointVals[2], pointVals[3],
+        {
+          isSensor: true,
+          render: {fillStyle: color},
+          density:2,
+          frictionAir: 0.08
+        }
+      );
+      let point3 = Bodies.trapezoid(x+forkSize*pointPosMod, pointVals[0], pointVals[1], pointVals[2], pointVals[3],
+        {
+          isSensor: true,
+          render: {fillStyle: color},
+          density:2,
+          frictionAir: 0.08
+        }
+      );
+      
+      let point4 = Bodies.trapezoid(x+forkSize*outerPointPosMod*pointPosMod, pointVals[0], pointVals[1], pointVals[2], pointVals[3],
+        {
+          isSensor: true,
+          render: {fillStyle: color},
+          density:2,
+          frictionAir: 0.08
+        }
+      );
+      Body.rotate(segBottom, Math.PI);
+      let parts = [grip, segBottom, segTop, point1, point2, point3, point4];
+      parts.forEach(p => {
+        p.label = label;
+        p.collisionFilter = enemyFilter
+      })
+      let fullFork = Body.create({
+        parts,
+        isStatic: stat
+      })
+      fullFork.label = label;
+      fullFork.collisionFilter = enemyFilter
+      return fullFork;
+    }
+
 export function createPlusScore(x, y, score, world, fade, color = "#ffffff", halfSize = false) {
   const parts = [];
   let isRainbow = color === "rainbow";
