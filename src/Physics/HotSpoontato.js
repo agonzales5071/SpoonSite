@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import { drawHUD } from "./util/spoonHelper";
+import { swapDocBody, drawHUD } from "./util/spoonHelper";
 
 const SpoonDropHotSpoontato = () => {
   const boxRef = useRef(null);
@@ -16,6 +16,7 @@ const SpoonDropHotSpoontato = () => {
   const [message, setMessage] = useState("AH ouch! The spoons are hot hot hot.");
   const [scoreText, setScoreText] = useState("Click or tap and drag to move the trampoline and bounce the spoons until they're cool");
 
+  useEffect(() => swapDocBody(), []);
   useEffect(() => {
     const {
       Engine,

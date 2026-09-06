@@ -1,12 +1,35 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Matter from 'matter-js'
 import './spoondrop.css';
-import { getDigitBodies, getSpoon, BACKGROUND_COLOR, getRandomInt} from './util/spoonHelper';
+import Popup from './util/menuPopup';
+import { swapDocBody, getDigitBodies, getSpoon, BACKGROUND_COLOR, getRandomInt} from './util/spoonHelper';
 
 const SpoonDropMenu = () => {
     const boxRef = useRef(null);
     const canvasRef = useRef(null);
-  
+    const tutorialFnRef = useRef(null);
+    const [popupVisible, setPopupVisible] = useState(true);
+    const [startTutorial, setStartTutorial] = useState(false);
+    const popupCheck = "menuPopupSeen";
+
+    useEffect(() => swapDocBody(), []);
+
+    useEffect(() => {
+      const hasSeenPopup = localStorage.getItem(popupCheck);
+
+      if (!hasSeenPopup) {
+        setPopupVisible(true);
+      }
+      else{
+        setStartTutorial(true);
+        setPopupVisible(false);
+      }
+    }, []);
+    const closePopup = () => {
+      setPopupVisible(false);
+      localStorage.setItem(popupCheck, "true");
+      setStartTutorial(true)
+    };
     useEffect(() => {
       var width = window.innerWidth;
       var height = window.innerHeight;
@@ -44,12 +67,12 @@ const SpoonDropMenu = () => {
       }
       let tutBodies = [];
       const links = [
-        ["/games/SpeedClick", "SpeedClick", "#77c2abff", "#74EE15"], 
         ["/games/CerealShot", "CerealShot", "#fff2d1", "#006FFF"], 
-        ["/games/SpoonSaberBattle", "SpoonSaber Battle", "#f7e546ff", "#74EE15"], 
         ["/games/Descent", "Descent",  "#9b8b70ff"],
         ["/games/Rescue", "Rescue",  "#aec8f8ff"],
         ["/games/HotSpoontato", "HotSpoontato",  "#c75656ff"],
+        ["/games/SpoonSaberBattle", "SpoonSaber Battle", "#f7e546ff", "#74EE15"], 
+        ["/games/SpeedClick", "SpeedClick", "#77c2abff", "#74EE15"], 
         ["/games/Freeplay", "Freeplay", "#c996ceff", "#8C00FC"],
         ["/", "Home Page", "#BFFCC6", "#FF6701"]];
       const link = 0;
@@ -248,7 +271,8 @@ const SpoonDropMenu = () => {
       
     
       Composite.add(engine.world, buckets());
-      animateNavTutorial();
+      tutorialFnRef.current = animateNavTutorial;
+      // animateNavTutorial();
       spoons.forEach(element => {
         Body.setAngle(element, getRandomAngle());
       });
@@ -365,13 +389,19 @@ const SpoonDropMenu = () => {
       Engine.clear(engine);
       render.canvas.remove();
       render.textures = {};
+      tutorialFnRef.current = null;
     };
   }, []);
-  
+  useEffect(() => {
+    if (startTutorial && tutorialFnRef.current) {
+      tutorialFnRef.current();
+    }
+  }, [startTutorial]);
   return (
     <div className="scene">
       <canvas ref={canvasRef} />
       <p id="menudisplay">drop a spoon to navigate</p>
+      <Popup visible={popupVisible} closePopup={closePopup}/>
     </div>
   )
 };

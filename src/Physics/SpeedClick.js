@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import "./spoondrop.css";
 import GameOver from './util/gameoverPopup';
 import { Link } from 'react-router-dom';
-import { getSpoon } from './util/spoonHelper';
+import { swapDocBody, getSpoon } from './util/spoonHelper';
 
 const SpoonDropGameSpeed = () => {
   const boxRef = useRef(null);
@@ -14,7 +14,7 @@ const SpoonDropGameSpeed = () => {
   const [gameOverState, setGameOverState] = useState(false);
   const [message, setMessage] = useState("Endurance test: How many spoons can you drop in 15 seconds?");
   const [scoreText, setScoreText] = useState("Click to drop a spoon in the bucket.");
-
+  useEffect(() => swapDocBody(), []);
   useEffect(() => {
     var width = window.innerWidth;
     var height = window.innerHeight;

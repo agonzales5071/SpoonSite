@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import { spoonFilter, getSpoonBalloon, getRandomInt, getAngleBetween, createDefined2DVector, spawnParticleBurst, enemyFilter, getFork } from "./util/spoonHelper";
+import { swapDocBody, spoonFilter, getSpoonBalloon, getRandomInt, getAngleBetween, createDefined2DVector, spawnParticleBurst, enemyFilter, getFork } from "./util/spoonHelper";
 
 const SpoonBalloon = () => {
   const boxRef = useRef(null);
@@ -14,7 +14,7 @@ const SpoonBalloon = () => {
   const [gameOverState, setGameOverState] = useState(false);
   const [message, setMessage] = useState("if the balloon touches the ground you die (death not implemented yet).");
   const [scoreText, setScoreText] = useState("Tap to bump balloon, hold to blow.");
-  
+  useEffect(() => swapDocBody(), []);
   useEffect( () => {
 
     var isMobile = false;
@@ -26,7 +26,6 @@ const SpoonBalloon = () => {
     let Bodies = Matter.Bodies;
     let Body = Matter.Body;
     let Composite = Matter.Composite;
-    let Constraint = Matter.Constraint;
     let Mouse = Matter.Mouse;
     let MouseConstraint = Matter.MouseConstraint;
   

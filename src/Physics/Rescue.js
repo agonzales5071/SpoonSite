@@ -3,6 +3,7 @@ import Matter from "matter-js";
 import GameOver from "./util/gameoverPopup";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
+import { swapDocBody } from "./util/spoonHelper";
 
 const SpoonDropRescue = () => {
   const boxRef = useRef(null);
@@ -13,6 +14,7 @@ const SpoonDropRescue = () => {
   const [gameOverState, setGameOverState] = useState(false);
   const [message, setMessage] = useState("AHHH! Spoons are falling from the skyyyyy.");
   const [scoreText, setScoreText] = useState("Click or tap and drag to move the net. Catch all the spoons!");
+  useEffect(() => swapDocBody(), []);
 
   useEffect(() => {
     const {
@@ -35,6 +37,8 @@ const SpoonDropRescue = () => {
 
     var width = window.innerWidth;
     var height = window.innerHeight;
+    if (width > 1920) width = 1920;
+    if (height > 1080) height = 1080;
 
     let engine = Engine.create({});
     let runner = Runner.create({});
@@ -45,7 +49,7 @@ const SpoonDropRescue = () => {
       canvas: canvasRef.current,
       options: {
         width: width,
-        height: height * 1.5,
+        height: height,
         wireframes: false,
       },
     });
@@ -507,17 +511,19 @@ const SpoonDropRescue = () => {
   return (
     <div className="notscene" ref={boxRef}>
       <div>
-          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
+        <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
           onRestart={() => restartRef.current()} playButtonText={playButtonText} />
+      </div>
+      <div className="game-canvas-wrapper">
+        <canvas className="game-canvas" ref={canvasRef} />
+        <div id="menutext">
+          <p id="dropper">Rescue</p>
+          <p id="descenttut" className="droppertext"></p>
         </div>
-      <canvas ref={canvasRef} />
+      </div>
       <Link to="/games">
         <button className="back-button" style={{ display: gameOverState ? "none" : "block" }} />
       </Link>
-      <div id="menutext">
-        <p id="dropper">Rescue</p>
-        <p id="descenttut" className="droppertext"></p>
-      </div>
     </div>
   );
 };

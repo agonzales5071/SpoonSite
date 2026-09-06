@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from "./util/gameoverPopupSaberBattle";
-import { createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, 
+import { swapDocBody, createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, 
   getDualSidedSaber, drawHUD, createRandom2DVector, rotatePlayerToward } from "./util/spoonHelper";
 //TODO: Scoring, double sided dark side saber, hilt, weak hitboxes, lives, add hilt to cosmetic filter
 const SpoonSaberBattle = () => {
@@ -18,7 +18,7 @@ const SpoonSaberBattle = () => {
   const [darkSideVisible, setDarkSideVisible] = useState(false);
   const [message, setMessage] = useState("The Soupth are attacking! You must take up your SpoonSaber.");
   const [scoreText, setScoreText] = useState("Click or tap and drag your SpoonSaber to block the enemy attacks");
-  
+  useEffect(() => swapDocBody(), []);
   useEffect( () => {
 
     var isMobile = false;

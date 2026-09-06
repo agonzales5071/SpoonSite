@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from './util/gameoverPopup.js'
-import {BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, spawnParticleBurst, getShipWing, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter, createRandom2DVector } from "./util/spoonHelper.js";
+import {swapDocBody, BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, spawnParticleBurst, getShipWing, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter, createRandom2DVector } from "./util/spoonHelper.js";
 
 async function lockPortrait() {
     try {
@@ -30,7 +30,7 @@ const SpoonshipAsteroid = () => {
   const [gameOverState, setGameOverState] = useState(false);
   const [message, setMessage] = useState("You are the pilot of a SpoonShip (trademark pending). Destroy the Space O's before they destroy you!");
   const [scoreText, setScoreText] = useState("");
-  
+  useEffect(() => swapDocBody(), []);
   useEffect( () => {
     var isMobile = false;
     var width = window.innerWidth;
@@ -421,18 +421,19 @@ const SpoonshipAsteroid = () => {
           if(powerPercentage < 1){
             powerPercentage += chargeIncrement;
           }
-          else{
-            chargeUp = false;
-          }
+          //No longer goes back down
+        //   else{
+        //     chargeUp = false;
+        //   }
         }
-        if(!chargeUp){
-          if(powerPercentage > minPowerPercentage){
-            powerPercentage -= chargeIncrement;
-          }
-          else{
-            chargeUp = true;
-          }
-        }
+        // if(!chargeUp){
+        //   if(powerPercentage > minPowerPercentage){
+        //     powerPercentage -= chargeIncrement;
+        //   }
+        //   else{
+        //     chargeUp = true;
+        //   }
+        // }
         visualizeCharge();
       }
     }

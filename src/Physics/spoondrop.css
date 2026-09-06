@@ -1,3 +1,6 @@
+.body-games{
+  background-color: #000000;
+}
 .scene{
   touch-action: manipulation;
 }
@@ -10,6 +13,33 @@
   margin-left: auto;
   text-align: center;
 }
+.game-canvas-wrapper {
+  position: relative; 
+  inset: 0;
+}
+
+.game-canvas {
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@media (min-width: 1921px) {
+  .game-canvas {
+    border-left: 20px solid whitesmoke;
+    border-right: 20px solid whitesmoke;
+  }
+}
+
+@media (min-height: 1081px) {
+  .game-canvas {
+    border-top: 20px solid whitesmoke;
+    border-bottom: 20px solid whitesmoke;
+  }
+}
+
 #menudisplay{
   color: whitesmoke;
   position: absolute;
@@ -41,11 +71,30 @@
 #menutext{
   color: whitesmoke;
   position: absolute;
-  display: inline-block;
-  transform: translateX(-50%);
+  top: 100%;
   left: 50%;
-  width: 100%;
-  text-align: center;
+  transform: translateX(-50%);
+  z-index: 20; 
+}
+@media (min-width: 1000px) {
+  #menutext {
+    font-size: 48px;
+    font-weight: bold;
+  }
+}
+
+@media (min-height: 1081px) {
+  #menutext {
+    color: #b8b200;
+    font-size: 48px;
+    font-weight: bold;
+    stroke:#000000;
+     text-shadow: 
+    -1px -1px 0 #000,  
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
+  }
 }
 .back-button {
   touch-action:  auto;
@@ -109,10 +158,11 @@
     z-index: 1;
     height: 100%;
     width: 100%;
-    background-image: url("https://assets.codepen.io/1468070/Repeatable+Pattern+-+Wavy+Lines.png?format=auto&quality=80");
-    background-size: 200%;
+    background-image: url("../../public/images/curves2_tileable2.png");
+    background-size: 384px 256px;
+    background-repeat: repeat;
     opacity: 0.3;
-    animation: move-background 50s linear infinite;
+    animation: move-background-menu 10s linear infinite;
     overflow-y: hidden;
   }
 #sd-modal-wrapper {

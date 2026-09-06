@@ -51,7 +51,7 @@
   }
   
   #star-pattern {
-    background-image: url("https://assets.codepen.io/1468070/Star+Pattern+3.svg");
+    background-image: url("../public/images/stars.png");
     background-size: 10%;  
     position: absolute;
     left: 50%;
@@ -218,10 +218,10 @@
     z-index: 1;
     height: 100%;
     width: 100%;
-    background-image: url("https://assets.codepen.io/1468070/Repeatable+Pattern+-+Wavy+Lines.png?format=auto&quality=80");
-    background-size: 200%;
+    background-image: url("../public/images/curves2_tileable2.png");
+    background-size: 384px 256px;
     opacity: 0.3;
-    animation: move-background 50s linear infinite;
+    animation: move-background-menu 20s linear infinite;
   }
   
   #modal-content {  
@@ -378,12 +378,21 @@
   }
   
   @keyframes move-background {
-    0% {
+    from {
       background-position: 0% 0%;
     }
     
-    100% {
+    to {
       background-position: -100% 0%;
+    }
+  }
+  @keyframes move-background-menu {
+    from {
+      background-position: 0px 0%;
+    }
+    
+    to {
+      background-position: -384px 0%;
     }
   }
   

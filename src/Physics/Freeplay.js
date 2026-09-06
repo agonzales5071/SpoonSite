@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react'
 import Matter from "matter-js";
 import { Link } from 'react-router-dom';
-
+import { swapDocBody } from './util/spoonHelper';
 
 const SpoonDrop = () => {
   const boxRef = useRef(null);
   const canvasRef = useRef(null);
+  useEffect(() => swapDocBody(), []);
 
   useEffect(() => {
     var width = window.innerWidth;

@@ -83,7 +83,6 @@ class LatestMic extends React.Component {
     document.body.classList.add("body-mic");
     document.documentElement.classList.add("body-mic");
     document.getElementById("root")?.classList.add("body-mic");
-    console.log("latest-mic page mounted");
     }
   
     componentWillUnmount() {

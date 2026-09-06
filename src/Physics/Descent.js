@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import {BACKGROUND_COLOR, createDefined2DVector, fruityColors, getAngleBetween, getLoop, getSpoon } from "./util/spoonHelper";
+import {swapDocBody, BACKGROUND_COLOR, createDefined2DVector, fruityColors, getAngleBetween, getLoop, getSpoon } from "./util/spoonHelper";
 
 //bug fixes
 //same name chat room join, back buttons, 
@@ -17,7 +17,7 @@ const SpoonDropDescent = () => {
   const [gameOverState, setGameOverState] = useState(false);
   const [scoreText, setScoreText] = useState(0);
   const [message, setMessage] = useState("");
-  
+  useEffect(() => swapDocBody(), []);
   useEffect( () => {
   const oopsAllSpoons = window.location.href.includes("Leo") || window.location.href.includes("leo");
     const queryString = window.location.search;
@@ -49,7 +49,7 @@ const SpoonDropDescent = () => {
       canvas: canvasRef.current,
       options: {
         width: window.innerWidth,
-        height: window.innerHeight+window.innerHeight,
+        height: window.innerHeight,
         wireframes: false
       }
     });

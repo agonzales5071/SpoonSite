@@ -1,5 +1,18 @@
 import Matter, { Bodies, Body, Vector} from "matter-js";
 
+export function swapDocBody(){
+  const bodyName = "body-games"
+  if (!document.body.classList.contains(bodyName)) document.body.classList.add(bodyName);
+  if (!document.documentElement.classList.contains(bodyName)) document.documentElement.classList.add(bodyName);
+  if (!document.getElementById("root")?.classList.contains(bodyName)) document.getElementById("root")?.classList.add(bodyName);
+  
+  return() => {
+    document.body.classList.remove(bodyName);
+    document.documentElement.classList.remove(bodyName);
+    document.getElementById("root")?.classList.remove(bodyName);
+  }
+}
+
 const segmentLength = 12;
 //const segmentThickness = 4;
 export const BACKGROUND_COLOR = '#14151fFF';

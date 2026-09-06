@@ -3,7 +3,7 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import { floatAndFade, spawnFallingO } from "./util/spoonHelper";
+import { swapDocBody, floatAndFade, spawnFallingO } from "./util/spoonHelper";
 
 const SpoonDropCerealShot = () => {
   const boxRef = useRef(null);
@@ -21,6 +21,7 @@ const SpoonDropCerealShot = () => {
   const powerRef = useRef(0);
   const directionRef = useRef(1); // 1 = filling, -1 = draining
   
+  useEffect(() => swapDocBody(), []);
   
   useEffect(() => {
     let animationId;
