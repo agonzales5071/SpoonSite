@@ -5,7 +5,6 @@ import Popup from './util/menuPopup';
 import { swapDocBody, getDigitBodies, getSpoon, BACKGROUND_COLOR, getRandomInt} from './util/spoonHelper';
 
 const SpoonDropMenu = () => {
-    const boxRef = useRef(null);
     const canvasRef = useRef(null);
     const tutorialFnRef = useRef(null);
     const [popupVisible, setPopupVisible] = useState(true);
@@ -46,12 +45,11 @@ const SpoonDropMenu = () => {
       let runner = Runner.create({});
 
       let render = Render.create({
-        element: boxRef.current,
         engine: engine,
         canvas: canvasRef.current,
         options: {
-          width: window.innerWidth,
-          height: window.innerHeight,
+          width: width,
+          height: height,
           wireframes: false,
         },
       });
@@ -69,8 +67,9 @@ const SpoonDropMenu = () => {
       const links = [
         ["/games/CerealShot", "CerealShot", "#fff2d1", "#006FFF"], 
         ["/games/Descent", "Descent",  "#9b8b70ff"],
+        ["/games/SpaceOs", "Space O's", "rgb(231, 129, 82)", "#006FFF"], 
         ["/games/Rescue", "Rescue",  "#aec8f8ff"],
-        ["/games/HotSpoontato", "HotSpoontato",  "#c75656ff"],
+        ["/games/HotSpoontato", "Hot Spoontato",  "#c75656ff"],
         ["/games/SpoonSaberBattle", "SpoonSaber Battle", "#f7e546ff", "#74EE15"], 
         ["/games/SpeedClick", "SpeedClick", "#77c2abff", "#74EE15"], 
         ["/games/Freeplay", "Freeplay", "#c996ceff", "#8C00FC"],
@@ -82,11 +81,9 @@ const SpoonDropMenu = () => {
       var hatches  = []; //list of bodies that need to be checked for collision
       var spoons = [];  
       var spoonSpawnXs = [];
-      var topRowOnly = false;
+      var topRowOnly = isMobile;
+      var tableDisplay = !isMobile;
 
-
-
-      
     function createSegmentNumber(x, y, num, color = "#FFFFFF", segmentLength, segmentThickness) {
       const parts = [];
 
@@ -134,249 +131,246 @@ const SpoonDropMenu = () => {
         }
       }, 1000)
     }
-      function buckets(){
-        var h = isMobile ? height/10 : height/6;
-        let linkTracker = 0;
-        var result = [];
-        const layerMax = 4;
-        // var spoonSpawnXs = [];
-        var upperMargin = isMobile ? 3*height/7 : height/4;
-        var usableY = height - upperMargin;
-        var numPerLayer = splitAlternating(routes, layerMax);
-        var sliceHeight = usableY/(numPerLayer.length+1);
-        for (let rowNum = 0; rowNum < numPerLayer.length; rowNum++) {
-          //build out each row
-          let w = width/(layerMax*2)
-          let sliceWidth = width/(numPerLayer[rowNum]+1);
-          let ypos = upperMargin + sliceHeight * (rowNum+1);
-          for(let bucketNum = 1; bucketNum < numPerLayer[rowNum] + 1; bucketNum++) {
-            let xpos = sliceWidth*bucketNum;
-            var hatchHeight = isMobile ? size/4 : size/2;
-            var hatchY = isMobile ? ypos + hatchHeight/2 : ypos;
-            
-            let hatch = Bodies.rectangle(xpos, hatchY, w, hatchHeight, {isStatic: true, 
-              render: {fillStyle: links[linkTracker][theme]},
-              link: links[linkTracker][link],
-              label: "hatch"
-            }) //bottom
-            
-            //create and style navigation text 
-            let location = document.createElement('p');
-            location.id = links[linkTracker][name];
-            location.class = "locations";
-            location.style.color = links[linkTracker][theme];
-            location.innerHTML = (linkTracker+1) + ". " + links[linkTracker][name];
+    function buckets(){
+      var h = isMobile ? height/10 : height/6;
+      let linkTracker = 0;
+      var result = [];
+      const layerMax = 4;
+      // var spoonSpawnXs = [];
+      var upperMargin = isMobile ? height/5 : height/6;
+      var usableY = height - upperMargin;
+      var numPerLayer = splitAlternating(routes, layerMax);
+      var sliceHeight = usableY/(numPerLayer.length+1);
+      document.getElementById("menudisplay").appendChild(document.createElement('br'));
+      for (let rowNum = 0; rowNum < numPerLayer.length; rowNum++) {
+        //build out each row
+        let w = width/(layerMax*2)
+        let sliceWidth = width/(numPerLayer[rowNum]+1);
+        let ypos = upperMargin + h + sliceHeight * (rowNum+1);
+        if(tableDisplay){
+          document.getElementById("menudisplay").appendChild(document.createElement('br'));
+          let locationsTable = document.createElement('table');
+          locationsTable.id = "locationsTable"+rowNum;
+          document.getElementById("menudisplay").appendChild(locationsTable);
+          let locationRow = document.createElement('tr');
+          locationRow.id = "locationRow" + rowNum;
+          document.getElementById("locationsTable"+rowNum).appendChild(locationRow);
+        }
+        for(let bucketNum = 1; bucketNum < numPerLayer[rowNum] + 1; bucketNum++) {
+          let xpos = sliceWidth*bucketNum;
+          var hatchHeight = isMobile ? size/4 : size/2;
+          var hatchY = isMobile ? ypos + hatchHeight/2 : ypos;
+          
+          let hatch = Bodies.rectangle(xpos, hatchY-hatchHeight/10, w*0.93, hatchHeight/4, {isStatic: true, 
+            render: {fillStyle: links[linkTracker][theme]},
+            link: links[linkTracker][link],
+            label: "hatch"
+          }) //bottom
+          let hatchProtection = Bodies.rectangle(xpos, hatchY+hatchHeight/4, w, hatchHeight/2, {isStatic: true, 
+            render: {fillStyle: links[linkTracker][theme]}
+          }) //bottom
+          
+          //create and style navigation text 
+          //TODO change this to a table that displays similarly to bucket orientation
+          let elementType = tableDisplay ? 'td' : 'p';
+          let location = document.createElement(elementType);
+          location.id = links[linkTracker][name];
+          location.className = "locations";
+          location.style.color = links[linkTracker][theme];
+          location.innerHTML = (linkTracker+1) + ". " + links[linkTracker][name];
+          if(tableDisplay){
+            document.getElementById("locationRow"+rowNum).appendChild(location);
+          }
+          else{
             document.getElementById("menudisplay").appendChild(location);
-            createSegmentNumber(xpos, ypos, linkTracker+1, location.style.color, segmentLength, segmentThickness);
-            
-            //stores hatch for reference
-            hatches.push(hatch);
-            result.push(hatch);
-            result.push(Bodies.rectangle(xpos+(w/2), ypos - h/2 + size/4, size/5, h, {isStatic: true, 
-              render: {fillStyle: links[linkTracker][theme]}})); //right
-            result.push(Bodies.rectangle(xpos-(w/2), ypos - h/2 + size/4, size/5, h, {isStatic: true, 
-              render: {fillStyle: links[linkTracker][theme]}})); //left
-            
-            if(!spoonSpawnXs.includes(xpos)){
-            //   //let spawnx = xpos + w,
-            //   let spawnx = xpos,
-            //   y = height/3,
-            //   partA1 = Bodies.circle(spawnx, y-(3*size/5), size/5),
-            //   partA2 = Bodies.circle(spawnx, y-(3*size/5)-2, size/5,
-            //   { render: partA1.render }
-            //   ),
-            //   partA3 = Bodies.circle(spawnx, y-(3*size/5)-4, size/5,
-            //   { render: partA1.render }
-            //   ),
-            //   partA4 = Bodies.circle(spawnx, y-(3*size/5)-6, size/5,
-            //   { render: partA1.render }
-            //   ),
-            //   partB = Bodies.trapezoid(spawnx, y, size / 5, size, 0.4, { render: partA1.render }),
-            //   sidespoon = Body.create({parts: [partA1, partA2, partA3, partA4, partB], collisionFilter:{group: 1, category: 2, mask: 4}});
+          }
+          createSegmentNumber(xpos, ypos, linkTracker+1, location.style.color, segmentLength, segmentThickness);
+          
+          if(bucketNum <numPerLayer[rowNum] && !isMobile && tableDisplay){
+            let locationSep = document.createElement('td');
+            locationSep.className = "locations";
+            locationSep.innerHTML = "|";
+            document.getElementById("locationRow"+rowNum).appendChild(locationSep);
+          }
+          //stores hatch for reference
+          hatches.push(hatch);
+          result.push(hatch);
+          result.push(hatchProtection);
+          result.push(Bodies.rectangle(xpos+(w/2), ypos - h/2 + size/4, size/5, h, {isStatic: true, 
+            render: {fillStyle: links[linkTracker][theme]}})); //right
+          result.push(Bodies.rectangle(xpos-(w/2), ypos - h/2 + size/4, size/5, h, {isStatic: true, 
+            render: {fillStyle: links[linkTracker][theme]}})); //left
+          
+          if(!spoonSpawnXs.includes(xpos)){
               if(topRowOnly){
-                if(rowNum === 0){
-                  spoonSpawnXs.push(xpos);    
-                }
+              if(rowNum === 0){
+                spoonSpawnXs.push(xpos);    
               }
-              else{
-                spoonSpawnXs.push(xpos);
+            }
+            else{
+              spoonSpawnXs.push(xpos);
+            }
+          }
+          linkTracker++;
+        }
+      }
+      
+      return result;
+    }
+      
+    function getRandomAngle() {
+      let angle = 100*Math.PI;
+      let offset = 7 - Math.floor(Math.random() * 14);
+      angle = 100*Math.PI - offset;
+      return angle/100 ;
+    }
+
+    function splitAlternating(total, maxPerGroup) {
+      const results = [];
+    
+      function backtrack(path, remaining, useEven) {
+        if (remaining === 0) {
+          results.push([...path]);
+          return;
+        }
+    
+        for (let i = 2; i <= Math.min(maxPerGroup, remaining); i++) {
+          if ((i % 2 === 0) !== useEven) continue;
+          path.push(i);
+          backtrack(path, remaining - i, !useEven);
+          path.pop();
+        }
+      }
+      
+      // Try starting with even and with odd
+      backtrack([], total, true);
+      backtrack([], total, false);
+    
+      if (results.length > 0) {
+        // Sort by fewest groups, then smallest numbers
+        results.sort((a, b) => {
+          if (a.length !== b.length) return a.length - b.length;
+          for (let i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) return a[i] - b[i];
+          }
+          return 0;
+        });
+        return results[0];
+      }
+    
+      // Fallback if no perfectly alternating result is found
+      return fallbackSplit(total, maxPerGroup);
+    }
+      
+    function fallbackSplit(total, max) {
+      const result = [];
+      while (total > 0) {
+        const group = Math.min(max, total);
+        result.push(group);
+        total -= group;
+      }
+      return result;
+    }
+      
+    
+    Composite.add(engine.world, buckets());
+    tutorialFnRef.current = animateNavTutorial;
+    // animateNavTutorial();
+    spoons.forEach(element => {
+      Body.setAngle(element, getRandomAngle());
+    });
+
+    function cleanupSpoons(){
+      for(const spoon of navSpoons){
+        setTimeout(() => {
+          if (engine && engine.world) {
+            Composite.remove(engine.world, spoon)
+          }
+        }, 50);
+      }
+    }
+      
+    
+    
+    // add mouse control
+    var mouse = Mouse.create(render.canvas),
+      mouseConstraint = MouseConstraint.create(engine, {
+        mouse: mouse,
+        constraint: {
+          stiffness: 0.2,
+          render: {
+            visible: false
+          }
+        }
+      });
+    
+    Composite.add(engine.world, mouseConstraint);
+  
+    var curSpoon;
+    var navSpoons = [];
+    //create spoon
+    Matter.Events.on(mouseConstraint, "mousedown", function(event) {
+      
+      let x = mouse.position.x,
+      y = mouse.position.y,
+      partA1 = Bodies.circle(x, y-(3*size/5), size/5),
+      partA2 = Bodies.circle(x, y-(3*size/5)-2, size/5,
+      { render: partA1.render }
+      ),
+      partA3 = Bodies.circle(x, y-(3*size/5)-4, size/5,
+      { render: partA1.render }
+      ),
+      partA4 = Bodies.circle(x, y-(3*size/5)-6, size/5,
+      { render: partA1.render }
+      ),
+      partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA1.render });
+      curSpoon = Body.create({
+        parts: [partA1, partA2, partA3, partA4, partB],
+        label: "spoon"
+      });
+      navSpoons.push(curSpoon);
+      Composite.add(engine.world, curSpoon);
+    });
+
+    Matter.Events.on(engine, "collisionStart", function(event) {
+      const pairs = event.pairs;
+      for (const pair of pairs) {
+        const { bodyA, bodyB } = pair;
+        // Check if one is a cereal and the other is a spoon
+        let doTut = false;
+        if(bodyA.parent !== null && bodyB.parent !== null)
+        {
+        //console.log(event);
+          if(bodyA.parent.label === "spoon" && bodyB.label === "hatch"){  
+            // console.log(bodyB.link)
+            cleanupSpoons();
+            window.location.href = bodyB.link;
+          }
+          else if(bodyA.label === "hatch" && bodyB.parent.label === "spoon"){
+            // console.log(bodyA.link)
+            cleanupSpoons();
+            window.location.href = bodyA.link;
+          }
+          if(bodyA.parent.label === "tut" && bodyB.label === "hatch"){  
+            // console.log(bodyB.link)
+            doTut = true;
+          }
+          else if(bodyA.label === "hatch" && bodyB.parent.label === "tut"){
+            // console.log(bodyA.link)
+            doTut = true
+          }
+          if(doTut){
+            let tutBody = bodyA.parent.label === "tut" ? bodyA.parent : bodyB.parent;
+            Composite.remove(engine.world, tutBodies)
+            setTimeout(() => {
+              if(engine && engine.world){
+                Composite.remove(engine.world, tutBody)
               }
-    
-            //   result.push(sidespoon);
-            //   spoons.push(sidespoon);
-      
-            }
-            linkTracker++;
-          }
-          // let innerTouchPad = Bodies.circle(width/2, height/5, size/4, {render: "black", isSensor: true, isStatic: true});
-            // let outerTouchPad = Bodies.circle(width/2, height/5, size/5, {render: "white", isSensor: true, isStatic: true});
-            // Composite.add(engine.world, [innerTouchPad, outerTouchPad])
-        }
-        return result;
-      }
-      
-      function getRandomAngle() {
-        let angle = 100*Math.PI;
-        let offset = 7 - Math.floor(Math.random() * 14);
-        angle = 100*Math.PI - offset;
-        return angle/100 ;
-      }
-
-      function splitAlternating(total, maxPerGroup) {
-        const results = [];
-      
-        function backtrack(path, remaining, useEven) {
-          if (remaining === 0) {
-            results.push([...path]);
-            return;
-          }
-      
-          for (let i = 2; i <= Math.min(maxPerGroup, remaining); i++) {
-            if ((i % 2 === 0) !== useEven) continue;
-            path.push(i);
-            backtrack(path, remaining - i, !useEven);
-            path.pop();
+            }, 750)
           }
         }
-       
-        // Try starting with even and with odd
-        backtrack([], total, true);
-        backtrack([], total, false);
-      
-        if (results.length > 0) {
-          // Sort by fewest groups, then smallest numbers
-          results.sort((a, b) => {
-            if (a.length !== b.length) return a.length - b.length;
-            for (let i = 0; i < a.length; i++) {
-              if (a[i] !== b[i]) return a[i] - b[i];
-            }
-            return 0;
-          });
-          return results[0];
-        }
-      
-        // Fallback if no perfectly alternating result is found
-        return fallbackSplit(total, maxPerGroup);
       }
-      
-      function fallbackSplit(total, max) {
-        const result = [];
-        while (total > 0) {
-          const group = Math.min(max, total);
-          result.push(group);
-          total -= group;
-        }
-        return result;
-      }
-      
-    
-      Composite.add(engine.world, buckets());
-      tutorialFnRef.current = animateNavTutorial;
-      // animateNavTutorial();
-      spoons.forEach(element => {
-        Body.setAngle(element, getRandomAngle());
-      });
-      //drop two spoons
-    
-      Composite.add(engine.world, [
-        // walls
-        Bodies.rectangle(width/6, height, width/2, size/2, { isStatic: true, collisionFilter:{category: 4, mask: 2}}),
-        Bodies.rectangle(5*width/6, height, width/2, size/2, { isStatic: true, collisionFilter:{category: 4, mask: 2} }),
-        Bodies.rectangle(2*width/3, 0, 50, height/2, { isStatic: true, collisionFilter:{category: 2, mask: 4}}),
-        Bodies.rectangle(width/3, 0, 50, height/2, { isStatic: true, collisionFilter:{category: 2, mask: 4} })
-      ]);
-
-      function cleanupSpoons(){
-        for(const spoon of navSpoons){
-          setTimeout(() => {
-            if (engine && engine.world) {
-              Composite.remove(engine.world, spoon)
-            }
-          }, 50);
-        }
-      }
-      
-    
-    
-      // add mouse control
-      var mouse = Mouse.create(render.canvas),
-        mouseConstraint = MouseConstraint.create(engine, {
-          mouse: mouse,
-          constraint: {
-            stiffness: 0.2,
-            render: {
-              visible: false
-            }
-          }
-        });
-      
-      Composite.add(engine.world, mouseConstraint);
-    
-      var curSpoon;
-      var navSpoons = [];
-      //create spoon
-      Matter.Events.on(mouseConstraint, "mousedown", function(event) {
-        
-        let x = mouse.position.x,
-        y = mouse.position.y,
-        partA1 = Bodies.circle(x, y-(3*size/5), size/5),
-        partA2 = Bodies.circle(x, y-(3*size/5)-2, size/5,
-        { render: partA1.render }
-        ),
-        partA3 = Bodies.circle(x, y-(3*size/5)-4, size/5,
-        { render: partA1.render }
-        ),
-        partA4 = Bodies.circle(x, y-(3*size/5)-6, size/5,
-        { render: partA1.render }
-        ),
-        partB = Bodies.trapezoid(x, y, size / 5, size, 0.4, { render: partA1.render });
-        curSpoon = Body.create({
-          parts: [partA1, partA2, partA3, partA4, partB],
-          label: "spoon"
-        });
-        navSpoons.push(curSpoon);
-        Composite.add(engine.world, curSpoon);
-      });
-
-      Matter.Events.on(engine, "collisionStart", function(event) {
-        const pairs = event.pairs;
-        for (const pair of pairs) {
-          const { bodyA, bodyB } = pair;
-          // Check if one is a cereal and the other is a spoon
-          let doTut = false;
-          if(bodyA.parent !== null && bodyB.parent !== null)
-          {
-          //console.log(event);
-            if(bodyA.parent.label === "spoon" && bodyB.label === "hatch"){  
-              // console.log(bodyB.link)
-              cleanupSpoons();
-              window.location.href = bodyB.link;
-            }
-            else if(bodyA.label === "hatch" && bodyB.parent.label === "spoon"){
-              // console.log(bodyA.link)
-              cleanupSpoons();
-              window.location.href = bodyA.link;
-            }
-            if(bodyA.parent.label === "tut" && bodyB.label === "hatch"){  
-              // console.log(bodyB.link)
-              doTut = true;
-            }
-            else if(bodyA.label === "hatch" && bodyB.parent.label === "tut"){
-              // console.log(bodyA.link)
-              doTut = true
-            }
-            if(doTut){
-              let tutBody = bodyA.parent.label === "tut" ? bodyA.parent : bodyB.parent;
-              Composite.remove(engine.world, tutBodies)
-              setTimeout(() => {
-                if(engine && engine.world){
-                  Composite.remove(engine.world, tutBody)
-                }
-              }, 750)
-            }
-          }
-        }
-      });
+    });
     
   
     Runner.run(runner, engine)
@@ -400,7 +394,9 @@ const SpoonDropMenu = () => {
   return (
     <div className="scene">
       <canvas ref={canvasRef} />
-      <p id="menudisplay">drop a spoon to navigate</p>
+      <p id="menudisplay">
+        <span id="menu-instructions">drop a spoon to navigate</span>
+      </p>
       <Popup visible={popupVisible} closePopup={closePopup}/>
     </div>
   )

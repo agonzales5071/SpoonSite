@@ -1,29 +1,60 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from "./util/gameoverPopupSaberBattle";
-import { swapDocBody, createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, 
-  getDualSidedSaber, drawHUD, createRandom2DVector, rotatePlayerToward } from "./util/spoonHelper";
-//TODO: Scoring, double sided dark side saber, hilt, weak hitboxes, lives, add hilt to cosmetic filter
+import { GameText, swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH,createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, 
+  getDualSidedSaber, drawHUD, createRandom2DVector, rotatePlayerToward, 
+  BACKGROUND_COLOR,
+  getAngleBetweenPos,
+  getDistanceBetweenPos,
+  createDefined2DVector} from "./util/spoonHelper";
+  
 const SpoonSaberBattle = () => {
-  const boxRef = useRef(null);
-  const canvasRef = useRef(null);
   const hudRef = useRef(null);
-  const restartRef = useRef(null);
-  const [playButtonText, setPlayButtonText] = useState("Play");
   const [mobilePlayer, setMobilePlayer] = useState(false);
-
-  const [gameOverState, setGameOverState] = useState(false);
   const [darkSideVisible, setDarkSideVisible] = useState(false);
-  const [message, setMessage] = useState("The Soupth are attacking! You must take up your SpoonSaber.");
-  const [scoreText, setScoreText] = useState("Click or tap and drag your SpoonSaber to block the enemy attacks");
-  useEffect(() => swapDocBody(), []);
-  useEffect( () => {
+  const [canvasWidth, setCanvasWidth] = useState(0);
+  
+  const flavor = "The Soupth are attacking! You must take up your SpoonSaber.";
+  const instructions = "Click or tap and drag your SpoonSaber to block the enemy attacks";
+  const {
+    canvasRef,
+    canvasHeight,
+    setCanvasHeight,
+    restartRef,
+    playButtonText,
+    setPlayButtonText,
+    gameOverState,
+    setGameOverState,
+    message,
+    setMessage,
+    scoreText,
+    setScoreText,
+  } = useGameState(
+    flavor,
+    instructions
+  );
 
+  const [playerColor, setPlayerColor] = useState(null);
+  // const playerColorRef = useRef(playerColor);
+
+
+  if(window.location.href.includes("DarthPlayer")){
+    setDarkSideVisible(true);
+    setPlayButtonText("Light Side");
+  }
+
+  useEffect(() => swapDocBody(), []);
+
+  useEffect( () => {
     var isMobile = false;
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    
+    const width = Math.min(window.innerWidth, MAX_WIDTH);
+    const height = Math.min(window.innerHeight, MAX_HEIGHT);
+    setCanvasHeight(height);
+    setCanvasWidth(width);
+
     let Engine = Matter.Engine;
     let Render = Matter.Render;
     let Runner = Matter.Runner;
@@ -38,37 +69,61 @@ const SpoonSaberBattle = () => {
     let runner = Runner.create({});
 
     var render = Render.create({
-      element: boxRef.current,
       engine: engine,
       canvas: canvasRef.current,
       options: {
-        width: window.innerWidth,
-        height: window.innerHeight+window.innerHeight,
+        width: width,
+        height: height,
         wireframes: false
       }
     });
-    const hudCanvas = hudRef.current;
-    if (hudCanvas) {
-      hudCanvas.width = window.innerWidth;
-      hudCanvas.height = window.innerHeight;
-    }
+    // moves hud to right side of screen
+    // const hudCanvas = hudRef.current;
+    // if (hudCanvas) {
+    //   hudCanvas.width = width;
+    //   hudCanvas.height = height;
+    // }
 
-    const backgroundColor = '#14151f';
+  //saber colors
+  const lightSideColors = new Map([
+    ['yellow', '#ffff00'],
+    ['neonGreen', '#b4ff00'],
+    ['lime', '#46ff00'],
+    ['green', '#00FF00'],
+    ['mint', '#00ff3c'],
+    ['cyan', '#00ff8c'],
+    ['sky', '#008CFF'],
+    ['blue', '#0000FF'],
+    ['purple', '#7300ff'],
+    ['magenta', '#dc00FF']
+  ])
+  const darkSideColors = new Map([
+    ['red', '#ff2727ff'],
+    ['bloodOrange', '#ff3c00ff'],
+  ])
 
-    var gameWidth = width*4/5;
-    var marginX = (width-gameWidth)/2;
-    var gameHeight = height*4/5;
-    var marginY = (height-gameHeight)/2
-    var points = 0;
-    var fric = 0.1
-    let lives = 3;
-    var size = 100; //size var for spoon
-    var ragDoll = false;
-    var isPlayerDarkSide = false;
-    if(window.location.href.includes("DarthPlayer")){
-      setDarkSideVisible(true);
-      setPlayButtonText("Light Side");
+
+  var gameWidth = width*4/5;
+  var marginX = (width-gameWidth)/2;
+  var gameHeight = height*4/5;
+  var marginY = (height-gameHeight)/2
+  var points = 0;
+  var fric = 0.1
+  let lives = 3;
+  var size = 100; //size var for spoon
+  var ragDoll = false;
+  var isPlayerDarkSide = false;
+  let localColor = getRandomSaberColor(isPlayerDarkSide);
+  let saberPathNeeded = false;
+      
+  function getRandomSaberColor(isDarkSide){
+    var colorValuesArray = [...lightSideColors.values()];
+    if(isDarkSide){
+      colorValuesArray = [...darkSideColors.values()];
     }
+    return colorValuesArray[getRandomInt(colorValuesArray.length)];
+  }
+    setPlayerColor(localColor);
     // var isPlayerDarkSide = false;
 
     //mobile augmentations
@@ -92,23 +147,7 @@ const SpoonSaberBattle = () => {
     
     Composite.add(engine.world, mouseConstraint);
 
-    //saber colors
-    const lightSideColors = new Map([
-      ['yellow', '#ffff00'],
-      ['neonGreen', '#b4ff00'],
-      ['lime', '#46ff00'],
-      ['green', '#00FF00'],
-      ['mint', '#00ff3c'],
-      ['cyan', '#00ff8c'],
-      ['sky', '#008CFF'],
-      ['blue', '#0000FF'],
-      ['purple', '#7300ff'],
-      ['magenta', '#dc00FF']
-    ])
-    const darkSideColors = new Map([
-      ['red', '#ff2727ff'],
-      ['bloodOrange', '#ff3c00ff'],
-      ])
+    
       
     const CATEGORY_SPOON = 0x0002;
     const CATEGORY_ENEMY_SPOON = 0x0004;
@@ -136,21 +175,22 @@ const SpoonSaberBattle = () => {
       x: width/2,
       y: height/2
     }
+
     function initializePlayer(){
       Composite.remove(engine.world, saber);
       ragDoll = false;
       lives = 3;
-      playerColor = getRandomSaberColor(isPlayerDarkSide);
-      saber = getSpoonWithHilt(size, spoonStart.x, spoonStart.y, spoonFilter, playerColor);
-      if(isPlayerDarkSide){saber = getDualSidedSaber(size*4/5, spoonStart.x, spoonStart.y, spoonFilter, playerColor);}
+      localColor = getRandomSaberColor(isPlayerDarkSide)
+      setPlayerColor(localColor);
+      saber = getSpoonWithHilt(size, spoonStart.x, spoonStart.y, spoonFilter, localColor);
+      if(isPlayerDarkSide){saber = getDualSidedSaber(size*4/5, spoonStart.x, spoonStart.y, spoonFilter, localColor);}
       saber.label = 'playerSaber'
       saber.isSensor = true;
       saber.frictionAir = fric;
       Composite.add(engine.world, saber);
     }
-    let playerColor = getRandomSaberColor(isPlayerDarkSide);
-    var saber = getSpoonWithHilt(size, spoonStart.x, spoonStart.y, spoonFilter, playerColor);
-    if(isPlayerDarkSide){saber = getDualSidedSaber(size*4/5, spoonStart.x, spoonStart.y, spoonFilter, playerColor);}
+    var saber = getSpoonWithHilt(size, spoonStart.x, spoonStart.y, spoonFilter, localColor);
+    if(isPlayerDarkSide){saber = getDualSidedSaber(size*4/5, spoonStart.x, spoonStart.y, spoonFilter, localColor);}
     saber.label = 'playerSaber'
     saber.isSensor = true;
     saber.frictionAir = fric;
@@ -158,7 +198,6 @@ const SpoonSaberBattle = () => {
     // Composite.add(engine.world, saber2);
 
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
-      if(!gameStarted && !resettable){startGame()}
       isMouseDown = true;  
     });
 
@@ -307,6 +346,8 @@ const SpoonSaberBattle = () => {
       attack.hitbox = perfectHitbox;
       Composite.add(engine.world, perfectHitbox);
       
+      saberPathNeeded = true;
+
       attack.weakHitboxTimeout = setTimeout(() => {
         attack.body.collisionFilter.mask = enemyFilter.mask;
         attack.body.collisionFilter.category = enemyFilter.category;
@@ -341,6 +382,13 @@ const SpoonSaberBattle = () => {
           movePlayerToward(target, dt);
         }
         rotatePlayerToward(target, dt, saber, isPlayerDarkSide);
+      }
+      if(saberPathNeeded === true){
+        if(attacks.length>=2){
+
+          createSaberPath(attacks.at(0), attacks.at(1));
+          saberPathNeeded = false;
+        }
       }
     });
     function redrawPlayer(){
@@ -432,15 +480,21 @@ const SpoonSaberBattle = () => {
     }
     var attacks = [];
     const attackAngleRange = 1.5*Math.PI;
+    const innerFactor = 0.98; //size of inner spoon
+    const silhouetteInnerFactor = 0.95
     function spawnEnemy(){
-      const innerFactor = 0.98; //size of inner spoon
       const initialSizeFactor = 0.1;
       const color = getRandomSaberColor(!isPlayerDarkSide);
       const angle = Math.random()*attackAngleRange - attackAngleRange/2 
       let enemyX = Math.random()*gameWidth+marginX;
       let enemyY = Math.random()*gameHeight+marginY;
+      //distance between new attacks
+      while (attacks.length > 0 && getDistanceBetweenPos(attacks.at(-1).initialPosition, {x: enemyX, y: enemyY}) < size){
+        enemyX = Math.random()*gameWidth+marginX;
+        enemyY = Math.random()*gameHeight+marginY;
+      }
       let evilOuter = getSpoon(size, enemyX, enemyY, cosmeticFilter, color);
-      let evilInner = getSpoon(size*innerFactor, enemyX, enemyY, cosmeticFilter, backgroundColor);
+      let evilInner = getSpoon(size*innerFactor, enemyX, enemyY, cosmeticFilter, BACKGROUND_COLOR);
       Body.setAngle(evilOuter, angle);
       Body.setAngle(evilInner, angle);
       Composite.add(engine.world, evilOuter)
@@ -460,20 +514,65 @@ const SpoonSaberBattle = () => {
         beenHitSecondSide: false, //only for dark side dual sided saber
         beenPerfectHit: false,
         particleTracker: 1,
-        angle: angle
+        angle: angle,
+        speed: speed
       }
       attacks.push(attack)
       Composite.add(engine.world, attack.body)
     }
 
-    function getRandomSaberColor(isDarkSide){
-      var colorValuesArray = [...lightSideColors.values()];
-      if(isDarkSide){
-        colorValuesArray = [...darkSideColors.values()];
-      }
-      return colorValuesArray[getRandomInt(colorValuesArray.length)];
+    function getEnemySilhouettePart(x, y, angle, color = BACKGROUND_COLOR){
+      let silSize = color === BACKGROUND_COLOR ? size*silhouetteInnerFactor : size;
+      let evilInner = getSpoon(silSize, x, y, cosmeticFilter, color);
+      Body.setAngle(evilInner, angle);
+      return evilInner;
     }
-        
+    const MAX_STEP_SIZE = size;
+    const MIN_STEP_SIZE = size/5;
+    const MAX_STEP_NUM = 8;
+    const MIN_STEP_NUM = 1;
+    function createSaberPath(prevAttack, curAttack){
+      let silNum = getRandomInt(6) + 2;
+      let spacialDiff = getDistanceBetweenPos(prevAttack.initialPosition, curAttack.initialPosition);
+      let movementAngleDiff = getAngleBetweenPos(prevAttack.initialPosition, curAttack.initialPosition);
+      let prevAngle = prevAttack.angle >= 0 ? prevAttack.angle : prevAttack.angle + 2*Math.PI; 
+      let nextAngle = curAttack.angle >= 0 ? curAttack.angle : curAttack.angle + 2*Math.PI; 
+      let bodyAngleDiff = prevAngle - nextAngle;
+      let spacing = spacialDiff/(silNum+1);
+      while(spacing > MAX_STEP_SIZE && silNum < MAX_STEP_NUM){
+        silNum++;
+        spacing = spacialDiff/(silNum+1);
+      }
+      while(spacing < MIN_STEP_SIZE && silNum > MIN_STEP_NUM){
+        silNum--;
+        spacing = spacialDiff/(silNum+1);
+      }
+      if(Math.abs(bodyAngleDiff) < Math.PI/3 && silNum > MAX_STEP_NUM/2){
+        bodyAngleDiff = bodyAngleDiff < 0 ? Math.PI*2 - bodyAngleDiff : Math.PI*2 + bodyAngleDiff; 
+      }
+      let msBetween = speed*100 - 500; //500 is about the time it takes to fully grow attack
+      let msStep = msBetween/silNum;
+      let angleStep = bodyAngleDiff/(silNum+1);
+      let silCounter = 1;
+      let pathInterval = setInterval(() => {
+        let vec = createDefined2DVector(spacing*silCounter, movementAngleDiff+Math.PI/2);
+        let silX = vec.x + prevAttack.initialPosition.x;
+        let silY = vec.y + prevAttack.initialPosition.y;
+        console.log("creating silhouette at " + silX + ", " + silY);
+        let curSilOuter = getEnemySilhouettePart(silX, silY, prevAngle - silCounter*angleStep, curAttack.color);
+        Composite.add(engine.world, curSilOuter);
+        let curSilInner = getEnemySilhouettePart(silX, silY, prevAngle - silCounter*angleStep);
+        Composite.add(engine.world, curSilInner);
+        setTimeout(()=> {
+        Composite.remove(engine.world, curSilOuter);
+        Composite.remove(engine.world, curSilInner);
+        }, 300)
+        silCounter++;
+        if(silCounter > silNum) clearInterval(pathInterval);
+      }, msStep)
+
+    }
+    
     function startGame() {
       if (gameStarted === false) {
         setGameOverState(false); // Show game over screen
@@ -630,7 +729,7 @@ const SpoonSaberBattle = () => {
 
     Runner.run(runner, engine)
     Render.run(render);
-    drawHUD(() => lives, () => gameStarted, hudRef, () => playerColor);
+    drawHUD(() => lives, () => gameStarted, hudRef, () => localColor);
     setGameOverState(true)
   // Cleanup on unmount
     return () => {
@@ -641,7 +740,7 @@ const SpoonSaberBattle = () => {
       render.canvas.remove();
       render.textures = {};
     };
-  }, []);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
   
     return (
       <div className="notscene">
@@ -650,8 +749,12 @@ const SpoonSaberBattle = () => {
              onRestart={() => restartRef.current(false)} onRestartDarkSide={() => restartRef.current(true)}
              playButtonText={playButtonText} darkSideVisible={darkSideVisible} mobile={mobilePlayer}/>
         </div>
-      <canvas ref={canvasRef} />
-      <canvas ref={hudRef} className="hud" style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none" }} />
+        <div className="game-canvas-wrapper" >
+          <canvas className="game-canvas" ref={canvasRef} style={{'borderColor': `${playerColor}`}}/>
+          <canvas ref={hudRef} className="hud" style={{ '--canvas-height': `${canvasHeight}px`, '--canvas-width': `${canvasWidth}px`, 
+            position: "absolute", zIndex: 1, pointerEvents: "none" }} />
+          <GameText gameName="SpoonSaber Battle" canvasHeight={canvasHeight}/>
+        </div>
       <Link to="/games">
         <button className='back-button' style={{ display: gameOverState ? "none" : "block" }}></button>
       </Link>

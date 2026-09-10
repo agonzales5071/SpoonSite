@@ -29,6 +29,7 @@ import SpoonDropHotSpoontato from './Physics/HotSpoontato.js';
 import SpoonDropCerealShot from './Physics/CerealShot.js';
 import SpoonSaberBattle from './Physics/SpoonSaberBattle.js';
 import SpoonBalloon from './Physics/SpoonBalloon.js';
+import { swapDocBody } from './components/Common/CssHelper.js';
 
 
 
@@ -76,10 +77,18 @@ class Home extends React.Component {
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
-    window.scrollTo(0, 0); // force scroll to top
+    window.scrollTo(0, 0); // force scroll to topexport function swapDocBody(extraClasses = []) {
+    //hides all scroll bars
+    swapDocBody(['hide-scrollbar']);
+    
   }
-  
+  //uncomment to make scrollbar visible in the future
+  //note: scroll bar is only invisible after visiting home page
   // componentWillUnmount(){
+  // const classes = ['hide-scrollbar]
+  // document.body.classList.remove(...classes);
+  //   document.documentElement.classList.remove(...classes);
+  //   document.getElementById("root")?.classList.remove(...classes);
   // }
   render(){
   

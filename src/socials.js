@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './socials.css';
+import { swapDocBody } from './components/Common/CssHelper';
 class Socials extends React.Component {
     componentDidMount(){
       document.body.className="body-socials"; // Or set the class
+      swapDocBody(['hide-scrollbar'])
     }
     componentWillUnmount(){
       document.body.className ="body";

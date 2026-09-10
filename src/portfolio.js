@@ -164,6 +164,7 @@ const ButtonBlock = ({
   
   const iframeStyle = useResponsiveIframeStyle();
   const containerStyle = useResponsiveContainerStyle();
+  const thumbnailStyle = useResponsiveThumbnailStyle();
 
   const vids = ['d9mLhZtSwSs', 't4l5JIRyx6Q', 'HZCxGwv6jIw', 'PD-g54MVZlc', 'w4i1hxabOmc'];
   const [vidIndex, setVidIndex] = useState(0);
@@ -175,7 +176,7 @@ const ButtonBlock = ({
   return (
     <div className="block">
       <VideoWithThumbnail  title={vidTitle} videoId={vids[vidIndex]}
-         containerStyle={containerStyle} thumbnailStyle={iframeStyle} iframeStyle={iframeStyle}/>
+         containerStyle={containerStyle} thumbnailStyle={thumbnailStyle} iframeStyle={iframeStyle}/>
       <h1 className="head">{header}</h1>
       <p className="explan">{text}</p>
       <button className="vidButton" onClick={handleNextVideo}>Next Video</button>

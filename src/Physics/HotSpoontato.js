@@ -3,19 +3,30 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import { swapDocBody, drawHUD } from "./util/spoonHelper";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, drawHUD } from "./util/spoonHelper";
 
 const SpoonDropHotSpoontato = () => {
-  const boxRef = useRef(null);
-  const canvasRef = useRef(null);
+  const flavor = "AH ouch! The spoons are hot hot hot." ;
+  const instructions = "Click or tap and drag to move the trampoline and bounce the spoons until they're cool";
   const hudRef = useRef(null);
-  const restartRef = useRef(null);
-  const [playButtonText, setPlayButtonText] = useState("Play")
-
-  const [gameOverState, setGameOverState] = useState(false);
-  const [message, setMessage] = useState("AH ouch! The spoons are hot hot hot.");
-  const [scoreText, setScoreText] = useState("Click or tap and drag to move the trampoline and bounce the spoons until they're cool");
-
+  const [canvasWidth, setCanvasWidth] = useState(0);
+  const {
+    canvasRef,
+    canvasHeight,
+    setCanvasHeight,
+    restartRef,
+    playButtonText,
+    setPlayButtonText,
+    gameOverState,
+    setGameOverState,
+    message,
+    setMessage,
+    scoreText,
+    setScoreText,
+  } = useGameState(
+    flavor,
+    instructions
+  );
   useEffect(() => swapDocBody(), []);
   useEffect(() => {
     const {
@@ -35,29 +46,25 @@ const SpoonDropHotSpoontato = () => {
 
     const allSpoons = [];
     var isMobile = false;
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    
+    const width = Math.min(window.innerWidth, MAX_WIDTH);
+    const height = Math.min(window.innerHeight, MAX_HEIGHT);
+    setCanvasHeight(height);
+    setCanvasWidth(width);
     
     
     let engine = Engine.create({});
     let runner = Runner.create({});
 
     let render = Render.create({
-      element: boxRef.current,
       engine: engine,
       canvas: canvasRef.current,
       options: {
         width: width,
-        height: height * 1.5,
+        height: height,
         wireframes: false,
       },
     });
-
-    const hudCanvas = hudRef.current;
-    if (hudCanvas) {
-      hudCanvas.width = window.innerWidth;
-      hudCanvas.height = window.innerHeight;
-    }
 
     var margin = width/10;
     var fric = 0.03;
@@ -176,7 +183,6 @@ const SpoonDropHotSpoontato = () => {
 
     Events.on(mouseConstraint, "mousedown", () => {
       isDragging = true;
-      if(!gameStarted && !resettable){startGame()}
     });
 
     Events.on(mouseConstraint, "mouseup", () => {
@@ -416,6 +422,7 @@ const SpoonDropHotSpoontato = () => {
     const spoonGrav = [0.0011, 0.0009, 0.001];
 
     //returns a spoon to fall from top of screen
+    //TODO Refactor this 
     function getFallingSpoon(obstacleSize, xposSpawn){
       let spoonType = getRandomInt(3);
       let spoonSpawn = [xposSpawn, -100, -(3 * obstacleSize) - 100];
@@ -736,7 +743,7 @@ const SpoonDropHotSpoontato = () => {
       if(points >= 20){
         message = "You are a professional cool guy/gal, aren't you?";
       }
-      else message = "If you can't take the heat, get out of the utensil drawer.";
+      else message = "If you can't take the heat, get out of the utensil drawer. \n Wait, why are they hot?";
       return message;
     }
       
@@ -762,26 +769,25 @@ const SpoonDropHotSpoontato = () => {
       Runner.stop(runner);
       Composite.clear(engine.world, false);
       Engine.clear(engine);
-      render.canvas.remove();
       render.textures = {};
     };
-  }, []);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
 
   return (
-    <div className="notscene" ref={boxRef}>
+    <div className="notscene">
       <div>
           <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
           onRestart={() => restartRef.current()} playButtonText={playButtonText} />
       </div>
-      <canvas ref={canvasRef} />
-      <canvas ref={hudRef} className="hud" style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none" }} />
+        <div className="game-canvas-wrapper">
+        <canvas className="game-canvas" ref={canvasRef} />
+        <canvas ref={hudRef} className="hud" style={{ '--canvas-height': `${canvasHeight}px`, '--canvas-width': `${canvasWidth}px`, 
+            position: "absolute", zIndex: 1, pointerEvents: "none" }} />
+        <GameText gameName="Hot Spoontato" canvasHeight={canvasHeight}/>
+      </div>
       <Link to="/games">
         <button className="back-button" style={{ display: gameOverState ? "none" : "block" }}/>
       </Link>
-      <div id="menutext">
-        <p id="dropper">Hot Spoontato</p>
-        <p id="descenttut" className="droppertext"></p>
-      </div>
     </div>
   );
 };

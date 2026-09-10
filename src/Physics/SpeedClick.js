@@ -1,23 +1,36 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, } from 'react'
 import Matter from "matter-js";
 import "./spoondrop.css";
 import GameOver from './util/gameoverPopup';
 import { Link } from 'react-router-dom';
-import { swapDocBody, getSpoon } from './util/spoonHelper';
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, getSpoon } from './util/spoonHelper';
 
 const SpoonDropGameSpeed = () => {
-  const boxRef = useRef(null);
-  const canvasRef = useRef(null);
-  const restartRef = useRef(null);
-  const [playButtonText, setPlayButtonText] = useState("Play")
-
-  const [gameOverState, setGameOverState] = useState(false);
-  const [message, setMessage] = useState("Endurance test: How many spoons can you drop in 15 seconds?");
-  const [scoreText, setScoreText] = useState("Click to drop a spoon in the bucket.");
+  const flavor = "Endurance test: How many spoons can you drop in 15 seconds?" ;
+  const instructions = "Click to drop a spoon in the bucket.";
+  const {
+    canvasRef,
+    canvasHeight,
+    setCanvasHeight,
+    restartRef,
+    playButtonText,
+    setPlayButtonText,
+    gameOverState,
+    setGameOverState,
+    message,
+    setMessage,
+    scoreText,
+    setScoreText,
+  } = useGameState(
+    flavor,
+    instructions
+  );
+  const textElementID = "dropper";
   useEffect(() => swapDocBody(), []);
   useEffect(() => {
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    const width = Math.min(window.innerWidth, MAX_WIDTH);
+    const height = Math.min(window.innerHeight, MAX_HEIGHT);
+    setCanvasHeight(height);
     let Engine = Matter.Engine;
     let Render = Matter.Render;
     let Runner = Matter.Runner;
@@ -30,12 +43,11 @@ const SpoonDropGameSpeed = () => {
     let runner = Runner.create({});
 
     let render = Render.create({
-      element: boxRef.current,
       engine: engine,
       canvas: canvasRef.current,
       options: {
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width: width,
+        height: height,
         wireframes: false,
       },
     });
@@ -82,14 +94,14 @@ const SpoonDropGameSpeed = () => {
         setGameOverState(false); // Show game over screen
         gameStartable = false;
         let timer = setInterval(function() {
-          if(document.getElementById("speedclickdisplay") === null){
+          if(document.getElementById(textElementID) === null){
             clearInterval(timer);
           }
           else{
             seconds--;
             if(seconds>0){
               
-                document.getElementById("speedclickdisplay").innerText = seconds;
+                document.getElementById(textElementID).innerText = seconds;
               
             }
             // If the count down is over, write some text
@@ -99,13 +111,13 @@ const SpoonDropGameSpeed = () => {
               let countUp = 0;
               //spoon tally
               var counter = setInterval(function(){
-                if(document.getElementById("speedclickdisplay") === null){
+                if(document.getElementById(textElementID) === null){
                   clearInterval(counter);
                 }
                 else{
                   if(countUp < spoonCount && countingUp){
                     countUp++;
-                    document.getElementById("speedclickdisplay").innerHTML = countUp;
+                    document.getElementById(textElementID).innerHTML = countUp;
                   }
                   if(countUp === spoonCount && countingUp){
                     countingUp = false;
@@ -116,8 +128,8 @@ const SpoonDropGameSpeed = () => {
                     let endMessage = getPopupMessage();
                     setMessage(endMessage);
                     setTimeout(() => {
-                      if(document.getElementById("speedclickdisplay").innerHTML){
-                        document.getElementById("speedclickdisplay").innerHTML = "";
+                      if(document.getElementById(textElementID).innerHTML){
+                        document.getElementById(textElementID).innerHTML = "";
                       }
                       setGameOverState(true); // Show game over screen
                     }, 1100)
@@ -155,8 +167,8 @@ const SpoonDropGameSpeed = () => {
       allSpoons.forEach(element =>{
         Composite.remove(engine.world, element);
       })
-      if(document.getElementById("speedclickdisplay")){
-        document.getElementById("speedclickdisplay").innerText = "Time starts with your first spoon.";
+      if(document.getElementById(textElementID)){
+        document.getElementById(textElementID).innerText = "Time starts with your first spoon.";
       }
       if(!hatchPresent){
         hatch = Bodies.rectangle(width/2, height*4/5, width/2, 50, {isStatic: true} );
@@ -193,22 +205,21 @@ const SpoonDropGameSpeed = () => {
       render.canvas.remove();
       render.textures = {};
     };
-  }, []);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
 
   
     return (
-      <div className="scene">
+      <div className="notscene">
         <div>
           <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
           onRestart={() => restartRef.current()} playButtonText={playButtonText} />
       </div>
-        <canvas ref={canvasRef} />
+        <div className="game-canvas-wrapper">
+          <canvas className="game-canvas" ref={canvasRef} />
+          <GameText gameName="Speed Click" canvasHeight={canvasHeight}/>
+        </div>
         <Link to="/games"><button className='back-button'
         style={{ display: gameOverState ? "none" : "block" }}></button></Link>
-        <div id="menutext">
-          <p id="speedclickdisplay">Speed Click</p>
-          <p id="restart"></p>
-        </div>
       </div>
       )
   

@@ -1,25 +1,39 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import { swapDocBody, spoonFilter, getSpoonBalloon, getRandomInt, getAngleBetween, createDefined2DVector, spawnParticleBurst, enemyFilter, getFork } from "./util/spoonHelper";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, spoonFilter, getSpoonBalloon, getRandomInt, getAngleBetween, createDefined2DVector, spawnParticleBurst, enemyFilter, getFork } from "./util/spoonHelper";
 
 const SpoonBalloon = () => {
-  const boxRef = useRef(null);
-  const canvasRef = useRef(null);
-  const restartRef = useRef(null);
-  const [playButtonText, setPlayButtonText] = useState("Play")
-
-  const [gameOverState, setGameOverState] = useState(false);
-  const [message, setMessage] = useState("if the balloon touches the ground you die (death not implemented yet).");
-  const [scoreText, setScoreText] = useState("Tap to bump balloon, hold to blow.");
+  const flavor = "if the balloon touches the ground you die (death not implemented yet).";
+  const instructions = "Tap to bump balloon, hold to blow.";
+  const {
+    canvasRef,
+    canvasHeight,
+    setCanvasHeight,
+    restartRef,
+    playButtonText,
+    setPlayButtonText,
+    gameOverState,
+    setGameOverState,
+    message,
+    setMessage,
+    scoreText,
+    setScoreText,
+  } = useGameState(
+    flavor,
+    instructions
+  );
   useEffect(() => swapDocBody(), []);
   useEffect( () => {
 
     var isMobile = false;
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    
+    const width = Math.min(window.innerWidth, MAX_WIDTH);
+    const height = Math.min(window.innerHeight, MAX_HEIGHT);
+    setCanvasHeight(height);
+
     let Engine = Matter.Engine;
     let Render = Matter.Render;
     let Runner = Matter.Runner;
@@ -33,12 +47,11 @@ const SpoonBalloon = () => {
     let runner = Runner.create({});
 
     var render = Render.create({
-      element: boxRef.current,
       engine: engine,
       canvas: canvasRef.current,
       options: {
-        width: window.innerWidth,
-        height: window.innerHeight+window.innerHeight,
+        width: width,
+        height: height,
         wireframes: false
       }
     });
@@ -317,7 +330,7 @@ const SpoonBalloon = () => {
       render.canvas.remove();
       render.textures = {};
     };
-  }, []);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
 
 
 
@@ -328,14 +341,13 @@ const SpoonBalloon = () => {
           <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
           onRestart={() => restartRef.current()} playButtonText={playButtonText} />
       </div>
-      <canvas ref={canvasRef} />
+      <div className="game-canvas-wrapper">
+        <canvas className="game-canvas" ref={canvasRef} />
+        <GameText gameName="Spoon Balloon" canvasHeight={canvasHeight}/>
+      </div>
       <Link to="/spoondropMenu">
         <button className='back-button' style={{ display: gameOverState ? "none" : "block" }}/>
       </Link>
-      <div id="menutext">
-        <p id="dropper">instructions</p>
-        <p id="descenttut"className="droppertext">do it!</p>
-      </div>
     </div>
   )
   

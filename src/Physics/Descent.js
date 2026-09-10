@@ -1,22 +1,35 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import {swapDocBody, BACKGROUND_COLOR, createDefined2DVector, fruityColors, getAngleBetween, getLoop, getSpoon } from "./util/spoonHelper";
+import {swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, BACKGROUND_COLOR, createDefined2DVector, fruityColors, getAngleBetween, getLoop, getSpoon } from "./util/spoonHelper";
 
 //bug fixes
 //same name chat room join, back buttons, 
 
 const SpoonDropDescent = () => {
-  const boxRef = useRef(null);
-  const canvasRef = useRef(null);
-  const restartRef = useRef(null);
-  const [playButtonText, setPlayButtonText] = useState("Play")
-
-  const [gameOverState, setGameOverState] = useState(false);
-  const [scoreText, setScoreText] = useState(0);
-  const [message, setMessage] = useState("");
+  const flavor = null ;
+  const instructions = null;
+  const {
+    canvasRef,
+    canvasHeight,
+    setCanvasHeight,
+    restartRef,
+    playButtonText,
+    setPlayButtonText,
+    gameOverState,
+    setGameOverState,
+    message,
+    setMessage,
+    scoreText,
+    setScoreText,
+  } = useGameState(
+    flavor,
+    instructions
+  );
+  // const [scoreText, setScoreText] = useState(0);
+  // const [message, setMessage] = useState("");
   useEffect(() => swapDocBody(), []);
   useEffect( () => {
   const oopsAllSpoons = window.location.href.includes("Leo") || window.location.href.includes("leo");
@@ -27,8 +40,11 @@ const SpoonDropDescent = () => {
     var atoms =[];
     var loops = [];
     var isMobile = false;
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+
+    const width = Math.min(window.innerWidth, MAX_WIDTH);
+    const height = Math.min(window.innerHeight, MAX_HEIGHT);
+    setCanvasHeight(height);
+    
     let Engine = Matter.Engine;
     let Render = Matter.Render;
     let Runner = Matter.Runner;
@@ -44,12 +60,11 @@ const SpoonDropDescent = () => {
     let runner = Runner.create({});
 
     var render = Render.create({
-      element: boxRef.current,
       engine: engine,
       canvas: canvasRef.current,
       options: {
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width: width,
+        height: height,
         wireframes: false
       }
     });
@@ -120,7 +135,6 @@ const SpoonDropDescent = () => {
     var resettable = false;
     //create spoon
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
-      if(!gameStarted && !resettable){startGame()}
       movement = setInterval(function() {
         if(!ragdoll){
           let mousex = mouse.position.x,
@@ -727,7 +741,7 @@ const SpoonDropDescent = () => {
       render.canvas.remove();
       render.textures = {};
     };
-  }, []);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
 
 
 
@@ -738,17 +752,15 @@ const SpoonDropDescent = () => {
           <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
           onRestart={() => restartRef.current()} playButtonText={playButtonText} />
       </div>
-      <canvas ref={canvasRef} />
-      <Link to="/games"><button className='back-button' 
-      style={{ display: gameOverState ? "none" : "block" }} ></button></Link>
-      <div id="menutext">
-        <p id="dropper">Descent</p>
-        <p id="descenttut"className="droppertext"></p>
+      <div className="game-canvas-wrapper">
+        <canvas className="game-canvas" ref={canvasRef} />
+        <GameText gameName="Descent" canvasHeight={canvasHeight}/>
       </div>
+      <Link to="/games">
+        <button className='back-button' style={{ display: gameOverState ? "none" : "block" }} ></button>
+      </Link>
     </div>
-  )
-  
-  
+  );
 };
 
 export default SpoonDropDescent;

@@ -3,24 +3,34 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
-import { swapDocBody, floatAndFade, spawnFallingO } from "./util/spoonHelper";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, floatAndFade, spawnFallingO } from "./util/spoonHelper";
 
 const SpoonDropCerealShot = () => {
-  const boxRef = useRef(null);
-  const canvasRef = useRef(null);
   const [power, setPower] = useState(0);
   const [charging, setCharging] = useState(false);
-  const restartRef = useRef(null);
-
-  const [gameOverState, setGameOverState] = useState(false);
-  const [scoreText, setScoreText] = useState(0);
-  const [message, setMessage] = useState("");
-  const [playButtonText, setPlayButtonText] = useState("Play")
-  
-
   const powerRef = useRef(0);
   const directionRef = useRef(1); // 1 = filling, -1 = draining
   
+  const flavor = "AH ouch! The spoons are hot hot hot." ;
+  const instructions = "Click or tap and drag to move the trampoline and bounce the spoons until they're cool";
+  const {
+    canvasRef,
+    canvasHeight,
+    setCanvasHeight,
+    restartRef,
+    playButtonText,
+    setPlayButtonText,
+    gameOverState,
+    setGameOverState,
+    message,
+    setMessage,
+    scoreText,
+    setScoreText,
+  } = useGameState(
+    flavor,
+    instructions
+  );
+
   useEffect(() => swapDocBody(), []);
   
   useEffect(() => {
@@ -72,19 +82,20 @@ const SpoonDropCerealShot = () => {
     let cereal = [];
     let crumbParticles = [];
     // var isMobile = false;
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    
+    const width = Math.min(window.innerWidth, MAX_WIDTH);
+    const height = Math.min(window.innerHeight, MAX_HEIGHT);
+    setCanvasHeight(height);
 
     let engine = Engine.create({});
     let runner = Runner.create({});
 
     let render = Render.create({
-      element: boxRef.current,
       engine: engine,
       canvas: canvasRef.current,
       options: {
         width: width,
-        height: height * 1.5,
+        height: height,
         wireframes: false,
       },
     });
@@ -249,7 +260,6 @@ const SpoonDropCerealShot = () => {
         mouseDownPos = {x: event.mouse.position.x, y: event.mouse.position.y};
       }
       isMouseDown = true;
-      if(!gameStarted && !resettable){startGame()}
       const mousePos = event.mouse.position;
 
       if(!swipeControls){
@@ -943,33 +953,30 @@ const SpoonDropCerealShot = () => {
       render.canvas.remove();
       render.textures = {};
     };
-  }, []);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
 
   return (
-    <div className="notscene" ref={boxRef}>
+    <div className="notscene">
       <div>
           <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
           onRestart={() => restartRef.current()} playButtonText={playButtonText} />
       </div>
-      <div className="power-bar">
-        <div style={{
-          width: `${power * 100}%`,
-          height: '100%',
-          background: 'limegreen',
-          transition: charging ? 'none' : 'width 0.2s ease'
-        }} />
+      <div className="game-canvas-wrapper">  
+        <div className="power-bar" style={{ '--canvas-height': `${canvasHeight}px`}}>
+          <div style={{
+            width: `${power * 100}%`,
+            height: '100%',
+            background: 'limegreen',
+            transition: charging ? 'none' : 'width 0.2s ease'
+          }} />
+        </div>
+        <canvas className="game-canvas" ref={canvasRef} />
+        <GameText gameName="Cereal Shot" canvasHeight={canvasHeight}/>
       </div>
-      <canvas ref={canvasRef} />
       <Link to="/games">
         <button className="back-button" 
         style={{ display: gameOverState ? "none" : "block" }} />
       </Link>
-      <div id="menutext">
-        <p id="dropper"></p>
-        <p id="descenttut" className="droppertext">
-          Cereal Shot
-        </p>
-      </div>
     </div>
   );
 };

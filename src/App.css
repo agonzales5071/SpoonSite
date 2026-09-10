@@ -1,13 +1,15 @@
 html, body, #root{
 	height: 100vh;
+	overflow-y: visible;
   }
   .App{
 	z-index: 0;
   }
 html{
-	overflow: hidden;
+	overflow-y: scroll;
 	padding: 0;
   	margin: 0;
+		height: auto;
 }
 body{
 	background-origin: border-box;
@@ -35,6 +37,14 @@ body{
 	z-index: 100;
 	overflow-x: hidden;
 	min-height: 100%;
+}
+.hide-scrollbar {
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* old Edge/IE */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;              /* Chrome, Safari, newer Edge (WebKit/Blink) */
 }
 .paralax{
 	display: none;
@@ -71,7 +81,8 @@ body{
   font-size: 32px;
   color: floralwhite;
   z-index: 2;
-  overflow:hidden
+  overflow:hidden;
+	pointer-events: none;
 }
 #construction {
   font-family: "Alphasmoke";

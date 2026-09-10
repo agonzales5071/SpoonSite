@@ -1,16 +1,18 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
-import { swapDocBody } from './util/spoonHelper';
+import { swapDocBody, MAX_HEIGHT, MAX_WIDTH, GameText } from './util/spoonHelper';
 
 const SpoonDropHomerun = () => {
-  const boxRef = useRef(null);
+  const textDisplay = "dropper";
   const canvasRef = useRef(null);
   useEffect(() => swapDocBody(), []);
+  const [canvasHeight, setCanvasHeight] = useState(0);
   useEffect(() => {
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    const width = Math.min(window.innerWidth, MAX_WIDTH);
+    const height = Math.min(window.innerHeight, MAX_HEIGHT);
+    setCanvasHeight(height);
     let Engine = Matter.Engine;
     let Render = Matter.Render;
     let Runner = Matter.Runner;
@@ -24,7 +26,6 @@ const SpoonDropHomerun = () => {
     let runner = Runner.create({});
 
     let render = Render.create({
-      element: boxRef.current,
       engine: engine,
       canvas: canvasRef.current,
       options: {
@@ -116,11 +117,11 @@ const SpoonDropHomerun = () => {
             //maybe makes the score smoother when it lands???
             let score = (Math.round(10000000*(curSpoon.position.x-width/2))/10000000).toFixed(7);
             let display = (Math.round(100*(curSpoon.position.x-width/2))/100).toFixed(2);
-            if(score !== lastScore && document.getElementById("homerundisplay") !== null){//stops repeated refresh
+            if(score !== lastScore && document.getElementById(textDisplay) !== null){//stops repeated refresh
               //commentary
               lastScore = score;
-              if(Math.abs(display) > 20000){document.getElementById("homerundisplay").innerHTML = "WHOA! You dropped the spoon " + display + "m away";}
-              else{document.getElementById("homerundisplay").innerHTML = "Nice! You dropped the spoon " + display + "m away";}
+              if(Math.abs(display) > 20000){document.getElementById(textDisplay).innerHTML = "WHOA! You dropped the spoon " + display + "m away";}
+              else{document.getElementById(textDisplay).innerHTML = "Nice! You dropped the spoon " + display + "m away";}
             }
             else{
               clearInterval(counter);
@@ -132,16 +133,16 @@ const SpoonDropHomerun = () => {
 
     Runner.run(runner, engine)
     Render.run(render);
-  });
+  }, [setCanvasHeight]);
 
   
     return (
     <div className="scene">
-      <canvas ref={canvasRef} />
-      <Link to="/games"><button className='back-button'></button></Link>
-      <div id="menutext">
-        <p id="homerundisplay">Drag a spoon into the circle and let it fly! Or just toss it...</p>
+      <div className="game-canvas-wrapper">
+        <canvas className="game-canvas" ref={canvasRef} />
+        <GameText gameName="Homerun" canvasHeight={canvasHeight}/>
       </div>
+      <Link to="/games"><button className='back-button'></button></Link>
     </div>
     );
   

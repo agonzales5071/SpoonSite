@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
 import GameOver from './util/gameoverPopup.js'
-import {swapDocBody, BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, spawnParticleBurst, getShipWing, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter, createRandom2DVector } from "./util/spoonHelper.js";
+import {swapDocBody,  useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, spawnParticleBurst, getShipWing, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter, createRandom2DVector } from "./util/spoonHelper.js";
 
 async function lockPortrait() {
     try {
@@ -22,19 +22,33 @@ function unlockOrientation() {
 }
 
 const SpoonshipAsteroid = () => {
-  const boxRef = useRef(null);
-  const canvasRef = useRef(null);
-  const restartRef = useRef(null);
-  const [playButtonText, setPlayButtonText] = useState("Play")
-
-  const [gameOverState, setGameOverState] = useState(false);
-  const [message, setMessage] = useState("You are the pilot of a SpoonShip (trademark pending). Destroy the Space O's before they destroy you!");
-  const [scoreText, setScoreText] = useState("");
+  const flavor = "You are the pilot of a SpoonShip (trademark pending) entering a dangerous astro-cereal field. " ;
+    const instructions = "Click or tap to shoot out a spoon and propel yourself forward.";
+    const {
+      canvasRef,
+      canvasHeight,
+      setCanvasHeight,
+      restartRef,
+      playButtonText,
+      setPlayButtonText,
+      gameOverState,
+      setGameOverState,
+      message,
+      setMessage,
+      scoreText,
+      setScoreText,
+    } = useGameState(
+      flavor,
+      instructions
+    );
   useEffect(() => swapDocBody(), []);
   useEffect( () => {
     var isMobile = false;
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    
+    const width = Math.min(window.innerWidth, MAX_WIDTH);
+    const height = Math.min(window.innerHeight, MAX_HEIGHT);
+    setCanvasHeight(height);
+
     let Engine = Matter.Engine;
     let Render = Matter.Render;
     let Runner = Matter.Runner;
@@ -49,12 +63,11 @@ const SpoonshipAsteroid = () => {
     let runner = Runner.create({});
 
     var render = Render.create({
-      element: boxRef.current,
       engine: engine,
       canvas: canvasRef.current,
       options: {
-        width: window.innerWidth,
-        height: window.innerHeight+window.innerHeight,
+        width: width,
+        height: height,
         wireframes: false
       }
     });
@@ -951,8 +964,8 @@ const SpoonshipAsteroid = () => {
         if (dropperEl) dropperEl.innerHTML = "Nice! " + points + " points"; 
       }
       else if(points === 0){
-        if (dropperEl) dropperEl.innerHTML = "Ready yourself pilot. We're headed straight into a Cereal field!"
-        if (tutEl) tutEl.innerHTML = "Tap to shoot, hold to charge a more powerful shot."
+        if (dropperEl) dropperEl.innerHTML = "Tap to shoot, hold to charge a more powerful shot."
+        if (tutEl) tutEl.innerHTML = ""
       }
       else{
         if (dropperEl) dropperEl.innerHTML = points + " points";
@@ -1007,7 +1020,7 @@ const SpoonshipAsteroid = () => {
       render.canvas.remove();
       render.textures = {};
     };
-  }, []);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
 
 
 
@@ -1018,14 +1031,13 @@ const SpoonshipAsteroid = () => {
           <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
           onRestart={() => restartRef.current()} playButtonText={playButtonText} />
       </div>
-      <canvas ref={canvasRef} />
+      <div className="game-canvas-wrapper">
+        <canvas className="game-canvas" ref={canvasRef} />
+        <GameText gameName="Space O's" canvasHeight={canvasHeight}/>
+      </div>
       <Link to="/games">
         <button className='back-button' style={{ display: gameOverState ? "none" : "block" }}/>
       </Link>
-      <div id="menutext">
-        <p id="dropper"></p>
-        <p id="descenttut"className="droppertext"></p>
-      </div>
     </div>
   )
   

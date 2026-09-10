@@ -1,21 +1,31 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect,} from "react";
 import Matter from "matter-js";
 import GameOver from "./util/gameoverPopup";
 import './spoondrop.css';
 import { Link } from 'react-router-dom';
-import { swapDocBody } from "./util/spoonHelper";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, getSpoon } from "./util/spoonHelper";
 
 const SpoonDropRescue = () => {
-  const boxRef = useRef(null);
-  const canvasRef = useRef(null);
-  const restartRef = useRef(null);
-  const [playButtonText, setPlayButtonText] = useState("Play")
-
-  const [gameOverState, setGameOverState] = useState(false);
-  const [message, setMessage] = useState("AHHH! Spoons are falling from the skyyyyy.");
-  const [scoreText, setScoreText] = useState("Click or tap and drag to move the net. Catch all the spoons!");
+  const flavor = "AHHH! Spoons are falling from the skyyyyy." ;
+  const instructions = "Click or tap and drag to move the net. Catch all the spoons!";
+  const {
+    canvasRef,
+    canvasHeight,
+    setCanvasHeight,
+    restartRef,
+    playButtonText,
+    setPlayButtonText,
+    gameOverState,
+    setGameOverState,
+    message,
+    setMessage,
+    scoreText,
+    setScoreText,
+  } = useGameState(
+    flavor,
+    instructions
+  );
   useEffect(() => swapDocBody(), []);
-
   useEffect(() => {
     const {
       Engine,
@@ -33,18 +43,16 @@ const SpoonDropRescue = () => {
     } = Matter;
 
     const allSpoons = [];
-    //var isMobile = false;
+    var isMobile = false;
 
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    if (width > 1920) width = 1920;
-    if (height > 1080) height = 1080;
-
+    const width = Math.min(window.innerWidth, MAX_WIDTH);
+    const height = Math.min(window.innerHeight, MAX_HEIGHT);
+    setCanvasHeight(height);
+    
     let engine = Engine.create({});
     let runner = Runner.create({});
 
     let render = Render.create({
-      element: boxRef.current,
       engine: engine,
       canvas: canvasRef.current,
       options: {
@@ -69,7 +77,7 @@ const SpoonDropRescue = () => {
     const startY = height * 0.8;
 
     if (width < 800) {
-      //isMobile = true;
+      isMobile = true;
       size = 50;
       fric = 0.03;
       segmentCount = 7;
@@ -156,6 +164,11 @@ const SpoonDropRescue = () => {
       render: { visible: false },
     });
 
+    trampoline.bodies.forEach((body, index) => {
+      body.label = index;
+      console.log(index)
+    })
+
     Composite.add(engine.world, [leftConstraint, rightConstraint]);
     Composite.add(engine.world, trampoline);
 
@@ -175,7 +188,6 @@ const SpoonDropRescue = () => {
     //controls
     Events.on(mouseConstraint, "mousedown", () => {
       isDragging = true;
-      if(!gameStarted && !resettable){startGame()}
     });
     Events.on(mouseConstraint, "mouseup", () => {
       isDragging = false;
@@ -232,6 +244,12 @@ const SpoonDropRescue = () => {
       Body.setPosition(rightSegment, Vector.create(rightSegment.position.x, startY));
       Body.setVelocity(rightSegment, Vector.create(rightSegment.velocity.x, 0));
     });
+    Events.on(engine, "collisionStart", function(event) {
+      const pairs = event.pairs;
+      for (const pair of pairs) {
+        checkPointIncrement(pair)
+      }
+    });
     
     // accounts for spoons when game is over
     var deadSpoons = [];
@@ -242,7 +260,6 @@ const SpoonDropRescue = () => {
     var tracker = 0;
     var initialSpeed = 50;
     var speed = initialSpeed;
-    var pointIncrementSwitch = false;
 
     // Spawn falling spoons function
     function getRandomInt(max) {
@@ -251,10 +268,11 @@ const SpoonDropRescue = () => {
 
 
     function spawnFallingSpoon() {
-      let obstacleSize = size * 0.200 + size * Math.random() * 0.1; //slight variation to spawn size
+      let obstacleSize = size * 0.800 + size * Math.random() * 0.4; //slight variation to spawn size
       let xposSpawn = gameWidth * Math.random() + margin; 
 
       let spoonObstacle = getFallingSpoon(obstacleSize, xposSpawn);
+      spoonObstacle.counted = false;
 
       allSpoons.push(spoonObstacle);
       //remove old spoons so there arent too many in the net
@@ -262,11 +280,7 @@ const SpoonDropRescue = () => {
         const oldSpoon = allSpoons.shift(); // remove first (oldest) spoon
         Composite.remove(engine.world, oldSpoon);
       }
-
-        
-        Composite.add(engine.world, spoonObstacle);
-      
-      
+      Composite.add(engine.world, spoonObstacle);
     }
 
     //slight variation on density of spoon based on color
@@ -276,52 +290,19 @@ const SpoonDropRescue = () => {
     //returns a spoon to fall from top of screen
     function getFallingSpoon(obstacleSize, xposSpawn){
       let spoonType = getRandomInt(5);
-      let spoonSpawn = [xposSpawn, -100, -(3 * obstacleSize) - 100];
-      let spoonHeadOffset = obstacleSize / 10;
       let spoonDensity = spoonGrav[spoonType];
-
-      //SHAPES
-      let partA1 = Bodies.circle(spoonSpawn[0], spoonSpawn[2], obstacleSize, {
-        restitution: restitutionValue,
-        density: spoonDensity,
-        render: {fillStyle: spoonColors[spoonType]},
-        collisionFilter: {
+      let color = spoonColors[spoonType];
+      let collisionFilter = {
           group: -2,
           category: 4,
           mask: 2,
-        },
+        }
+      let spoonObstacle = getSpoon(obstacleSize, xposSpawn, -100, collisionFilter, color );
+      
+      spoonObstacle.parts.forEach(part => {
+        part.restitution = restitutionValue;
+        part.density = spoonDensity;
       });
-      let partA2 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - spoonHeadOffset, obstacleSize, {
-        render: partA1.render,
-        density: spoonDensity,
-        restitution: restitutionValue,
-        collisionFilter: partA1.collisionFilter,
-      });
-      let partA3 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 2 * spoonHeadOffset, obstacleSize, {
-        render: partA1.render,
-        density: spoonDensity,
-        restitution: restitutionValue,
-        collisionFilter: partA1.collisionFilter,
-      });
-      let partA4 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 3 * spoonHeadOffset, obstacleSize, {
-        render: partA1.render,
-        density: spoonDensity,
-        restitution: restitutionValue,
-        collisionFilter: partA1.collisionFilter,
-      });
-      let partB = Bodies.trapezoid(spoonSpawn[0], spoonSpawn[1], obstacleSize, obstacleSize * 5, 0.4, {
-        render: partA1.render,
-        density: spoonDensity,
-        restitution: restitutionValue,
-      });
-
-      let spoonObstacle = Body.create({
-        parts: [partA1, partA2, partA3, partA4, partB],
-        restitution: restitutionValue,
-        collisionFilter: partA1.collisionFilter,
-      });
-
-      Body.setCentre(spoonObstacle, Vector.create(spoonSpawn[0], spoonSpawn[1] - obstacleSize / 10), false);
       
       //ANGLE
       let angle = Math.random() * 90 - 45;
@@ -355,6 +336,23 @@ const SpoonDropRescue = () => {
         allSpoons.splice(0, allSpoons.length);
       }
     }
+    function checkPointIncrement(collisionPair){
+      const { bodyA, bodyB } = collisionPair;
+      //bodyA is trampoline segment bodyB is spoon
+      if(bodyA.label > 0 && bodyA.label < segmentCount-1){
+        if(bodyB.parent.counted === false){
+          points++;
+          bodyB.parent.counted = true;
+        }
+      }
+      //bodyA is spoon bodyB is trampoline
+      if(bodyB.label > 0 && bodyB.label < segmentCount-1){
+        if(bodyA.parent.counted === false){
+          points++;
+          bodyA.parent.counted = true;
+        }
+      }
+    }
 
     // Game control vars
     var gameStarted = false;
@@ -365,7 +363,6 @@ const SpoonDropRescue = () => {
         points = 0;
         setScoreText(points);            // reset score
         resettable = false;
-        pointIncrementSwitch = false;
         tracker = 0;
         speed = initialSpeed;
         //removes spoons from previous game if applicable
@@ -390,8 +387,9 @@ const SpoonDropRescue = () => {
       gameStarted = false;
       resettable = true;
       clearInterval(dropSpoons);
+      let dumpForce = isMobile ? 0.1: 0.5;
       trampoline.bodies.forEach(segment => {
-        const netForce = { x: 0, y: 1 }; // throw out the spoons
+        const netForce = { x: 0, y: dumpForce }; // throw out the spoons
         Body.applyForce(segment, segment.position, netForce);
       });
       const tutEl = document.getElementById("descenttut");
@@ -442,21 +440,9 @@ const SpoonDropRescue = () => {
       }
       if (tracker % speed === 0) {
         doSpawn = true;
-        pointIncrementSwitch = true;
-      }
-      else if (tracker % (Math.floor(speed/2)) === 0) {
-        doPointIncrement()
       }
       tracker++;
       return doSpawn; 
-    }
-
-    //points should increment halfway through spawn increment
-    
-    function doPointIncrement() {
-      //increment points
-      if (pointIncrementSwitch) points++;
-      pointIncrementSwitch = !pointIncrementSwitch;
     }
 
     function setText() {
@@ -503,23 +489,19 @@ const SpoonDropRescue = () => {
       Runner.stop(runner);
       Composite.clear(engine.world, false);
       Engine.clear(engine);
-      render.canvas.remove();
       render.textures = {};
     };
-  }, []);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
 
   return (
-    <div className="notscene" ref={boxRef}>
+    <div className="notscene" >
       <div>
         <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
           onRestart={() => restartRef.current()} playButtonText={playButtonText} />
       </div>
       <div className="game-canvas-wrapper">
         <canvas className="game-canvas" ref={canvasRef} />
-        <div id="menutext">
-          <p id="dropper">Rescue</p>
-          <p id="descenttut" className="droppertext"></p>
-        </div>
+        <GameText gameName="Rescue" canvasHeight={canvasHeight}/>
       </div>
       <Link to="/games">
         <button className="back-button" style={{ display: gameOverState ? "none" : "block" }} />

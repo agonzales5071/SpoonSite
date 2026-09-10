@@ -2,7 +2,8 @@
   background-color: #4b8a5e;
   background-image: radial-gradient(rgb(28, 0, 46) 10px, transparent 15px);
   background-size: 20px 20px;
-  overflow-y: scroll;
+  overflow-y: visible;
+  caret-color: transparent;
 }
 .poster-wrapper {
   display: flex;

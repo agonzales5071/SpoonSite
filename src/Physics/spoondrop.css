@@ -1,20 +1,24 @@
 .body-games{
   background-color: #000000;
+  background-image: 
+    radial-gradient(circle, rgba(0,0,0,0.6) 40%, rgba(0,0,0,.95) 95%, rgba(0,0,0,1) 100%),
+    url('/public/images/stars2.png');
+  caret-color: transparent;
 }
 .scene{
-  touch-action: manipulation;
+  touch-action: none; 
+  position: relative;
 }
 .notscene{
   touch-action: unset;
 }
 .locations{
-  position: absolute;
-  width: 100%;
-  margin-left: auto;
-  text-align: center;
+  font-size: 16px;
 }
 .game-canvas-wrapper {
-  position: relative; 
+  position: relative;
+  width: 100vw;
+  height: 100vh;
   inset: 0;
 }
 
@@ -24,30 +28,49 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  border-left: 20px solid whitesmoke;
+  border-right: 20px solid whitesmoke;
+  border-top: 20px solid whitesmoke;
+  border-bottom: 20px solid whitesmoke;
 }
 
-@media (min-width: 1921px) {
-  .game-canvas {
-    border-left: 20px solid whitesmoke;
-    border-right: 20px solid whitesmoke;
-  }
-}
-
-@media (min-height: 1081px) {
-  .game-canvas {
-    border-top: 20px solid whitesmoke;
-    border-bottom: 20px solid whitesmoke;
-  }
-}
 
 #menudisplay{
   color: whitesmoke;
   position: absolute;
   display: inline-block;
+  top: 2%;
   transform: translateX(-50%);
   left: 50%;
   text-align: center;
+  pointer-events: none;
+  font-weight: bold;
+  font-size: 24px;
+  white-space: nowrap;
 }
+@media (min-width: 1000px) {
+  #menudisplay{
+    font-size: 30px;
+  }
+  .locations{
+    font-size: 24px;
+    margin-bottom: 0;
+  }
+}
+#menudisplay table {
+  margin: 0 auto;       /* centers each row's table within the widest one */
+  border-collapse: collapse;
+}
+
+#menudisplay td {
+  text-align: center;
+  padding: 0 8px;
+}
+#menu-instructions {
+  display: inline-block;
+  margin-bottom: 20px; /* adjust to taste */
+}
+
 #menunavs{
   color: whitesmoke;
   position: absolute;
@@ -61,20 +84,15 @@
   margin-left: auto;
   text-align: center;
 }
-
-#homerundisplay{
-  color: whitesmoke;
-  position: absolute;
-  left: 10%;
-  right: 10%;
-}
 #menutext{
   color: whitesmoke;
-  position: absolute;
-  top: 100%;
+  position: relative;
+  top: calc(50% - (var(--canvas-height) / 2) + 20px); 
   left: 50%;
   transform: translateX(-50%);
   z-index: 20; 
+  caret-color: transparent;
+  pointer-events: none;
 }
 @media (min-width: 1000px) {
   #menutext {
@@ -82,18 +100,17 @@
     font-weight: bold;
   }
 }
-
+.hud{
+  position: absolute;
+  top: 5%; 
+  right: 0%; 
+  z-index: 20; 
+}
 @media (min-height: 1081px) {
-  #menutext {
-    color: #b8b200;
-    font-size: 48px;
-    font-weight: bold;
-    stroke:#000000;
-     text-shadow: 
-    -1px -1px 0 #000,  
-     1px -1px 0 #000,
-    -1px  1px 0 #000,
-     1px  1px 0 #000;
+  .hud{
+    position: relative;
+    top: calc(50% - (var(--canvas-height) / 2) + 20px); 
+    left: calc(50% - (var(--canvas-width) / 2) + 20px); 
   }
 }
 .back-button {
@@ -118,19 +135,6 @@
 .back-button:hover{
   border-right: 25px solid rgb(160, 201, 188);
 }
-.power-bar {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  height: 10px;
-  background: #ccc;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid #444;
-  width: 100px;
-  z-index: 1000;
-}
 @media only screen and (min-width: 768px) {
   .back-button{
     visibility: visible;
@@ -142,6 +146,20 @@
   .back-button:hover{
     border-right: 45px solid rgb(160, 201, 188);
   }
+
+}
+.power-bar {
+  position: fixed;
+  top: calc(50% + (var(--canvas-height) / 2 - 20px) ); 
+  left: 50%;
+  transform: translateX(-50%);
+  height: 10px;
+  background: #ccc;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #444;
+  width: 100px;
+  z-index: 1000;
 }
 
 @media (min-width: 768px){
@@ -149,6 +167,15 @@
     height: 20px;
     border: 2px solid #444;
     width: 200px;
+    top: calc(50% + (var(--canvas-height) / 2 - 40px) ); 
+  }
+}
+@media (min-width: 1921px) {
+  .power-bar {
+    top: calc(50% + (var(--canvas-height) / 2 ) ); 
+    height: 40px;
+    border: 4px solid #444;
+    width: 400px;
   }
 }
 #sd-modal-background {
@@ -185,6 +212,7 @@
   padding: 3rem;
   position: relative;
   z-index: 1;
+  caret-color: transparent;
 }
 @media(max-width: 1024px) {
   #sd-modal-content {

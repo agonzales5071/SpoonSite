@@ -1,16 +1,55 @@
 import Matter, { Bodies, Body, Vector} from "matter-js";
+import { useRef, useState } from 'react';
 
-export function swapDocBody(){
-  const bodyName = "body-games"
-  if (!document.body.classList.contains(bodyName)) document.body.classList.add(bodyName);
-  if (!document.documentElement.classList.contains(bodyName)) document.documentElement.classList.add(bodyName);
-  if (!document.getElementById("root")?.classList.contains(bodyName)) document.getElementById("root")?.classList.add(bodyName);
-  
-  return() => {
-    document.body.classList.remove(bodyName);
-    document.documentElement.classList.remove(bodyName);
-    document.getElementById("root")?.classList.remove(bodyName);
-  }
+export function swapDocBody() {
+const classes = ['body-games', 'hide-scrollbar']; 
+  document.body.classList.add(...classes);
+  document.documentElement.classList.add(...classes);
+  document.getElementById("root")?.classList.add(...classes);
+
+  return () => {
+    document.body.classList.remove(...classes);
+    document.documentElement.classList.remove(...classes);
+    document.getElementById("root")?.classList.remove(...classes);
+  };
+}
+
+export const MAX_WIDTH = 1920;
+export const MAX_HEIGHT = 1080;
+
+export const GameText = ({gameName, canvasHeight}) => {
+    return (
+      <div id="menutext"style={{ '--canvas-height': `${canvasHeight}px` }}>
+          <p id="dropper">{gameName}</p>
+          <p id="descenttut" className="droppertext"></p>
+        </div>
+    )
+}
+
+export function useGameState(initialMessage, initialScoreText) {
+  const canvasRef = useRef(null);
+  const [canvasHeight, setCanvasHeight] = useState(0);
+  const restartRef = useRef(null);
+  const [playButtonText, setPlayButtonText] = useState("Play");
+
+  const [gameOverState, setGameOverState] = useState(false);
+  const [message, setMessage] = useState(initialMessage);
+  const [scoreText, setScoreText] = useState(initialScoreText);
+
+  return {
+    canvasRef,
+    canvasHeight,
+    setCanvasHeight,
+    restartRef,
+    playButtonText,
+    setPlayButtonText,
+    gameOverState,
+    setGameOverState,
+    message,
+    setMessage,
+    scoreText,
+    setScoreText,
+  };
 }
 
 const segmentLength = 12;
@@ -234,7 +273,7 @@ export function getShipWing(xposSpawn, yposSpawn, spoonSize, isLeft){
 }
 
 
-function getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset){
+export function getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset){
     let spoonDensity = 0.0011;
 
     //SHAPES
@@ -632,6 +671,12 @@ export function getAngleBetween(bodyA, bodyB) {
   const xDiff = bodyB.position.x - bodyA.position.x;
   const yDiff = bodyB.position.y - bodyA.position.y;
   return Math.atan2(yDiff, xDiff);
+}
+
+export function getDistanceBetweenPos(posA, posB){
+  let xDiff = posA.x - posB.x;
+  let yDiff = posA.y - posB.y;
+  return Math.sqrt(xDiff*xDiff + yDiff*yDiff);
 }
 export function getAngleBetweenPos(posA, posB) {
   const xDiff = posB.x - posA.x;
