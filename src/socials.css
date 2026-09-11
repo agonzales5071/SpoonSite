@@ -52,7 +52,7 @@
   }
   
   #star-pattern {
-    background-image: url("../public/images/stars.png");
+    background-image: url("../public/images/stars2.png");
     background-size: 10%;  
     position: absolute;
     left: 50%;
@@ -62,7 +62,7 @@
     height: 100%;
     width: 100%;
     min-width: 1200px;
-    opacity: 0.10;
+    opacity: .1;
     animation: pan 180s linear infinite;
     will-change: background-position;
   }
