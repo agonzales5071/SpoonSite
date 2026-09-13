@@ -4,30 +4,19 @@ import './spoondrop.css';
 import GameOver from "./util/gameoverPopup";
 import { Link } from 'react-router-dom';
 import {swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, BACKGROUND_COLOR, createDefined2DVector, fruityColors, getAngleBetween, getLoop, getSpoon } from "./util/spoonHelper";
+import { createMatterEngine } from "./util/createMatterEngine";
+import { GameShell } from "./util/GameShell";
 
 //bug fixes
 //same name chat room join, back buttons, 
 
 const SpoonDropDescent = () => {
+  const gameKey = "descent";
   const flavor = null ;
   const instructions = null;
-  const {
-    canvasRef,
-    canvasHeight,
-    setCanvasHeight,
-    restartRef,
-    playButtonText,
-    setPlayButtonText,
-    gameOverState,
-    setGameOverState,
-    message,
-    setMessage,
-    scoreText,
-    setScoreText,
-  } = useGameState(
-    flavor,
-    instructions
-  );
+  const gameState = useGameState(flavor, instructions, gameKey);
+    const { canvasRef, canvasHeight, setCanvasHeight, restartRef, setPlayButtonText,
+            setGameOverState, setMessage, setScoreText, recordScore } = gameState;
   // const [scoreText, setScoreText] = useState(0);
   // const [message, setMessage] = useState("");
   useEffect(() => swapDocBody(), []);
@@ -56,18 +45,7 @@ const SpoonDropDescent = () => {
     let sinusoidTracker = 0;
     let closeWallSinusoidTracker = [0, 0, Math.PI/2];
     
-    let engine = Engine.create({});
-    let runner = Runner.create({});
-
-    var render = Render.create({
-      engine: engine,
-      canvas: canvasRef.current,
-      options: {
-        width: width,
-        height: height,
-        wireframes: false
-      }
-    });
+    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height);
 
     var gameWidth = width*4/5;
     var leftMargin = (width-gameWidth)/2;
@@ -196,6 +174,7 @@ const SpoonDropDescent = () => {
         loops.forEach(element => {
           Body.setStatic(element.body, true);
         });
+        recordScore(points);
         setScoreText(points + "m fallen");
         let endMessage = getPopupMessage();
         setMessage(endMessage);
@@ -727,39 +706,19 @@ const SpoonDropDescent = () => {
     setScoreText("Click or tap to guide the spoon's descent.")
     restartRef.current = startRestart;
     // Start Matter runner and renderer
-    Runner.run(runner, engine);
-    Render.run(render);
+    start();
     setGameOverState(true); // Show game over screen
     
 
     // Cleanup on unmount
-    return () => {
-      Render.stop(render);
-      Runner.stop(runner);
-      Composite.clear(engine.world, false);
-      Engine.clear(engine);
-      render.canvas.remove();
-      render.textures = {};
-    };
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
+    return cleanup;
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
 
 
 
   
     return (
-      <div className="notscene">
-      <div>
-          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
-          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
-      </div>
-      <div className="game-canvas-wrapper">
-        <canvas className="game-canvas" ref={canvasRef} />
-        <GameText gameName="Descent" canvasHeight={canvasHeight}/>
-      </div>
-      <Link to="/games">
-        <button className='back-button' style={{ display: gameOverState ? "none" : "block" }} ></button>
-      </Link>
-    </div>
+      <GameShell gameName="Descent" canvasRef={canvasRef} gameState={gameState} />
   );
 };
 

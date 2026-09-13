@@ -396,7 +396,15 @@
       background-position: -384px 0%;
     }
   }
-  
+  @keyframes move-background-crowns {
+    from {
+      background-position: 0px 0%;
+    }
+    
+    to {
+      background-position: 100px 0%;
+    }
+  }
   @keyframes bounce {
     0%, 20%, 100% {
       translate: 0% 0%;

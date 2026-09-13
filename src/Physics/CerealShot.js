@@ -1,36 +1,22 @@
-import React, { useEffect, useRef, useState, } from "react";
+import { useEffect, useRef, useState } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
-import GameOver from "./util/gameoverPopup";
-import { Link } from 'react-router-dom';
-import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, floatAndFade, spawnFallingO } from "./util/spoonHelper";
+import { createMatterEngine } from "./util/createMatterEngine";
+import { GameShell } from "./util/GameShell";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, floatAndFade, spawnFallingO } from "./util/spoonHelper";
 
 const SpoonDropCerealShot = () => {
+  const gameKey = "cerealShot";
   const [power, setPower] = useState(0);
   const [charging, setCharging] = useState(false);
   const powerRef = useRef(0);
   const directionRef = useRef(1); // 1 = filling, -1 = draining
   
-  const flavor = "AH ouch! The spoons are hot hot hot." ;
-  const instructions = "Click or tap and drag to move the trampoline and bounce the spoons until they're cool";
-  const {
-    canvasRef,
-    canvasHeight,
-    setCanvasHeight,
-    restartRef,
-    playButtonText,
-    setPlayButtonText,
-    gameOverState,
-    setGameOverState,
-    message,
-    setMessage,
-    scoreText,
-    setScoreText,
-  } = useGameState(
-    flavor,
-    instructions
-  );
-
+  const flavor = "Somebody is making cereal the wrong way... MILK FIRST. Destroy the cereal and stop this abomination!";
+  const instructions = "Tap and hold to charge cannon. Release to shoot.";
+  const gameState = useGameState(flavor, instructions, gameKey);
+  const { canvasRef, canvasHeight, setCanvasHeight, restartRef, setPlayButtonText,
+          setGameOverState, setMessage, setScoreText, recordScore } = gameState;
   useEffect(() => swapDocBody(), []);
   
   useEffect(() => {
@@ -64,9 +50,6 @@ const SpoonDropCerealShot = () => {
 
   useEffect(() => {
     const {
-      Engine,
-      Render,
-      Runner,
       Bodies,
       Body,
       Composite,
@@ -87,18 +70,7 @@ const SpoonDropCerealShot = () => {
     const height = Math.min(window.innerHeight, MAX_HEIGHT);
     setCanvasHeight(height);
 
-    let engine = Engine.create({});
-    let runner = Runner.create({});
-
-    let render = Render.create({
-      engine: engine,
-      canvas: canvasRef.current,
-      options: {
-        width: width,
-        height: height,
-        wireframes: false,
-      },
-    });
+    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height);
 
     var MAX_FORCE = 0.9;
     const CATEGORY_CANNON = 0x0001;
@@ -824,6 +796,7 @@ const SpoonDropCerealShot = () => {
     }
     //TODO: add more messages
     function gameOver() {
+      recordScore(points);
       setScoreText(points + " points");
       const dropperEl = document.getElementById("dropper");
       if (dropperEl) dropperEl.innerHTML = "";
@@ -939,45 +912,25 @@ const SpoonDropCerealShot = () => {
 
 
     // Start Matter runner and renderer
-    Runner.run(runner, engine);
-    Render.run(render);
+    start();
     setGameOverState(true); // Show game over screen
     
 
     // Cleanup on unmount
-    return () => {
-      Render.stop(render);
-      Runner.stop(runner);
-      Composite.clear(engine.world, false);
-      Engine.clear(engine);
-      render.canvas.remove();
-      render.textures = {};
-    };
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
+    return cleanup;
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
 
   return (
-    <div className="notscene">
-      <div>
-          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
-          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
+    <GameShell gameName="Descent" canvasRef={canvasRef} gameState={gameState}>
+      <div className="power-bar" style={{ '--canvas-height': `${canvasHeight}px`}}>
+        <div style={{
+          width: `${power * 100}%`,
+          height: '100%',
+          background: 'limegreen',
+          transition: charging ? 'none' : 'width 0.2s ease'
+        }} />
       </div>
-      <div className="game-canvas-wrapper">  
-        <div className="power-bar" style={{ '--canvas-height': `${canvasHeight}px`}}>
-          <div style={{
-            width: `${power * 100}%`,
-            height: '100%',
-            background: 'limegreen',
-            transition: charging ? 'none' : 'width 0.2s ease'
-          }} />
-        </div>
-        <canvas className="game-canvas" ref={canvasRef} />
-        <GameText gameName="Cereal Shot" canvasHeight={canvasHeight}/>
-      </div>
-      <Link to="/games">
-        <button className="back-button" 
-        style={{ display: gameOverState ? "none" : "block" }} />
-      </Link>
-    </div>
+    </GameShell>
   );
 };
 

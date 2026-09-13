@@ -68,7 +68,7 @@
 }
 #menu-instructions {
   display: inline-block;
-  margin-bottom: 20px; /* adjust to taste */
+  margin-bottom: 20px; 
 }
 
 #menunavs{
@@ -213,15 +213,45 @@
   position: relative;
   z-index: 1;
   caret-color: transparent;
+  padding: 0;
 }
 @media(max-width: 1024px) {
   #sd-modal-content {
     padding: 0;
   }
 }
+#sd-modal-message .sd-message {
+  margin-bottom: 16px; /* space between "Your Top Scores" and the list */
+  margin-top: .2rem
+}
 #sd-modal-message p {
   font-size: 1.5rem;
   font-family: "GrapeSoda";
+  padding: 10px;
+}
+#sd-modal-message ol {
+  margin-bottom: 24px;
+  list-style: none;
+  padding-left: 0;
+  counter-reset: score-count;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px 24px; /* row-gap column-gap */
+}
+@media (min-width: 600px) {
+  #sd-modal-message ol {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+#sd-modal-message li {
+  counter-increment: score-count;
+  font-size: 1.5rem;
+  font-family: "GrapeSoda";
+}
+
+#sd-modal-message li::before {
+  content: counter(score-count) ". ";
+  margin-right: 4px;
 }
 
 @media(max-width: 1024px) {
@@ -237,7 +267,7 @@
 #sd-modal {
   display: flex;
   width: 50rem;
-  aspect-ratio: 5 / 3;
+  min-height: 30rem;
   position: relative;
   background: #0097b8;
   padding: 30px;
@@ -251,9 +281,9 @@
   overflow: hidden;
 }
 
-  #modal {
-    background-color: rgb(50 50 50);
-  }
+#modal {
+  background-color: rgb(50 50 50);
+}
 
 #sd-modal-actions {
   display: flex;
@@ -271,6 +301,10 @@
     gap: 1.5rem;
   }
 }
+#sd-modal-actions .sd-modal-link,
+#sd-modal-actions #restart-action {
+  flex: 0 1 auto;
+}
 @media(max-width: 1024px) {
     #sd-modal {
       aspect-ratio: auto;
@@ -279,8 +313,9 @@
       border-top-right-radius: 3rem;
       border-bottom-left-radius: 3rem;
     }
+    
   }
-  
+
 @media(max-width: 728px) {
   #sd-modal {
     min-height: 400px;
@@ -292,21 +327,35 @@
     font-size: 36px;
   }
 }
+@media(max-height: 499px) {
+  #sd-modal{
+    min-height: 300px;
+    height: 300px;
+  }
+  #sd-modal-message .sd-message,
+  #sd-modal-message p{
+    font-size: 24px;
+    margin-bottom: 0px; /* space between "Your Top Scores" and the list */
+    margin-top: 0px;
+    padding:0px
+  }
+} 
 .sd-modal-action {
   width: 100%;
   background-color: #fdfdfd;
   cursor: pointer;
   /* transition: background-color 0.3s ease; */
-   overflow: hidden;
+  overflow: hidden;
   justify-content: center;
-    padding: 0.85rem;
-    position: relative;
-    font-size: 1.25rem;
-    border: none;
-    border-radius: 0.75rem;
-    outline: 0.2rem solid white;
-    outline-offset: 0.2rem;
-    z-index: 0;
+  padding: 0.85rem;
+  position: relative;
+  font-size: 1.25rem;
+  border: none;
+  border-radius: 0.75rem;
+  outline: 0.2rem solid white;
+  outline-offset: 0.2rem;
+  z-index: 0;
+  max-width: 150px;
 }
 @media(min-width: 728px) {
   #sd-modal-action{
@@ -340,10 +389,10 @@
 }
 
 .sd-modal-link {
-  width: 100%;
   position: relative;
   text-decoration: none;
   color: inherit;
+  width: 150px;
 }
 
 .sd-modal-action-fade {
@@ -392,7 +441,7 @@
 
 #restart-action{
   padding: 0.85rem;
-  position: left;
+  position: center;
   font-size: 1.25rem;
   font-family: "GrapeSoda";
   border: none;
@@ -401,6 +450,34 @@
   outline-offset: 0.2rem;
   overflow: hidden;
   z-index: 0;
+  max-width: 150px;
+}
+#game-menu-action{
+  font-family: "SixtyFour";
+  padding: 0.85rem;
+  position: center;
+  font-size: 1.25rem;
+  justify-content: center;
+  border: none;
+  border-radius: 0.75rem;
+  outline: 0.2rem solid rgb(223, 2, 2);
+  outline-offset: 0.2rem;
+  overflow: hidden;
+  max-width: 150px;
+}
+@media(min-width: 728px) {
+  #restart-action{
+    max-width: 300px;
+  }
+  .sd-modal-action{
+    max-width: 300px;
+  }
+  #game-menu-action{
+    max-width: 300px;
+  }
+  .sd-modal-link{
+    width: 300px;
+  }
 }
   #restart-action-fade {  
     z-index: 0;
@@ -418,17 +495,45 @@
     background-color: rgb(235, 89, 76);
   }
 
-#game-menu-action{
-  font-family: "SixtyFour";
-  padding: 0.85rem;
-  position: left;
+
+#leaderboard-action{
+  width: fit-content;
+  padding: 0.2rem;
+  align-self: flex-end;   /* replaces left: 90% */
   font-size: 1.25rem;
-  justify-content: center;
   border: none;
   border-radius: 0.75rem;
-  outline: 0.2rem solid rgb(223, 2, 2);
+  outline: 0.2rem solid rgb(255, 225, 119);
   outline-offset: 0.2rem;
   overflow: hidden;
+}
+.icon-span {
+  display: inline-block;
+  width: 30px;   /* You must define a width and height */
+  height: 15px;  
+  background-image: url("/public/images/crown2.png");
+  background-size: 75%;
+  background-position: center;
+  background-repeat: no-repeat;
+  margin-right: 5%;
+}
+@media(min-width: 728px) {
+  @media(min-height: 499px) {
+    #leaderboard-action{
+      top:0px;
+      right: 20px
+    }
+    .icon-span {
+      width: 60px;   /* You must define a width and height */
+      height: 30px; 
+    }
+  }
+}
+
+.sd-personal-best{
+  display: inline-block;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 #darkside-action{
   padding: 0.85rem;

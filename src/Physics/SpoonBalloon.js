@@ -1,30 +1,17 @@
-import React, { useEffect} from "react";
+import { useEffect} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
-import GameOver from "./util/gameoverPopup";
-import { Link } from 'react-router-dom';
-import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, spoonFilter, getSpoonBalloon, getRandomInt, getAngleBetween, createDefined2DVector, spawnParticleBurst, enemyFilter, getFork } from "./util/spoonHelper";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, spoonFilter, getSpoonBalloon, getRandomInt, getAngleBetween, createDefined2DVector, spawnParticleBurst, enemyFilter, getFork } from "./util/spoonHelper";
+import { createMatterEngine } from "./util/createMatterEngine";
+import { GameShell } from "./util/GameShell";
 
 const SpoonBalloon = () => {
+  const gameKey = "spoonBalloon";
   const flavor = "if the balloon touches the ground you die (death not implemented yet).";
   const instructions = "Tap to bump balloon, hold to blow.";
-  const {
-    canvasRef,
-    canvasHeight,
-    setCanvasHeight,
-    restartRef,
-    playButtonText,
-    setPlayButtonText,
-    gameOverState,
-    setGameOverState,
-    message,
-    setMessage,
-    scoreText,
-    setScoreText,
-  } = useGameState(
-    flavor,
-    instructions
-  );
+  const gameState = useGameState(flavor, instructions, gameKey);
+  const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
+    setGameOverState, setMessage, setScoreText, recordScore } = gameState;
   useEffect(() => swapDocBody(), []);
   useEffect( () => {
 
@@ -33,28 +20,14 @@ const SpoonBalloon = () => {
     const width = Math.min(window.innerWidth, MAX_WIDTH);
     const height = Math.min(window.innerHeight, MAX_HEIGHT);
     setCanvasHeight(height);
-
-    let Engine = Matter.Engine;
-    let Render = Matter.Render;
-    let Runner = Matter.Runner;
+    
     let Bodies = Matter.Bodies;
     let Body = Matter.Body;
     let Composite = Matter.Composite;
     let Mouse = Matter.Mouse;
     let MouseConstraint = Matter.MouseConstraint;
   
-    let engine = Engine.create({});
-    let runner = Runner.create({});
-
-    var render = Render.create({
-      engine: engine,
-      canvas: canvasRef.current,
-      options: {
-        width: width,
-        height: height,
-        wireframes: false
-      }
-    });
+    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height);
 
     const HAZARD_LABEL = "hazard";
     const PLAYER_COLOR = "silver";
@@ -268,7 +241,8 @@ const SpoonBalloon = () => {
     function gameOver() {
       // setScoreText(points);
       // let endMessage = getPopupMessage()
-      // setMessage(endMessage)        
+      // setMessage(endMessage)      
+      recordScore(0);  
       gameStarted = false;
       resettable = true;
       //set text
@@ -318,37 +292,17 @@ const SpoonBalloon = () => {
     }
     restartRef.current = startRestart;
 
-    Runner.run(runner, engine)
-    Render.run(render);
+    start();
     setGameOverState(true); // Show game over screen
   // Cleanup on unmount
-    return () => {
-      Render.stop(render);
-      Runner.stop(runner);
-      Composite.clear(engine.world, false);
-      Engine.clear(engine);
-      render.canvas.remove();
-      render.textures = {};
-    };
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
+    return cleanup;
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
 
 
 
   
   return (
-    <div className="notscene">
-      <div>
-          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
-          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
-      </div>
-      <div className="game-canvas-wrapper">
-        <canvas className="game-canvas" ref={canvasRef} />
-        <GameText gameName="Spoon Balloon" canvasHeight={canvasHeight}/>
-      </div>
-      <Link to="/spoondropMenu">
-        <button className='back-button' style={{ display: gameOverState ? "none" : "block" }}/>
-      </Link>
-    </div>
+    <GameShell gameName="Spoon Balloon" canvasRef={canvasRef} gameState={gameState} />
   )
   
   

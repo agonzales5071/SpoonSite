@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState} from "react";
+import { useEffect, useRef, useState} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
-import { Link } from 'react-router-dom';
-import GameOver from "./util/gameoverPopupSaberBattle";
-import { GameText, swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH,createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, 
+import { createMatterEngine } from "./util/createMatterEngine";
+import { GameShell } from "./util/GameShell";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH,createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, 
   getDualSidedSaber, drawHUD, createRandom2DVector, rotatePlayerToward, 
   BACKGROUND_COLOR,
   getAngleBetweenPos,
@@ -11,39 +11,19 @@ import { GameText, swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH,createPlusSc
   createDefined2DVector} from "./util/spoonHelper";
   
 const SpoonSaberBattle = () => {
+  const gameKey = "saberBattle";
   const hudRef = useRef(null);
   const [mobilePlayer, setMobilePlayer] = useState(false);
-  const [darkSideVisible, setDarkSideVisible] = useState(false);
   const [canvasWidth, setCanvasWidth] = useState(0);
   
   const flavor = "The Soupth are attacking! You must take up your SpoonSaber.";
   const instructions = "Click or tap and drag your SpoonSaber to block the enemy attacks";
-  const {
-    canvasRef,
-    canvasHeight,
-    setCanvasHeight,
-    restartRef,
-    playButtonText,
-    setPlayButtonText,
-    gameOverState,
-    setGameOverState,
-    message,
-    setMessage,
-    scoreText,
-    setScoreText,
-  } = useGameState(
-    flavor,
-    instructions
-  );
+  const gameState = useGameState(flavor, instructions, gameKey);
+    const { canvasRef, canvasHeight, setCanvasHeight, restartRef, setPlayButtonText,
+            setGameOverState, setMessage, setScoreText, recordScore } = gameState;
 
   const [playerColor, setPlayerColor] = useState(null);
   // const playerColorRef = useRef(playerColor);
-
-
-  if(window.location.href.includes("DarthPlayer")){
-    setDarkSideVisible(true);
-    setPlayButtonText("Light Side");
-  }
 
   useEffect(() => swapDocBody(), []);
 
@@ -55,28 +35,14 @@ const SpoonSaberBattle = () => {
     setCanvasHeight(height);
     setCanvasWidth(width);
 
-    let Engine = Matter.Engine;
-    let Render = Matter.Render;
-    let Runner = Matter.Runner;
     let Bodies = Matter.Bodies;
     let Body = Matter.Body;
     let Vector = Matter.Vector;
     let Composite = Matter.Composite;
     let Mouse = Matter.Mouse;
     let MouseConstraint = Matter.MouseConstraint;
-  
-    let engine = Engine.create({gravity: {y: 0}});
-    let runner = Runner.create({});
-
-    var render = Render.create({
-      engine: engine,
-      canvas: canvasRef.current,
-      options: {
-        width: width,
-        height: height,
-        wireframes: false
-      }
-    });
+    let engineOptions = {gravity: {y: 0}};
+    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height, engineOptions);
     // moves hud to right side of screen
     // const hudCanvas = hudRef.current;
     // if (hudCanvas) {
@@ -123,7 +89,7 @@ const SpoonSaberBattle = () => {
     }
     return colorValuesArray[getRandomInt(colorValuesArray.length)];
   }
-    setPlayerColor(localColor);
+    setPlayerColor("white");
     // var isPlayerDarkSide = false;
 
     //mobile augmentations
@@ -131,7 +97,9 @@ const SpoonSaberBattle = () => {
       fric = 0.03
       isMobile = true;
       size = 50;
-      setMobilePlayer(true);
+      if(height > 500){
+        setMobilePlayer(true);
+      }
     }
     // add mouse control
     var mouse = Mouse.create(render.canvas),
@@ -521,8 +489,8 @@ const SpoonSaberBattle = () => {
       Composite.add(engine.world, attack.body)
     }
 
-    function getEnemySilhouettePart(x, y, angle, color = BACKGROUND_COLOR){
-      let silSize = color === BACKGROUND_COLOR ? size*silhouetteInnerFactor : size;
+    function getEnemySilhouettePart(x, y, angle, color = "#000000"){
+      let silSize = color === "#000000" ? size*silhouetteInnerFactor : size;
       let evilInner = getSpoon(silSize, x, y, cosmeticFilter, color);
       Body.setAngle(evilInner, angle);
       return evilInner;
@@ -577,13 +545,14 @@ const SpoonSaberBattle = () => {
       if (gameStarted === false) {
         setGameOverState(false); // Show game over screen
         gameStarted = true;
+        initializePlayer();
         startEnemy();
       }
     }
     function restartGame() {
       if (resettable === true) {
         setScoreText(0);            // reset score
-        initializePlayer();
+        
         points = 0;
         resettable = false;
         tracker = 0;
@@ -598,7 +567,7 @@ const SpoonSaberBattle = () => {
       }
     }
     function gameOver() {
-      setDarkSideVisible(true);
+      recordScore(points);
       setScoreText(points);
       let endMessage = getPopupMessage()
       setMessage(endMessage)            
@@ -727,42 +696,28 @@ const SpoonSaberBattle = () => {
     }
     restartRef.current = startRestart;
 
-    Runner.run(runner, engine)
-    Render.run(render);
+    start(); //matter engine
     drawHUD(() => lives, () => gameStarted, hudRef, () => localColor);
     setGameOverState(true)
   // Cleanup on unmount
-    return () => {
-      Render.stop(render);
-      Runner.stop(runner);
-      Composite.clear(engine.world, false);
-      Engine.clear(engine);
-      render.canvas.remove();
-      render.textures = {};
-    };
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
+    return cleanup;
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
   
     return (
-      <div className="notscene">
-        <div>
-            <GameOver message={message} scoreText={scoreText} visible={gameOverState}
-             onRestart={() => restartRef.current(false)} onRestartDarkSide={() => restartRef.current(true)}
-             playButtonText={playButtonText} darkSideVisible={darkSideVisible} mobile={mobilePlayer}/>
-        </div>
-        <div className="game-canvas-wrapper" >
-          <canvas className="game-canvas" ref={canvasRef} style={{'borderColor': `${playerColor}`}}/>
-          <canvas ref={hudRef} className="hud" style={{ '--canvas-height': `${canvasHeight}px`, '--canvas-width': `${canvasWidth}px`, 
-            position: "absolute", zIndex: 1, pointerEvents: "none" }} />
-          <GameText gameName="SpoonSaber Battle" canvasHeight={canvasHeight}/>
-        </div>
-      <Link to="/games">
-        <button className='back-button' style={{ display: gameOverState ? "none" : "block" }}></button>
-      </Link>
-      <div id="menutext">
-        <p id="dropper">SpoonSaber Battle</p>
-        <p id="descenttut"className="droppertext"></p>
-      </div>
-    </div>
+      <GameShell gameName="SpoonSaber Battle" canvasRef={canvasRef} gameState={gameState} canvasStyle={{ borderColor: playerColor }}
+        gameOverProps={{mobile: mobilePlayer, onRestartDarkSide: () => restartRef.current(true)}}>
+        <canvas
+          ref={hudRef}
+          className="hud"
+          style={{
+            '--canvas-height': `${canvasHeight}px`,
+            '--canvas-width': `${canvasWidth}px`,
+            position: "absolute",
+            zIndex: 1,
+            pointerEvents: "none",
+          }}
+        />
+      </GameShell>
   )
   
   

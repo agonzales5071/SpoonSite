@@ -1,38 +1,22 @@
 import React, { useEffect, useRef, useState} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
-import GameOver from "./util/gameoverPopup";
-import { Link } from 'react-router-dom';
-import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, drawHUD } from "./util/spoonHelper";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, drawHUD } from "./util/spoonHelper";
+import { createMatterEngine } from "./util/createMatterEngine";
+import { GameShell } from "./util/GameShell";
 
 const SpoonDropHotSpoontato = () => {
+  const gameKey = "hotSpoontato";
   const flavor = "AH ouch! The spoons are hot hot hot." ;
   const instructions = "Click or tap and drag to move the trampoline and bounce the spoons until they're cool";
   const hudRef = useRef(null);
   const [canvasWidth, setCanvasWidth] = useState(0);
-  const {
-    canvasRef,
-    canvasHeight,
-    setCanvasHeight,
-    restartRef,
-    playButtonText,
-    setPlayButtonText,
-    gameOverState,
-    setGameOverState,
-    message,
-    setMessage,
-    scoreText,
-    setScoreText,
-  } = useGameState(
-    flavor,
-    instructions
-  );
+  const gameState = useGameState(flavor, instructions, gameKey);
+  const { canvasRef, canvasHeight, setCanvasHeight, restartRef, setPlayButtonText,
+            setGameOverState, setMessage, setScoreText, recordScore } = gameState;
   useEffect(() => swapDocBody(), []);
   useEffect(() => {
     const {
-      Engine,
-      Render,
-      Runner,
       Bodies,
       Body,
       Composite,
@@ -53,18 +37,7 @@ const SpoonDropHotSpoontato = () => {
     setCanvasWidth(width);
     
     
-    let engine = Engine.create({});
-    let runner = Runner.create({});
-
-    let render = Render.create({
-      engine: engine,
-      canvas: canvasRef.current,
-      options: {
-        width: width,
-        height: height,
-        wireframes: false,
-      },
-    });
+    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height);
 
     var margin = width/10;
     var fric = 0.03;
@@ -652,6 +625,7 @@ const SpoonDropHotSpoontato = () => {
     }
     //TODO: add more messages
     function gameOver() {
+      recordScore(points);
       setScoreText(points + " cool spoons");
       let endMessage = getPopupMessage();
       setMessage(endMessage);
@@ -756,39 +730,21 @@ const SpoonDropHotSpoontato = () => {
     }
     restartRef.current = startRestart;
 
-    Runner.run(runner, engine)
-    Render.run(render);
+    start();
     setGameOverState(true); // Show game over screen
     
     drawHUD(() => lives, () => gameStarted, hudRef);
     
 
     // Cleanup on unmount
-    return () => {
-      Render.stop(render);
-      Runner.stop(runner);
-      Composite.clear(engine.world, false);
-      Engine.clear(engine);
-      render.textures = {};
-    };
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
+    return cleanup;
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
 
   return (
-    <div className="notscene">
-      <div>
-          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
-          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
-      </div>
-        <div className="game-canvas-wrapper">
-        <canvas className="game-canvas" ref={canvasRef} />
-        <canvas ref={hudRef} className="hud" style={{ '--canvas-height': `${canvasHeight}px`, '--canvas-width': `${canvasWidth}px`, 
-            position: "absolute", zIndex: 1, pointerEvents: "none" }} />
-        <GameText gameName="Hot Spoontato" canvasHeight={canvasHeight}/>
-      </div>
-      <Link to="/games">
-        <button className="back-button" style={{ display: gameOverState ? "none" : "block" }}/>
-      </Link>
-    </div>
+    <GameShell gameName="Hot Spoontato" canvasRef={canvasRef} gameState={gameState}>
+      <canvas ref={hudRef} className="hud" style={{ '--canvas-height': `${canvasHeight}px`, '--canvas-width': `${canvasWidth}px`, 
+          position: "absolute", zIndex: 1, pointerEvents: "none" }} />
+    </GameShell>
   );
 };
 

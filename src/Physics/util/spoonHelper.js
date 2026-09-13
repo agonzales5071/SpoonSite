@@ -1,5 +1,6 @@
 import Matter, { Bodies, Body, Vector} from "matter-js";
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { getScores, getPersonalBest, recordScore as recordScoreToStorage } from './leaderboard';
 
 export function swapDocBody() {
 const classes = ['body-games', 'hide-scrollbar']; 
@@ -26,7 +27,7 @@ export const GameText = ({gameName, canvasHeight}) => {
     )
 }
 
-export function useGameState(initialMessage, initialScoreText) {
+export function useGameState(initialMessage, initialScoreText, gameKey) {
   const canvasRef = useRef(null);
   const [canvasHeight, setCanvasHeight] = useState(0);
   const restartRef = useRef(null);
@@ -35,6 +36,24 @@ export function useGameState(initialMessage, initialScoreText) {
   const [gameOverState, setGameOverState] = useState(false);
   const [message, setMessage] = useState(initialMessage);
   const [scoreText, setScoreText] = useState(initialScoreText);
+
+  const [view, setView] = useState('gameover'); // 'gameover' | 'personalBest' — extend later for 'globalBest'
+  const [personalBest, setPersonalBest] = useState(null);
+  const [topScores, setTopScores] = useState([]);
+  const [isNewPB, setIsNewPB] = useState(false);
+
+  useEffect(() => {
+    setPersonalBest(getPersonalBest(gameKey));
+    setTopScores(getScores(gameKey));
+  }, [gameKey]);
+
+  const recordScore = useCallback((score) => {
+    const result = recordScoreToStorage(gameKey, score);
+    setPersonalBest(result.personalBest);
+    setTopScores(result.topScores);
+    setIsNewPB(result.isNewBest);
+    return result.isNewBest;
+  }, [gameKey]);
 
   return {
     canvasRef,
@@ -49,6 +68,7 @@ export function useGameState(initialMessage, initialScoreText) {
     setMessage,
     scoreText,
     setScoreText,
+    view, setView, personalBest, topScores, recordScore, isNewPB
   };
 }
 

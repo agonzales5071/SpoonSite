@@ -1,36 +1,20 @@
 import React, { useEffect,} from "react";
 import Matter from "matter-js";
-import GameOver from "./util/gameoverPopup";
 import './spoondrop.css';
-import { Link } from 'react-router-dom';
-import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, getSpoon } from "./util/spoonHelper";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, getSpoon } from "./util/spoonHelper";
+import { createMatterEngine } from "./util/createMatterEngine";
+import { GameShell } from "./util/GameShell";
 
 const SpoonDropRescue = () => {
+  const gameKey = "rescue";
   const flavor = "AHHH! Spoons are falling from the skyyyyy." ;
   const instructions = "Click or tap and drag to move the net. Catch all the spoons!";
-  const {
-    canvasRef,
-    canvasHeight,
-    setCanvasHeight,
-    restartRef,
-    playButtonText,
-    setPlayButtonText,
-    gameOverState,
-    setGameOverState,
-    message,
-    setMessage,
-    scoreText,
-    setScoreText,
-  } = useGameState(
-    flavor,
-    instructions
-  );
+  const gameState = useGameState(flavor, instructions, gameKey);
+  const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
+    setGameOverState, setMessage, setScoreText, recordScore } = gameState;
   useEffect(() => swapDocBody(), []);
   useEffect(() => {
     const {
-      Engine,
-      Render,
-      Runner,
       Bodies,
       Body,
       Composite,
@@ -49,18 +33,7 @@ const SpoonDropRescue = () => {
     const height = Math.min(window.innerHeight, MAX_HEIGHT);
     setCanvasHeight(height);
     
-    let engine = Engine.create({});
-    let runner = Runner.create({});
-
-    let render = Render.create({
-      engine: engine,
-      canvas: canvasRef.current,
-      options: {
-        width: width,
-        height: height,
-        wireframes: false,
-      },
-    });
+    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height);
 
     var gameWidth = width*8/10;
     var margin = width/10;
@@ -381,6 +354,7 @@ const SpoonDropRescue = () => {
     }
     //TODO: add more messages
     function gameOver() {
+      recordScore(points);
       setScoreText(points + " spoons saved");
       let endMessage = getPopupMessage()
       setMessage(endMessage);
@@ -480,33 +454,14 @@ const SpoonDropRescue = () => {
     }
     restartRef.current = startRestart;
 
-    Runner.run(runner, engine)
-    Render.run(render);
+    start();
     setGameOverState(true); // Show game over screen
     // Cleanup on unmount
-    return () => {
-      Render.stop(render);
-      Runner.stop(runner);
-      Composite.clear(engine.world, false);
-      Engine.clear(engine);
-      render.textures = {};
-    };
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
+    return cleanup;
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
 
   return (
-    <div className="notscene" >
-      <div>
-        <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
-          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
-      </div>
-      <div className="game-canvas-wrapper">
-        <canvas className="game-canvas" ref={canvasRef} />
-        <GameText gameName="Rescue" canvasHeight={canvasHeight}/>
-      </div>
-      <Link to="/games">
-        <button className="back-button" style={{ display: gameOverState ? "none" : "block" }} />
-      </Link>
-    </div>
+    <GameShell gameName="Rescue" canvasRef={canvasRef} gameState={gameState} />
   );
 };
 

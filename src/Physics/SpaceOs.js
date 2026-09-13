@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
-import { Link } from 'react-router-dom';
-import GameOver from './util/gameoverPopup.js'
-import {swapDocBody,  useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, spawnParticleBurst, getShipWing, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter, createRandom2DVector } from "./util/spoonHelper.js";
+import {swapDocBody,  useGameState, MAX_HEIGHT, MAX_WIDTH, BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, spawnParticleBurst, getShipWing, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter, createRandom2DVector } from "./util/spoonHelper.js";
+import { createMatterEngine } from "./util/createMatterEngine";
+import { GameShell } from "./util/GameShell";
 
 async function lockPortrait() {
     try {
@@ -22,25 +22,12 @@ function unlockOrientation() {
 }
 
 const SpoonshipAsteroid = () => {
+  const gameKey = "spaceOs";
   const flavor = "You are the pilot of a SpoonShip (trademark pending) entering a dangerous astro-cereal field. " ;
-    const instructions = "Click or tap to shoot out a spoon and propel yourself forward.";
-    const {
-      canvasRef,
-      canvasHeight,
-      setCanvasHeight,
-      restartRef,
-      playButtonText,
-      setPlayButtonText,
-      gameOverState,
-      setGameOverState,
-      message,
-      setMessage,
-      scoreText,
-      setScoreText,
-    } = useGameState(
-      flavor,
-      instructions
-    );
+  const instructions = "Click or tap to shoot out a spoon and propel yourself forward.";
+  const gameState = useGameState(flavor, instructions, gameKey);
+  const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
+    setGameOverState, setMessage, setScoreText, recordScore } = gameState;
   useEffect(() => swapDocBody(), []);
   useEffect( () => {
     var isMobile = false;
@@ -48,10 +35,6 @@ const SpoonshipAsteroid = () => {
     const width = Math.min(window.innerWidth, MAX_WIDTH);
     const height = Math.min(window.innerHeight, MAX_HEIGHT);
     setCanvasHeight(height);
-
-    let Engine = Matter.Engine;
-    let Render = Matter.Render;
-    let Runner = Matter.Runner;
     let Bodies = Matter.Bodies;
     let Vector = Matter.Vector;
     let Body = Matter.Body;
@@ -59,18 +42,7 @@ const SpoonshipAsteroid = () => {
     let Mouse = Matter.Mouse;
     let MouseConstraint = Matter.MouseConstraint;
   
-    let engine = Engine.create({gravity: {y: 0}});
-    let runner = Runner.create({});
-
-    var render = Render.create({
-      engine: engine,
-      canvas: canvasRef.current,
-      options: {
-        width: width,
-        height: height,
-        wireframes: false
-      }
-    });
+    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height, {gravity: {y: 0}});
 
     var gameWidth = width;
     var marginV = height/6;
@@ -916,6 +888,7 @@ const SpoonshipAsteroid = () => {
       }
     }
     function gameOver() {
+      recordScore(points);
       deathAnimation(playerShip)
       setScoreText("Score: " + points + " points");
       let endMessage = getPopupMessage()
@@ -1001,13 +974,11 @@ const SpoonshipAsteroid = () => {
     }
     restartRef.current = startRestart;
 
-    Runner.run(runner, engine)
-    Render.run(render);
+    start();
     setGameOverState(true); // Show game over screen
   // Cleanup on unmount
     return () => {
-      Render.stop(render);
-      Runner.stop(runner);
+      cleanup()
       window.removeEventListener("keydown", handleKey);
       unlockOrientation()
       clearPendingBlackHoles();
@@ -1015,30 +986,15 @@ const SpoonshipAsteroid = () => {
       projectiles.forEach(p => {
         clearTimeout(p.deleteTimeout);
       })
-      Composite.clear(engine.world, false);
-      Engine.clear(engine);
-      render.canvas.remove();
-      render.textures = {};
+      
     };
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
 
 
 
   
   return (
-    <div className="notscene">
-      <div>
-          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
-          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
-      </div>
-      <div className="game-canvas-wrapper">
-        <canvas className="game-canvas" ref={canvasRef} />
-        <GameText gameName="Space O's" canvasHeight={canvasHeight}/>
-      </div>
-      <Link to="/games">
-        <button className='back-button' style={{ display: gameOverState ? "none" : "block" }}/>
-      </Link>
-    </div>
+    <GameShell gameName="Space O's" canvasRef={canvasRef} gameState={gameState} />
   )
   
   

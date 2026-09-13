@@ -1,56 +1,29 @@
 import { useEffect, } from 'react'
 import Matter from "matter-js";
 import "./spoondrop.css";
-import GameOver from './util/gameoverPopup';
-import { Link } from 'react-router-dom';
-import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, getSpoon } from './util/spoonHelper';
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, getSpoon } from './util/spoonHelper';
+import { createMatterEngine } from "./util/createMatterEngine";
+import { GameShell } from "./util/GameShell";
 
 const SpoonDropGameSpeed = () => {
+  const gameKey = "speedClick";
   const flavor = "Endurance test: How many spoons can you drop in 15 seconds?" ;
   const instructions = "Click to drop a spoon in the bucket.";
-  const {
-    canvasRef,
-    canvasHeight,
-    setCanvasHeight,
-    restartRef,
-    playButtonText,
-    setPlayButtonText,
-    gameOverState,
-    setGameOverState,
-    message,
-    setMessage,
-    scoreText,
-    setScoreText,
-  } = useGameState(
-    flavor,
-    instructions
-  );
+  const gameState = useGameState(flavor, instructions, gameKey);
+  const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
+    setGameOverState, setMessage, setScoreText, recordScore } = gameState;
   const textElementID = "dropper";
   useEffect(() => swapDocBody(), []);
   useEffect(() => {
     const width = Math.min(window.innerWidth, MAX_WIDTH);
     const height = Math.min(window.innerHeight, MAX_HEIGHT);
     setCanvasHeight(height);
-    let Engine = Matter.Engine;
-    let Render = Matter.Render;
-    let Runner = Matter.Runner;
     let Bodies = Matter.Bodies;
     let Composite = Matter.Composite;
     let Mouse = Matter.Mouse;
     let MouseConstraint = Matter.MouseConstraint;
   
-    let engine = Engine.create({});
-    let runner = Runner.create({});
-
-    let render = Render.create({
-      engine: engine,
-      canvas: canvasRef.current,
-      options: {
-        width: width,
-        height: height,
-        wireframes: false,
-      },
-    });
+    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height);
 
     var hatch = Bodies.rectangle(width/2, height*4/5, width/2, 50, {isStatic: true} ),
         sideL = Bodies.rectangle(width*3/4, height*1/20, 50, height*3/2, {isStatic: true}),
@@ -123,6 +96,7 @@ const SpoonDropGameSpeed = () => {
                     countingUp = false;
                     clearInterval(counter);
                     clearInterval(timer);
+                    recordScore(spoonCount);
                     setScoreText(spoonCount + " spoons dropped");
                     setPlayButtonText("Restart")
                     let endMessage = getPopupMessage();
@@ -193,35 +167,16 @@ const SpoonDropGameSpeed = () => {
 
     restartRef.current = resetGame;
 
-    Runner.run(runner, engine)
-    Render.run(render);
+    start();
     setGameOverState(true); // Show game over screen
   // Cleanup on unmount
-    return () => {
-      Render.stop(render);
-      Runner.stop(runner);
-      Composite.clear(engine.world, false);
-      Engine.clear(engine);
-      render.canvas.remove();
-      render.textures = {};
-    };
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText]);
+    return cleanup;
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
 
   
     return (
-      <div className="notscene">
-        <div>
-          <GameOver message={message} scoreText={scoreText} visible={gameOverState} 
-          onRestart={() => restartRef.current()} playButtonText={playButtonText} />
-      </div>
-        <div className="game-canvas-wrapper">
-          <canvas className="game-canvas" ref={canvasRef} />
-          <GameText gameName="Speed Click" canvasHeight={canvasHeight}/>
-        </div>
-        <Link to="/games"><button className='back-button'
-        style={{ display: gameOverState ? "none" : "block" }}></button></Link>
-      </div>
-      )
+      <GameShell gameName="Rescue" canvasRef={canvasRef} gameState={gameState} />
+    )
   
 }
 export default SpoonDropGameSpeed;

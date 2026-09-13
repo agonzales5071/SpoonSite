@@ -57,12 +57,13 @@ const SpoonDropMenu = () => {
       var isMobile = false;
       var segmentLength = 24;
       var segmentThickness = 12;
-      if(width < 800){
+      if(width < 800 || height < 500){
         size = 50;
         isMobile = true;
         segmentLength = 12;
         segmentThickness = 6;
       }
+      let horizontalMobile = height<500;
       let tutBodies = [];
       const links = [
         ["/games/CerealShot", "CerealShot", "#fff2d1", "#006FFF"], 
@@ -82,7 +83,8 @@ const SpoonDropMenu = () => {
       var spoons = [];  
       var spoonSpawnXs = [];
       var topRowOnly = isMobile;
-      var tableDisplay = !isMobile;
+      var tableDisplay = !isMobile || horizontalMobile;
+      const horizontalPhoneDisplayLayers = 3;
 
     function createSegmentNumber(x, y, num, color = "#FFFFFF", segmentLength, segmentThickness) {
       const parts = [];
@@ -148,20 +150,32 @@ const SpoonDropMenu = () => {
         let sliceWidth = width/(numPerLayer[rowNum]+1);
         let ypos = upperMargin + h + sliceHeight * (rowNum+1);
         if(tableDisplay){
-          document.getElementById("menudisplay").appendChild(document.createElement('br'));
-          let locationsTable = document.createElement('table');
-          locationsTable.id = "locationsTable"+rowNum;
-          document.getElementById("menudisplay").appendChild(locationsTable);
-          let locationRow = document.createElement('tr');
-          locationRow.id = "locationRow" + rowNum;
-          document.getElementById("locationsTable"+rowNum).appendChild(locationRow);
+          if(horizontalMobile && rowNum === 0){
+            for (let i = 0; i < layerMax; i++){
+              let locationsTable = document.createElement('table');
+              locationsTable.id = "locationsTable"+i;
+              document.getElementById("menudisplay").appendChild(locationsTable);
+              let locationRow = document.createElement('tr');
+              locationRow.id = "locationRow" + i;
+              document.getElementById("locationsTable"+i).appendChild(locationRow);
+            }
+          }
+          else{
+            document.getElementById("menudisplay").appendChild(document.createElement('br'));
+            let locationsTable = document.createElement('table');
+            locationsTable.id = "locationsTable"+rowNum;
+            document.getElementById("menudisplay").appendChild(locationsTable);
+            let locationRow = document.createElement('tr');
+            locationRow.id = "locationRow" + rowNum;
+            document.getElementById("locationsTable"+rowNum).appendChild(locationRow);
+          }
         }
         for(let bucketNum = 1; bucketNum < numPerLayer[rowNum] + 1; bucketNum++) {
           let xpos = sliceWidth*bucketNum;
           var hatchHeight = isMobile ? size/4 : size/2;
           var hatchY = isMobile ? ypos + hatchHeight/2 : ypos;
-          
-          let hatch = Bodies.rectangle(xpos, hatchY-hatchHeight/10, w*0.93, hatchHeight/4, {isStatic: true, 
+          let widthFactor = width> 1800 ? .96 : .93
+          let hatch = Bodies.rectangle(xpos, hatchY-hatchHeight/10, w*widthFactor, hatchHeight/4, {isStatic: true, 
             render: {fillStyle: links[linkTracker][theme]},
             link: links[linkTracker][link],
             label: "hatch"
@@ -179,7 +193,13 @@ const SpoonDropMenu = () => {
           location.style.color = links[linkTracker][theme];
           location.innerHTML = (linkTracker+1) + ". " + links[linkTracker][name];
           if(tableDisplay){
-            document.getElementById("locationRow"+rowNum).appendChild(location);
+            //horizontal phones capped at X rows of game name display
+            if(horizontalMobile){
+               document.getElementById("locationRow"+linkTracker % horizontalPhoneDisplayLayers).appendChild(location);
+            }
+            else{
+              document.getElementById("locationRow"+rowNum).appendChild(location);
+            }
           }
           else{
             document.getElementById("menudisplay").appendChild(location);
