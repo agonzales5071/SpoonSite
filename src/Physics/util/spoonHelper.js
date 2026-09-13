@@ -28,6 +28,10 @@ export const GameText = ({gameName, canvasHeight}) => {
 }
 
 export function useGameState(initialMessage, initialScoreText, gameKey) {
+  const gameStartedRef = useRef(false);
+  const pausedRef = useRef(false); // not wired to anything yet — placeholder for pause feature
+  const [rebuildKey, setRebuildKey] = useState(0);
+
   const canvasRef = useRef(null);
   const [canvasHeight, setCanvasHeight] = useState(0);
   const restartRef = useRef(null);
@@ -46,6 +50,22 @@ export function useGameState(initialMessage, initialScoreText, gameKey) {
     setPersonalBest(getPersonalBest(gameKey));
     setTopScores(getScores(gameKey));
   }, [gameKey]);
+  useEffect(() => {
+    let resizeTimeout;
+    function handleResize() {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (!gameStartedRef.current && !pausedRef.current) {
+          setRebuildKey(k => k + 1);
+        }
+      }, 200); // debounce so rapid resize/drag events don't spam rebuilds
+    }
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(resizeTimeout);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const recordScore = useCallback((score) => {
     const result = recordScoreToStorage(gameKey, score);
@@ -68,7 +88,8 @@ export function useGameState(initialMessage, initialScoreText, gameKey) {
     setMessage,
     scoreText,
     setScoreText,
-    view, setView, personalBest, topScores, recordScore, isNewPB
+    view, setView, personalBest, topScores, recordScore, isNewPB,
+    gameStartedRef, pausedRef, rebuildKey,
   };
 }
 

@@ -1,9 +1,7 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
-import GameOver from "./util/gameoverPopup";
-import { Link } from 'react-router-dom';
-import {swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, GameText, BACKGROUND_COLOR, createDefined2DVector, fruityColors, getAngleBetween, getLoop, getSpoon } from "./util/spoonHelper";
+import {swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, BACKGROUND_COLOR, createDefined2DVector, fruityColors, getAngleBetween, getLoop, getSpoon } from "./util/spoonHelper";
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
 
@@ -15,8 +13,9 @@ const SpoonDropDescent = () => {
   const flavor = null ;
   const instructions = null;
   const gameState = useGameState(flavor, instructions, gameKey);
-    const { canvasRef, canvasHeight, setCanvasHeight, restartRef, setPlayButtonText,
-            setGameOverState, setMessage, setScoreText, recordScore } = gameState;
+    const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
+            setGameOverState, setMessage, setScoreText, recordScore,
+          gameStartedRef, pausedRef, rebuildKey } = gameState;
   // const [scoreText, setScoreText] = useState(0);
   // const [message, setMessage] = useState("");
   useEffect(() => swapDocBody(), []);
@@ -33,10 +32,7 @@ const SpoonDropDescent = () => {
     const width = Math.min(window.innerWidth, MAX_WIDTH);
     const height = Math.min(window.innerHeight, MAX_HEIGHT);
     setCanvasHeight(height);
-    
-    let Engine = Matter.Engine;
-    let Render = Matter.Render;
-    let Runner = Matter.Runner;
+
     let Bodies = Matter.Bodies;
     let Body = Matter.Body;
     let Composite = Matter.Composite;
@@ -65,11 +61,11 @@ const SpoonDropDescent = () => {
       mask: 4
     }
     //mobile augmentations
-    if(width < 800){
+    if(width < 900){
       isMobile = true;
-      size = 50;
+      size = width > 500 && height > 500 ? 75 : 50;
       force = 0.002;
-      fric = 0.03
+      fric = 0.03;
       turnaround = 0.8;
       gameWidth = width*0.75;
       leftMargin = (width-gameWidth)/2;
@@ -174,7 +170,8 @@ const SpoonDropDescent = () => {
         loops.forEach(element => {
           Body.setStatic(element.body, true);
         });
-        recordScore(points);
+
+        if(!debugVal) recordScore(points);
         setScoreText(points + "m fallen");
         let endMessage = getPopupMessage();
         setMessage(endMessage);
@@ -191,6 +188,7 @@ const SpoonDropDescent = () => {
         }
         setTimeout(() => {
           setGameOverState(true); // Show game over screen
+          gameStartedRef.current = false;
         }, 1100)
       }
         
@@ -223,7 +221,8 @@ const SpoonDropDescent = () => {
     function startGame() {
       if(gameStarted === false){
         setGameOverState(false); // hide game over screen
-        gameStarted = true;     
+        gameStarted = true;
+        gameStartedRef.current = true;
         document.getElementById('descenttut').innerHTML = "";
 
         spawnwalls = setInterval(function() {
@@ -311,8 +310,8 @@ const SpoonDropDescent = () => {
       
       let pos = smallSine + mediumSine + leftoverWidth + leftMargin;
       let smallInterval = isMobile ? 8 : 16;
-      let curveFasterSmall = Math.abs(Math.sin(closeWallSinusoidTracker[0])) > 0.9 ? 3 : 1;
-      let curveFasterMed = Math.abs(Math.sin(closeWallSinusoidTracker[1])) > 0.9 ? 3 : 1;
+      let curveFasterSmall = Math.abs(Math.sin(closeWallSinusoidTracker[0])) > 0.9 ? 2 : 1;
+      let curveFasterMed = Math.abs(Math.sin(closeWallSinusoidTracker[1])) > 0.9 ? 2 : 1;
       closeWallSinusoidTracker[0] += Math.PI/(getRandomInt(smallInterval) + smallInterval/curveFasterSmall);
       closeWallSinusoidTracker[1] += Math.PI/(getRandomInt(16/curveFasterMed) + 100);
 
@@ -322,14 +321,15 @@ const SpoonDropDescent = () => {
       let percentDone = getObstaclePercentDone()
       let safetyMargin = percentDone > .95 || percentDone < 0.05 
       let wallFrequency = isMobile ? 2 : 3;
+      let spaceBetween = width >= 500 ? 1.75*size : size;
       if(wallTracker%wallFrequency === 0 && !safetyMargin){
         let center = getCloseWallsCenter();
         
-        let thickness = 1.5;
+        let thickness = 1.4;
         let walls = [
-          Bodies.rectangle(center-size-width/2, height+size+100, width, size*thickness, { isStatic: false, frictionAir: 0, 
+          Bodies.rectangle(center-spaceBetween-width/2, height+size+100, width, size*thickness, { isStatic: false, frictionAir: 0, 
             collisionFilter: obstacleFilter}),
-          Bodies.rectangle(center+size+width/2, height+size+100, width, size*thickness, { isStatic: false, frictionAir: 0, 
+          Bodies.rectangle(center+spaceBetween+width/2, height+size+100, width, size*thickness, { isStatic: false, frictionAir: 0, 
             collisionFilter: obstacleFilter}),
         ]
         addWalls(walls);
@@ -712,7 +712,7 @@ const SpoonDropDescent = () => {
 
     // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
 
 
 
