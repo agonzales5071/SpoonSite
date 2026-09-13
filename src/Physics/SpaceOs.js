@@ -1,25 +1,9 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import {swapDocBody,  useGameState, MAX_HEIGHT, MAX_WIDTH, BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, spawnParticleBurst, getShipWing, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter, createRandom2DVector } from "./util/spoonHelper.js";
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
-
-async function lockPortrait() {
-    try {
-        if (!document.fullscreenElement) {
-            await document.documentElement.requestFullscreen();
-        }
-        await window.screen.orientation.lock('portrait');
-    } catch (error) {
-        console.error("Orientation lock failed: ", error);
-    }
-}
-
-function unlockOrientation() {
-    // Release the orientation lock
-    window.screen.orientation.unlock();
-}
 
 const SpoonshipAsteroid = () => {
   const gameKey = "spaceOs";
@@ -967,9 +951,6 @@ const SpoonshipAsteroid = () => {
       else{
         restartGame();
       }
-      if(isMobile){
-        lockPortrait();
-      }
       setPlayButtonText("Restart")
     }
     restartRef.current = startRestart;
@@ -980,7 +961,6 @@ const SpoonshipAsteroid = () => {
     return () => {
       cleanup()
       window.removeEventListener("keydown", handleKey);
-      unlockOrientation()
       clearPendingBlackHoles();
       eraseBlackHoles();
       projectiles.forEach(p => {

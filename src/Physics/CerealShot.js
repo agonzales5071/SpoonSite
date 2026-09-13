@@ -16,7 +16,8 @@ const SpoonDropCerealShot = () => {
   const instructions = "Tap and hold to charge cannon. Release to shoot.";
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, canvasHeight, setCanvasHeight, restartRef, setPlayButtonText,
-          setGameOverState, setMessage, setScoreText, recordScore } = gameState;
+          setGameOverState, setMessage, setScoreText, recordScore,
+          gameStartedRef, pausedRef, rebuildKey } = gameState;
   useEffect(() => swapDocBody(), []);
   
   useEffect(() => {
@@ -99,10 +100,10 @@ const SpoonDropCerealShot = () => {
     var cerealGrav = 0.0006;
     var milkHeight = 30;
     var isMobile = false;
-    if (width < 800) {
+    if(width < 900){
       isMobile = true;
       milkHeight = 20;
-      size = 50;
+      size = width > 500 && height > 500 ? 75 : 50;
       gameWidth = width * 8/10;
       margin = width/10;
       MAX_FORCE = 0.2;
@@ -803,6 +804,7 @@ const SpoonDropCerealShot = () => {
       let endMessage = getPopupMessage();
       setMessage(endMessage);        
       gameStarted = false;
+      gameStartedRef.current = false;
       resettable = true;
       clearInterval(dropSpoons);
       setTimeout(() => {
@@ -826,6 +828,7 @@ const SpoonDropCerealShot = () => {
       if (gameStarted === false) {
         setGameOverState(false); // Show game over screen
         gameStarted = true;
+        gameStartedRef.current = true;
         const tutEl = document.getElementById("descenttut");
         if (tutEl) tutEl.innerHTML = "";
 
@@ -918,7 +921,7 @@ const SpoonDropCerealShot = () => {
 
     // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
 
   return (
     <GameShell gameName="Descent" canvasRef={canvasRef} gameState={gameState}>

@@ -11,7 +11,9 @@ const SpoonDropRescue = () => {
   const instructions = "Click or tap and drag to move the net. Catch all the spoons!";
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
-    setGameOverState, setMessage, setScoreText, recordScore } = gameState;
+    setGameOverState, setMessage, setScoreText, recordScore,
+          gameStartedRef, pausedRef, rebuildKey } = gameState;
+
   useEffect(() => swapDocBody(), []);
   useEffect(() => {
     const {
@@ -49,9 +51,9 @@ const SpoonDropRescue = () => {
     const startX = width / 2 - (segmentCount * segmentWidth) / 2;
     const startY = height * 0.8;
 
-    if (width < 800) {
+    if (width < 900) {
       isMobile = true;
-      size = 50;
+      size = width > 500 && height > 500 ? 75 : 50;
       fric = 0.03;
       segmentCount = 7;
       segmentWidth = 28;
@@ -359,6 +361,7 @@ const SpoonDropRescue = () => {
       let endMessage = getPopupMessage()
       setMessage(endMessage);
       gameStarted = false;
+      gameStartedRef.current = false;
       resettable = true;
       clearInterval(dropSpoons);
       let dumpForce = isMobile ? 0.1: 0.5;
@@ -379,6 +382,7 @@ const SpoonDropRescue = () => {
       if (gameStarted === false) {
         setGameOverState(false); // Show game over screen
         gameStarted = true;
+        gameStartedRef.current = true;
         const tutEl = document.getElementById("descenttut");
         if (tutEl) tutEl.innerHTML = "";
 
@@ -458,7 +462,7 @@ const SpoonDropRescue = () => {
     setGameOverState(true); // Show game over screen
     // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
 
   return (
     <GameShell gameName="Rescue" canvasRef={canvasRef} gameState={gameState} />

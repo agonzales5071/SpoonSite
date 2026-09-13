@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState} from "react";
+import { useEffect, useRef, useState} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, drawHUD } from "./util/spoonHelper";
@@ -13,7 +13,8 @@ const SpoonDropHotSpoontato = () => {
   const [canvasWidth, setCanvasWidth] = useState(0);
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, canvasHeight, setCanvasHeight, restartRef, setPlayButtonText,
-            setGameOverState, setMessage, setScoreText, recordScore } = gameState;
+          setGameOverState, setMessage, setScoreText, recordScore,
+          gameStartedRef, pausedRef, rebuildKey } = gameState;
   useEffect(() => swapDocBody(), []);
   useEffect(() => {
     const {
@@ -49,9 +50,9 @@ const SpoonDropHotSpoontato = () => {
     var segmentCount = 11;
     var segmentWidth = 40;
     var segmentHeight = 30;
-    if (width < 800) {
+    if(width < 900){
       isMobile = true;
-      size = 50;
+      size = width > 500 && height > 500 ? 75 : 50;
       fric = 0.15;
       segmentCount = 5;
       segmentWidth = 28;
@@ -630,6 +631,7 @@ const SpoonDropHotSpoontato = () => {
       let endMessage = getPopupMessage();
       setMessage(endMessage);
       gameStarted = false;
+      gameStartedRef.current = false;
       resettable = true;
       clearInterval(dropSpoons);
       trampoline.bodies.forEach(segment => {
@@ -651,6 +653,7 @@ const SpoonDropHotSpoontato = () => {
       if (gameStarted === false) {
         setGameOverState(false); // Show game over screen
         gameStarted = true;
+        gameStartedRef.current = true;
         const tutEl = document.getElementById("descenttut");
         if (tutEl) tutEl.innerHTML = "";
 
@@ -738,7 +741,7 @@ const SpoonDropHotSpoontato = () => {
 
     // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
 
   return (
     <GameShell gameName="Hot Spoontato" canvasRef={canvasRef} gameState={gameState}>
