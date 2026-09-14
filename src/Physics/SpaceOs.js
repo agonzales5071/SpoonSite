@@ -223,14 +223,14 @@ const SpoonshipAsteroid = () => {
                   };
                   Body.setVelocity(p.body, {x:0, y:0})
                   p.cooldownTimeOut = setTimeout(() => {
-                    p.onCooldown = false;
-                    Body.setVelocity(p.body, p.bufferedSpeed)
+                    if (projectiles.includes(p)) {
+                      p.onCooldown = false;
+                      Body.setVelocity(p.body, p.bufferedSpeed)
+                    }
                   }, 50)
                   doPointIncrement(p, asteroid.position);
                   explodeAsteroid(asteroid, p.asteroidHits);
-                  if(demoteProjectile(p)){
-                    i--;
-                  }        
+                  demoteProjectile(p)
                 }
               }
             }
@@ -323,12 +323,15 @@ const SpoonshipAsteroid = () => {
       return destroyed;
     }
 
-    function destroyProjectile(p, i = 0){
+    function destroyProjectile(p){
       Composite.remove(engine.world, p.body);
       if(p.deleteTimeout){
-        clearTimeout(p.deleteTimeout)
+        clearTimeout(p.deleteTimeout);
       }
-      projectiles.splice(i, 1);
+      const idx = projectiles.indexOf(p);
+      if(idx !== -1){
+        projectiles.splice(idx, 1);
+      }
     }
     function applyThrust(){
       if(!playerCaptured){
@@ -474,12 +477,12 @@ const SpoonshipAsteroid = () => {
       for (let i = projectiles.length - 1; i >= 0; i--) {
         const p = projectiles[i];
         if(p.deletable){
-          destroyProjectile(p, i);
+          destroyProjectile(p);
         }
         else if(p.isOOB){
           checkStillNeeded = true;
           if(offScreenCheckProjectile(p, defaultScreenWrapOffset/4)){
-            destroyProjectile(p, i);
+            destroyProjectile(p);
           }
         }
       }

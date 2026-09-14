@@ -911,3 +911,16 @@ export function spawnParticleBurst(body, color = null, isMobile, engine, Composi
     Body.applyForce(crumb, crumb.position, createDefined2DVector(randomForce, angle + Math.PI/2))
   }
 }
+
+//returns spawn indicator
+export function getDroppingIndicator(x, color, isMobile){
+  let size = isMobile ? 25 : 50;
+  const triangle = Matter.Bodies.polygon(x, size, 3, size, {
+    isStatic: true,
+    isSensor: true,
+    render:{fillStyle: color},
+    collisionFilter: cosmeticFilter  
+  });
+  Body.rotate(triangle, -Math.PI/6)
+  return triangle;
+}

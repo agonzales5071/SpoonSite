@@ -8,8 +8,9 @@ const Popup = ({ visible, closePopup }) => {
           <div id="sd-modal-background"></div>
           <div id="sd-modal-content">
             <div id="sd-modal-message">
-              <p className="sd-message" style={{marginTop: '10%'}}>Click or tap anywhere and let go to drop a spoon.</p>
-              <p className="sd-message" style={{marginTop: '10%'}}>Drop the spoon in a bucket to navigate to the corresponding page</p>
+              <p className="sd-message" >Click or tap anywhere and let go to drop a spoon.</p>
+              <p className="sd-message" >Drop the spoon in a bucket to navigate to the corresponding page.</p>
+              <p className="sd-message" >On mobile, add this site to your homescreen for best experience.</p>
             </div>
             <div id="sd-modal-actions">
               <button 

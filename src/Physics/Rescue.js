@@ -1,7 +1,7 @@
 import React, { useEffect,} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
-import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, getSpoon } from "./util/spoonHelper";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, getSpoon, getDroppingIndicator } from "./util/spoonHelper";
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
 
@@ -29,6 +29,8 @@ const SpoonDropRescue = () => {
     } = Matter;
 
     const allSpoons = [];
+    const spoonsInQueue = [];
+    const indicators = [];
     var isMobile = false;
 
     const width = Math.min(window.innerWidth, MAX_WIDTH);
@@ -235,27 +237,58 @@ const SpoonDropRescue = () => {
     var tracker = 0;
     var initialSpeed = 50;
     var speed = initialSpeed;
+    
 
     // Spawn falling spoons function
     function getRandomInt(max) {
       return Math.floor(Math.random() * max);
     }
 
-
     function spawnFallingSpoon() {
       let obstacleSize = size * 0.800 + size * Math.random() * 0.4; //slight variation to spawn size
-      let xposSpawn = gameWidth * Math.random() + margin; 
-
-      let spoonObstacle = getFallingSpoon(obstacleSize, xposSpawn);
-      spoonObstacle.counted = false;
-
-      allSpoons.push(spoonObstacle);
-      //remove old spoons so there arent too many in the net
-      if (allSpoons.length > 10) {//max number of spoons allowed in game
-        const oldSpoon = allSpoons.shift(); // remove first (oldest) spoon
-        Composite.remove(engine.world, oldSpoon);
-      }
-      Composite.add(engine.world, spoonObstacle);
+      let indicatorShowing = false;
+      let nextDropXPos = gameWidth * Math.random() + margin; 
+      let indicatorTimeTracker = 10;
+      let spoonType = getRandomInt(5);
+      let color = spoonColors[spoonType];
+      let triangleBody = getDroppingIndicator(nextDropXPos, color, isMobile);
+      indicators.push(triangleBody);
+      let indicatorBlinkingInterval = setInterval(() => {
+        if(indicatorShowing){
+          Composite.remove(engine.world, triangleBody)
+        }
+        else{
+          Composite.add(engine.world, triangleBody)
+        }
+        indicatorShowing = !indicatorShowing;
+        indicatorTimeTracker--;
+        if(indicatorTimeTracker<=0){
+          let spoonObstacle = getFallingSpoon(obstacleSize, nextDropXPos, spoonType);
+          
+          spoonObstacle.counted = false;
+          allSpoons.push(spoonObstacle);
+          //remove old spoons so there arent too many in the net
+          if (allSpoons.length > 4) {//max number of spoons allowed in game
+            const oldSpoon = allSpoons.shift(); // remove first (oldest) spoon
+            Composite.remove(engine.world, oldSpoon);
+          }
+          Composite.add(engine.world, spoonObstacle);
+          clearInterval(indicatorBlinkingInterval);
+          spoonsInQueue.shift();
+          indicators.shift();
+        }
+      }, 500);
+      spoonsInQueue.push(indicatorBlinkingInterval)
+    }
+    function clearAllQueuedSpoons(){
+      spoonsInQueue.forEach(interval => {
+        clearInterval(interval)
+      })
+      spoonsInQueue.splice(0, spoonsInQueue.length);
+      indicators.forEach(body => {
+        Composite.remove(engine.world, body);
+      })
+      indicators.splice(0, indicators.length);
     }
 
     //slight variation on density of spoon based on color
@@ -263,8 +296,8 @@ const SpoonDropRescue = () => {
     const spoonGrav = [0.0011, 0.0012, 0.0008, 0.0009, 0.001];
 
     //returns a spoon to fall from top of screen
-    function getFallingSpoon(obstacleSize, xposSpawn){
-      let spoonType = getRandomInt(5);
+    function getFallingSpoon(obstacleSize, xposSpawn, spoonType){
+      
       let spoonDensity = spoonGrav[spoonType];
       let color = spoonColors[spoonType];
       let collisionFilter = {
@@ -360,6 +393,7 @@ const SpoonDropRescue = () => {
       setScoreText(points + " spoons saved");
       let endMessage = getPopupMessage()
       setMessage(endMessage);
+      clearAllQueuedSpoons();
       gameStarted = false;
       gameStartedRef.current = false;
       resettable = true;

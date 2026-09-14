@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
-import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, drawHUD } from "./util/spoonHelper";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, drawHUD, getDroppingIndicator } from "./util/spoonHelper";
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
 
@@ -30,6 +30,8 @@ const SpoonDropHotSpoontato = () => {
     } = Matter;
 
     const allSpoons = [];
+    const spoonsInQueue = [];
+    const indicators = [];
     var isMobile = false;
     
     const width = Math.min(window.innerWidth, MAX_WIDTH);
@@ -379,16 +381,44 @@ const SpoonDropHotSpoontato = () => {
     function getRandomInt(max) {
       return Math.floor(Math.random() * max);
     }
-
+    function clearAllQueuedSpoons(){
+      spoonsInQueue.forEach(interval => {
+        clearInterval(interval)
+      })
+      spoonsInQueue.splice(0, spoonsInQueue.length);
+      indicators.forEach(body => {
+        Composite.remove(engine.world, body);
+      })
+      indicators.splice(0, indicators.length);
+    }
     function spawnFallingSpoon() {
       let obstacleSize = size * 0.225 + size * Math.random() * 0.05; //slight variation to spawn size
       let xposSpawn = gameWidth * Math.random() + margin; 
-
-      let spoonObstacle = getFallingSpoon(obstacleSize, xposSpawn);
-
-      allSpoons.push({body: spoonObstacle, temp: startingHeat, isCooled: false});
-      spoonHeatValues.push(startingHeat);
-      Composite.add(engine.world, spoonObstacle);
+      let indicatorShowing = false; 
+      let indicatorTimeTracker = 10;
+      let color = spoonColors[0];
+      let triangleBody = getDroppingIndicator(xposSpawn, color, isMobile);
+      indicators.push(triangleBody);
+      let indicatorBlinkingInterval = setInterval(() => {
+        if(indicatorShowing){
+          Composite.remove(engine.world, triangleBody)
+        }
+        else{
+          Composite.add(engine.world, triangleBody)
+        }
+        indicatorShowing = !indicatorShowing;
+        indicatorTimeTracker--;
+        if(indicatorTimeTracker<=0){
+          let spoonObstacle = getFallingSpoon(obstacleSize, xposSpawn);
+    
+          allSpoons.push({body: spoonObstacle, temp: startingHeat, isCooled: false});
+          spoonHeatValues.push(startingHeat);
+          Composite.add(engine.world, spoonObstacle);
+          clearInterval(indicatorBlinkingInterval);
+          spoonsInQueue.shift();
+          indicators.shift();
+        }
+      }, 500);
     }
 
     //slight variation on density of spoon based on color
@@ -628,6 +658,7 @@ const SpoonDropHotSpoontato = () => {
     function gameOver() {
       recordScore(points);
       setScoreText(points + " cool spoons");
+      clearAllQueuedSpoons();
       let endMessage = getPopupMessage();
       setMessage(endMessage);
       gameStarted = false;
