@@ -11,7 +11,8 @@ const SpoonshipAsteroid = () => {
   const instructions = "Click or tap to shoot out a spoon and propel yourself forward.";
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
-    setGameOverState, setMessage, setScoreText, recordScore } = gameState;
+    setGameOverState, setMessage, setScoreText, recordScore,
+    gameStartedRef, pausedRef, rebuildKey } = gameState;
   useEffect(() => swapDocBody(), []);
   useEffect( () => {
     var isMobile = false;
@@ -34,7 +35,6 @@ const SpoonshipAsteroid = () => {
     var points = 0;
     var size = 50; //size var for spoon
     var maxThrustForce = 0.02;
-    var playerScreenWrapOffset = size/2;
     var defaultScreenWrapOffset = 50;
     var playerFriction = 0.003;
     var minPowerPercentage = 0.2;
@@ -55,12 +55,12 @@ const SpoonshipAsteroid = () => {
     // var holeOn = false; //debug
     const blackHoleDefaultTimeout = 15;
     //mobile augmentations
-    if(width < 800){
+    if(width < 900){
       isMobile = true;
-      size = 30;
-      maxThrustForce = 0.005;
-      playerScreenWrapOffset = 15;
+      size = width > 500 && height > 500 ? 40 : 30;
+      maxThrustForce = size/6000;
     }
+    let playerScreenWrapOffset = size/2;
     if(isMobile){
       setScoreText("On mobile, locking screen orientation and playing horizontally is recommended.");
     }
@@ -811,10 +811,29 @@ const SpoonshipAsteroid = () => {
 
     function startEnemy(){
       let round = 1;
+      let roundGroupTracker = 1;
+      let roundGroupAmount = 4;
+      let asteroidsLeft = 0;
       let baseRoundTimer = 30;
       let roundTimer = baseRoundTimer;
+      let startPoint = 3;
       enemyInterval = setInterval(() => {
-        if(asteroids.length === 0 || roundTimer <= 0){
+        asteroidsLeft = 0;
+        asteroids.forEach(asteroid => {
+          let level = asteroid.level;
+          let val = level === 3 ? 5 : level === 2 ? 3 : 1;
+          asteroidsLeft+= val;
+        });
+        let spawnHoldPoint = roundGroupTracker%roundGroupAmount === 0;
+        if(asteroids.length === 0 || 
+          ((roundTimer <= 0 && !spawnHoldPoint) ||
+          spawnHoldPoint && asteroidsLeft < startPoint)){
+          //reset and enlarge spawnHoldPoint factors
+          if(spawnHoldPoint){
+            roundGroupTracker = 1;
+            roundGroupAmount++;
+            startPoint+=2;
+          }
           for (let i = getRandomInt(3) + 1; i > 0; i--){
             spawnAsteroid()
           }
@@ -834,6 +853,7 @@ const SpoonshipAsteroid = () => {
       if (gameStarted === false) {
         setGameOverState(false); // Show game over screen
         gameStarted = true;
+        gameStartedRef.current = true;
         startEnemy();
         setText();
       }
@@ -878,6 +898,7 @@ const SpoonshipAsteroid = () => {
       let endMessage = getPopupMessage()
       setMessage(endMessage)        
       gameStarted = false;
+      gameStartedRef.current = false;
       resettable = true;
       releasePlayer()
       setText()
@@ -968,7 +989,7 @@ const SpoonshipAsteroid = () => {
       })
       
     };
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, gameStartedRef, rebuildKey]);
 
 
 

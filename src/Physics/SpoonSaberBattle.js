@@ -20,7 +20,8 @@ const SpoonSaberBattle = () => {
   const instructions = "Click or tap and drag your SpoonSaber to block the enemy attacks";
   const gameState = useGameState(flavor, instructions, gameKey);
     const { canvasRef, canvasHeight, setCanvasHeight, restartRef, setPlayButtonText,
-            setGameOverState, setMessage, setScoreText, recordScore } = gameState;
+            setGameOverState, setMessage, setScoreText, recordScore,
+          gameStartedRef, pausedRef, rebuildKey } = gameState;
 
   const [playerColor, setPlayerColor] = useState(null);
   // const playerColorRef = useRef(playerColor);
@@ -93,10 +94,10 @@ const SpoonSaberBattle = () => {
     // var isPlayerDarkSide = false;
 
     //mobile augmentations
-    if(width < 800){
+    if(width < 900){
       fric = 0.03
       isMobile = true;
-      size = 50;
+      size = width > 500 && height > 500 ? 75 : 50;
       if(height > 500){
         setMobilePlayer(true);
       }
@@ -545,6 +546,7 @@ const SpoonSaberBattle = () => {
       if (gameStarted === false) {
         setGameOverState(false); // Show game over screen
         gameStarted = true;
+        gameStartedRef.current = true;
         initializePlayer();
         startEnemy();
       }
@@ -572,6 +574,7 @@ const SpoonSaberBattle = () => {
       let endMessage = getPopupMessage()
       setMessage(endMessage)            
       gameStarted = false;
+      gameStartedRef.current = false;
       resettable = true;
       deathAnimation();
       attacks.forEach(attack => {
@@ -701,7 +704,7 @@ const SpoonSaberBattle = () => {
     setGameOverState(true)
   // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
   
     return (
       <GameShell gameName="SpoonSaber Battle" canvasRef={canvasRef} gameState={gameState} canvasStyle={{ borderColor: playerColor }}

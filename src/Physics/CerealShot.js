@@ -924,7 +924,7 @@ const SpoonDropCerealShot = () => {
   }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
 
   return (
-    <GameShell gameName="Descent" canvasRef={canvasRef} gameState={gameState}>
+    <GameShell gameName="Cereal Shot" canvasRef={canvasRef} gameState={gameState}>
       <div className="power-bar" style={{ '--canvas-height': `${canvasHeight}px`}}>
         <div style={{
           width: `${power * 100}%`,

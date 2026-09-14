@@ -11,7 +11,8 @@ const SpoonDropGameSpeed = () => {
   const instructions = "Click to drop a spoon in the bucket.";
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
-    setGameOverState, setMessage, setScoreText, recordScore } = gameState;
+    setGameOverState, setMessage, setScoreText, recordScore,
+    gameStartedRef, pausedRef, rebuildKey } = gameState;
   const textElementID = "dropper";
   useEffect(() => swapDocBody(), []);
   useEffect(() => {
@@ -65,7 +66,7 @@ const SpoonDropGameSpeed = () => {
       if (gameStartable){
         gameRunning = true;
         setGameOverState(false); // Show game over screen
-        gameStartable = false;
+        gameStartedRef.current = true;
         let timer = setInterval(function() {
           if(document.getElementById(textElementID) === null){
             clearInterval(timer);
@@ -106,6 +107,7 @@ const SpoonDropGameSpeed = () => {
                         document.getElementById(textElementID).innerHTML = "";
                       }
                       setGameOverState(true); // Show game over screen
+                      gameStartedRef.current = true;
                     }, 1100)
                   
                   }
@@ -135,9 +137,11 @@ const SpoonDropGameSpeed = () => {
     function resetGame(){
       spoonCount = 0;
       setGameOverState(false); // Show game over screen
+      gameStartedRef.current = true;
       seconds = 15;
       countingUp = false;
       gameStartable = true; 
+      gameStartedRef.current =true;
       allSpoons.forEach(element =>{
         Composite.remove(engine.world, element);
       })
@@ -169,13 +173,14 @@ const SpoonDropGameSpeed = () => {
 
     start();
     setGameOverState(true); // Show game over screen
+    gameStartedRef.current = false;
   // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
 
   
     return (
-      <GameShell gameName="Rescue" canvasRef={canvasRef} gameState={gameState} />
+      <GameShell gameName="Speed Click" canvasRef={canvasRef} gameState={gameState} />
     )
   
 }

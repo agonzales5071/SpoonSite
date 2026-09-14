@@ -11,7 +11,8 @@ const SpoonBalloon = () => {
   const instructions = "Tap to bump balloon, hold to blow.";
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
-    setGameOverState, setMessage, setScoreText, recordScore } = gameState;
+    setGameOverState, setMessage, setScoreText, recordScore,
+    gameStartedRef, pausedRef, rebuildKey } = gameState;
   useEffect(() => swapDocBody(), []);
   useEffect( () => {
 
@@ -36,9 +37,9 @@ const SpoonBalloon = () => {
     // var points = 0;
     var size = 100; //size var for spoon
     //mobile augmentations
-    if(width < 800){
+    if(width < 900){
       isMobile = true;
-      size = 50;
+      size = width > 500 && height > 500 ? 75 : 50;
     }
 
     // add mouse control
@@ -222,6 +223,7 @@ const SpoonBalloon = () => {
       if (gameStarted === false) {
         setGameOverState(false); // Show game over screen
         gameStarted = true;
+        gameStartedRef.current = true;
         initialBump();
         // startEnemy();
       }
@@ -244,6 +246,7 @@ const SpoonBalloon = () => {
       // setMessage(endMessage)      
       recordScore(0);  
       gameStarted = false;
+      gameStartedRef.current = false;
       resettable = true;
       //set text
       //leaderboards
@@ -296,7 +299,7 @@ const SpoonBalloon = () => {
     setGameOverState(true); // Show game over screen
   // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
 
 
 

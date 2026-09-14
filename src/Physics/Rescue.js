@@ -12,7 +12,7 @@ const SpoonDropRescue = () => {
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
     setGameOverState, setMessage, setScoreText, recordScore,
-          gameStartedRef, pausedRef, rebuildKey } = gameState;
+    gameStartedRef, pausedRef, rebuildKey } = gameState;
 
   useEffect(() => swapDocBody(), []);
   useEffect(() => {
