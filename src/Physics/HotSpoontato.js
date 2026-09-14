@@ -218,7 +218,7 @@ const SpoonDropHotSpoontato = () => {
 
     //----------BUMPERS------------
     var bumperWidth = 50;
-    const bumperHeight = height * 2; // taller than canvas
+    const bumperHeight = height * 5; // taller than canvas
     const bumperY = height / 2;
     if (isMobile){
       bumperWidth = 20;
@@ -306,7 +306,7 @@ const SpoonDropHotSpoontato = () => {
           if (trampolineBody && targetBody) {
             bumpNeeded = true;
             netBump = true;
-            setTimeout(() => { 
+            setTimeout(() => { Matter.Body.applyForce(targetBody.parent, targetBody.position, { x: 0, y:  bumperPowerY/2})
             netBump = false; }, 1000);
             setTimeout(() => { Matter.Body.applyForce(targetBody.parent, targetBody.position, { x: 0, y:  bumperPowerY});
             }, 100);
