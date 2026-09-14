@@ -128,7 +128,7 @@ export function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
-export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, center = "middle"){
+export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, center = "middle", trapSlope = 0.4){
   if(spoonFilter === null){
     spoonFilter = {
       group: 0,
@@ -140,7 +140,7 @@ export function getSpoon(spoonSize, xposSpawn, yposSpawn, spoonFilter, color, ce
   let spoonHeadOffset = spoonSize / 50;
 
   //SHAPES
-  let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset)
+  let parts = getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset, trapSlope)
 
   let spoon = Body.create({
     parts: parts,
@@ -314,7 +314,7 @@ export function getShipWing(xposSpawn, yposSpawn, spoonSize, isLeft){
 }
 
 
-export function getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset){
+export function getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonHeadOffset, trapSlope = 0.4){
     let spoonDensity = 0.0011;
 
     //SHAPES
@@ -338,7 +338,7 @@ export function getSpoonBodies(spoonSize, spoonSpawn, spoonFilter, color, spoonH
       density: spoonDensity,
       collisionFilter: partA1.collisionFilter,
     });
-    let partB = Bodies.trapezoid(spoonSpawn[0], spoonSpawn[1], spoonSize/5, spoonSize, 0.4, {
+    let partB = Bodies.trapezoid(spoonSpawn[0], spoonSpawn[1], spoonSize/5, spoonSize, trapSlope, {
       render: partA1.render,
       density: spoonDensity,
       collisionFilter: partA1.collisionFilter,

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
-import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, drawHUD, getDroppingIndicator } from "./util/spoonHelper";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, drawHUD, getDroppingIndicator, getSpoon } from "./util/spoonHelper";
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
 
@@ -277,9 +277,17 @@ const SpoonDropHotSpoontato = () => {
 
     const ongoingPushes = new Map(); // Map<spoon.id, intervalId>
 
-    let netBump = false; // new flag
+    let netBump = false; // 
     // Collision handling for bouncing spoons off trampoline segments
     Events.on(engine, "collisionStart", function (event) {
+      var bumperPowerY = -0.015;
+      var bumperPowerX = 0.00005;
+      var maxTicks = 4;
+      if (isMobile) {
+        bumperPowerY = -0.005;
+        bumperPowerX = 0.0001;
+        maxTicks = 2;
+      }
       event.pairs.forEach((pair) => {
         const { bodyA, bodyB } = pair;
 
@@ -298,21 +306,16 @@ const SpoonDropHotSpoontato = () => {
           if (trampolineBody && targetBody) {
             bumpNeeded = true;
             netBump = true;
-            setTimeout(() => { netBump = false; }, 1000);
+            setTimeout(() => { 
+            netBump = false; }, 1000);
+            setTimeout(() => { Matter.Body.applyForce(targetBody.parent, targetBody.position, { x: 0, y:  bumperPowerY});
+            }, 100);
           }
         }
 
         //collision logic for spoon and bumper
         const bumper = [bodyA, bodyB].find(b => b.label === "bumper");
         const spoonPart = [bodyA, bodyB].find(b => b.label !== "bumper");
-        var bumperPowerY = -0.015;
-        var bumperPowerX = 0.00005;
-        var maxTicks = 4;
-        if (isMobile) {
-          bumperPowerY = -0.005;
-          bumperPowerX = 0.0001;
-          maxTicks = 2;
-        }
         if (bumper && spoonPart?.isSpoonPart) {
           const spoon = spoonPart.parentSpoon;
           if (spoon && spoon.parts) {
@@ -390,9 +393,14 @@ const SpoonDropHotSpoontato = () => {
         Composite.remove(engine.world, body);
       })
       indicators.splice(0, indicators.length);
+      allSpoons.forEach(body => {
+        Composite.remove(engine.world, body);
+      })
+      allSpoons.splice(0, allSpoons.length);
+      
     }
     function spawnFallingSpoon() {
-      let obstacleSize = size * 0.225 + size * Math.random() * 0.05; //slight variation to spawn size
+      let obstacleSize = 5*(size * 0.225 + size * Math.random() * 0.05); //slight variation to spawn size
       let xposSpawn = gameWidth * Math.random() + margin; 
       let indicatorShowing = false; 
       let indicatorTimeTracker = 10;
@@ -419,88 +427,46 @@ const SpoonDropHotSpoontato = () => {
           indicators.shift();
         }
       }, 500);
+      spoonsInQueue.push(indicatorBlinkingInterval);
     }
 
     //slight variation on density of spoon based on color
     const spoonColors = ["#bf3317", "#db8c2c","#e6ca40", "#54a8a7"];
-    const spoonGrav = [0.0011, 0.0009, 0.001];
+    const spoonGrav = [0.008, 0.0006, 0.007];
 
     //returns a spoon to fall from top of screen
     //TODO Refactor this 
     function getFallingSpoon(obstacleSize, xposSpawn){
       let spoonType = getRandomInt(3);
-      let spoonSpawn = [xposSpawn, -100, -(3 * obstacleSize) - 100];
-      let spoonHeadOffset = obstacleSize / 10;
       let spoonDensity = spoonGrav[spoonType];
-
-      //SHAPES
-      let partA1 = Bodies.circle(spoonSpawn[0], spoonSpawn[2], obstacleSize, {
-        restitution: restitutionValue,
-        label: "spoon",
-        density: spoonDensity,
-        render: {fillStyle: spoonColors[0]},
-        collisionFilter: {
+      let collisionFilter = {
           group: -2,
           category: 4,
           mask: 2 | 8,
-        },
+        }
+      let spoon = getSpoon(obstacleSize, xposSpawn, -100, collisionFilter, spoonColors[0], "middle", .6);
+      spoon.parts.forEach(part => {
+        part.restitution = restitutionValue;
+        part.density = spoonDensity;
+        part.label = "spoon";
+        part.isSpoonPart = true;
+        part.parentSpoon = spoon; // link to parent
       });
-      let partA2 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - spoonHeadOffset, obstacleSize, {
-        render: partA1.render,
-        density: spoonDensity,
-        label: "spoon",
-        restitution: restitutionValue,
-        collisionFilter: partA1.collisionFilter,
-      });
-      let partA3 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 2 * spoonHeadOffset, obstacleSize, {
-        render: partA1.render,
-        density: spoonDensity,
-        label: "spoon",
-        restitution: restitutionValue,
-        collisionFilter: partA1.collisionFilter,
-      });
-      let partA4 = Bodies.circle(spoonSpawn[0], spoonSpawn[2] - 3 * spoonHeadOffset, obstacleSize, {
-        render: partA1.render,
-        density: spoonDensity,
-        label: "spoon",
-        restitution: restitutionValue,
-        collisionFilter: partA1.collisionFilter,
-      });
-      let partB = Bodies.trapezoid(spoonSpawn[0], spoonSpawn[1], obstacleSize, obstacleSize * 5, 0.4, {
-        render: partA1.render,
-        density: spoonDensity,
-        label: "spoon",
-        restitution: restitutionValue,
-        collisionFilter: partA1.collisionFilter,
-      });
-
-      let spoonObstacle = Body.create({
-        parts: [partA1, partA2, partA3, partA4, partB],
-        restitution: restitutionValue,
-        label: "spoon",
-        collisionFilter: partA1.collisionFilter,
-      });
-
-      Body.setCentre(spoonObstacle, Vector.create(spoonSpawn[0], spoonSpawn[1] - obstacleSize / 10), false);
+      //SHAPES
       
       //ANGLE
-      let angle = Math.random() * 90 - 45;
+      let angle = Math.random()*2 >=1 ? Math.PI/2 : -Math.PI/2;
           
-      Body.setAngle(spoonObstacle, angle);
+      Body.setAngle(spoon, angle);
 
-      if (Math.random() * 2 < 1 ) {//some of em spin :)
+      if (points > 6 && Math.random() * 2 < 1 ) {//some of em spin :)
         Body.setAngularVelocity(
-          spoonObstacle,
+          spoon,
           ((obstacleSize - Math.random() * obstacleSize) / 600) * (getRandomInt(3) - 1)
         );
       }
-      const parts = [partA1, partA2, partA3, partA4, partB];
-      parts.forEach(part => {
-        part.isSpoonPart = true;
-        part.parentSpoon = spoonObstacle; // link to parent
-      });
 
-      return spoonObstacle;
+      return spoon;
     }
 
     function createPlusOne(x, y) {
