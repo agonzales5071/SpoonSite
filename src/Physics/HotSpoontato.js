@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
-import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, drawHUD, getDroppingIndicator, getSpoon } from "./util/spoonHelper";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, drawHUD, getDroppingIndicator, getSpoon, resizeDroppingIndicator } from "./util/spoonHelper";
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
 
@@ -214,6 +214,18 @@ const SpoonDropHotSpoontato = () => {
     
       Body.setPosition(rightSegment, Vector.create(rightSegment.position.x, netBump ? rightSegment.position.y : startY));
       Body.setVelocity(rightSegment, Vector.create(rightSegment.velocity.x, netBump ? rightSegment.velocity.y : 0));
+
+      allSpoons.forEach(spoon => {
+        if(spoon.body.beenOnScreen && spoon.body.position.y <= -size){
+          let triangle = getDroppingIndicator(spoon.body.position.x, spoon.body.color, isMobile);
+          resizeDroppingIndicator(triangle, spoon.body.position.y);
+          Composite.add(engine.world, triangle)
+          setTimeout(()=>{
+            Composite.remove(engine.world, triangle);
+          }, 10)
+        }
+      })
+
     });
 
     //----------BUMPERS------------
@@ -304,6 +316,7 @@ const SpoonDropHotSpoontato = () => {
             targetBody = bodyA;
           }
           if (trampolineBody && targetBody) {
+            targetBody.parent.beenOnScreen = true;
             bumpNeeded = true;
             netBump = true;
             setTimeout(() => { Matter.Body.applyForce(targetBody.parent, targetBody.position, { x: 0, y:  bumperPowerY/2})
@@ -418,7 +431,7 @@ const SpoonDropHotSpoontato = () => {
         indicatorTimeTracker--;
         if(indicatorTimeTracker<=0){
           let spoonObstacle = getFallingSpoon(obstacleSize, xposSpawn);
-    
+          spoonObstacle.color = color;
           allSpoons.push({body: spoonObstacle, temp: startingHeat, isCooled: false});
           spoonHeatValues.push(startingHeat);
           Composite.add(engine.world, spoonObstacle);
@@ -452,7 +465,8 @@ const SpoonDropHotSpoontato = () => {
         part.isSpoonPart = true;
         part.parentSpoon = spoon; // link to parent
       });
-      //SHAPES
+      spoon.color = spoonColors[0];
+      spoon.beenOnScreen = false;
       
       //ANGLE
       let angle = Math.random()*2 >=1 ? Math.PI/2 : -Math.PI/2;
@@ -538,6 +552,7 @@ const SpoonDropHotSpoontato = () => {
             mask: 0,
           }
         });
+        spoonBody.color = spoonColors[3]
         //increase points once per spoon
         points++;
         spoon.isCooled = true;
@@ -549,6 +564,7 @@ const SpoonDropHotSpoontato = () => {
       spoon.parts.forEach(part => {
         part.render.fillStyle = spoonColors[color];
       });
+      spoon.color = spoonColors[color];
     }
 
     var spoonHeatValues = [];

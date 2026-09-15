@@ -64,7 +64,7 @@ const SpoonDropDescent = () => {
     if(width < 900){
       isMobile = true;
       size = width > 500 && height > 500 ? 75 : 50;
-      force = 0.002;
+      force = width > 500 && height > 500 ? 0.006 : 0.002;
       fric = 0.03;
       turnaround = 0.8;
       gameWidth = width*0.75;
@@ -309,7 +309,7 @@ const SpoonDropDescent = () => {
       let mediumSine = medAmp*Math.sin(closeWallSinusoidTracker[1]);
       
       let pos = smallSine + mediumSine + leftoverWidth + leftMargin;
-      let smallInterval = isMobile ? 8 : 16;
+      let smallInterval = isMobile ? height > 500 && width > 500 ? 13 : 8 : 10;
       let curveFasterSmall = Math.abs(Math.sin(closeWallSinusoidTracker[0])) > 0.9 ? 2 : 1;
       let curveFasterMed = Math.abs(Math.sin(closeWallSinusoidTracker[1])) > 0.9 ? 2 : 1;
       closeWallSinusoidTracker[0] += Math.PI/(getRandomInt(smallInterval) + smallInterval/curveFasterSmall);
@@ -321,7 +321,7 @@ const SpoonDropDescent = () => {
       let percentDone = getObstaclePercentDone()
       let safetyMargin = percentDone > .95 || percentDone < 0.05 
       let wallFrequency = isMobile ? 2 : 3;
-      let spaceBetween = width >= 500 ? 1.75*size : size;
+      let spaceBetween = width >= 500 ? 1*size : size;
       if(wallTracker%wallFrequency === 0 && !safetyMargin){
         let center = getCloseWallsCenter();
         

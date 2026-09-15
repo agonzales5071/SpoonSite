@@ -924,3 +924,8 @@ export function getDroppingIndicator(x, color, isMobile){
   Body.rotate(triangle, -Math.PI/6)
   return triangle;
 }
+export function resizeDroppingIndicator(triangle, y){
+  let peakHeight = -500;
+  let factor = Math.max(0.1, Math.abs((peakHeight - Math.max(peakHeight, y)) / peakHeight));
+  Body.scale(triangle, factor, factor)
+}
