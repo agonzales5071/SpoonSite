@@ -29,7 +29,39 @@ export const GameText = ({gameName, canvasHeight}) => {
 
 export function useGameState(initialMessage, initialScoreText, gameKey) {
   const gameStartedRef = useRef(false);
-  const pausedRef = useRef(false); // not wired to anything yet — placeholder for pause feature
+  const [paused, setPausedState] = useState(false);
+  const pausedRef = useRef(false);
+  const pauseRef = useRef(null);   // each game assigns its own "actually freeze" function here
+  const resumeRef = useRef(null);  // each game assigns its own "actually unfreeze" function here
+
+  const [resumeCountdown, setResumeCountdown] = useState(null); // null = no countdown in progress
+
+  const setPaused = useCallback((value) => {
+    pausedRef.current = value;
+    setPausedState(value);
+    if (value) {
+      setResumeCountdown(null); // cancel any pending resume countdown if we're (re)pausing
+    }
+  }, []);
+
+  const beginResume = useCallback(() => {
+    setPaused(false);       // hide the popup immediately
+    setResumeCountdown(3);  // engine/timers stay frozen until this reaches 0
+  }, [setPaused]);
+
+  useEffect(() => {
+    if (resumeCountdown === null) return;
+    if (resumeCountdown === 0) {
+      if (!pausedRef.current && resumeRef.current) {
+        resumeRef.current(); // actually unfreeze, now that the countdown is done
+      }
+      setResumeCountdown(null);
+      return;
+    }
+    const t = setTimeout(() => setResumeCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resumeCountdown]);
+
   const [rebuildKey, setRebuildKey] = useState(0);
 
   const canvasRef = useRef(null);
@@ -55,7 +87,12 @@ export function useGameState(initialMessage, initialScoreText, gameKey) {
     function handleResize() {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        if (!gameStartedRef.current && !pausedRef.current) {
+        if (pausedRef.current) return;
+         if (gameStartedRef.current) {
+        // game is running — auto-pause instead of rebuilding out from under it
+        if (pauseRef.current) pauseRef.current();
+          setPaused(true);
+        } else {
           setRebuildKey(k => k + 1);
         }
       }, 200); // debounce so rapid resize/drag events don't spam rebuilds
@@ -65,7 +102,7 @@ export function useGameState(initialMessage, initialScoreText, gameKey) {
       clearTimeout(resizeTimeout);
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [setPaused]);
 
   const recordScore = useCallback((score) => {
     const result = recordScoreToStorage(gameKey, score);
@@ -89,7 +126,9 @@ export function useGameState(initialMessage, initialScoreText, gameKey) {
     scoreText,
     setScoreText,
     view, setView, personalBest, topScores, recordScore, isNewPB,
-    gameStartedRef, pausedRef, rebuildKey,
+    gameStartedRef, rebuildKey,
+    paused, pausedRef, setPaused, pauseRef, resumeRef,
+    resumeCountdown, beginResume
   };
 }
 
@@ -499,7 +538,7 @@ export function getFork(x, y, size, color, isMobile, label, stat = false){
       return fullFork;
     }
 
-export function createPlusScore(x, y, score, world, fade, color = "#ffffff", halfSize = false) {
+export function createPlusScore(timers, x, y, score, world, fade, color = "#ffffff", halfSize = false) {
   const parts = [];
   let isRainbow = color === "rainbow";
   if(isRainbow){
@@ -540,16 +579,16 @@ export function createPlusScore(x, y, score, world, fade, color = "#ffffff", hal
   });
 
   if(fade){
-    floatAndFade(composite, world, color, isRainbow)
+    floatAndFade(timers, composite, world, color, isRainbow)
   }
   Matter.Composite.add(world, composite);
 }
-export function floatAndFade(composite, world,  color, isRainbow, noFadeScoreParts = []){
+export function floatAndFade(timers, composite, world,  color, isRainbow, noFadeScoreParts = []){
   let opacity = 1;
   let hue = 0;
   let startFadeTime = 20;
   let fadeTimer = 0;
-  const floatInterval = setInterval(() => {
+  const floatInterval = timers.setInterval(() => {
     if(fadeTimer>=startFadeTime){
       Matter.Body.translate(composite, { x: 0, y: -1 });
       opacity -= 0.05;
@@ -571,7 +610,7 @@ export function floatAndFade(composite, world,  color, isRainbow, noFadeScorePar
       });
     }
     if (opacity <= 0) {
-      clearInterval(floatInterval);
+      timers.clearInterval(floatInterval);
       Matter.Composite.remove(world, composite);
     }
   }, 50);
@@ -864,7 +903,7 @@ export function spawnFallingO(x, world, collisionFilter, size, fric, cerealGrav)
   return cerealO;
 }
 
-export function spawnParticleBurst(body, color = null, isMobile, engine, Composite, size = null) {
+export function spawnParticleBurst(timers, body, color = null, isMobile, engine, Composite, size = null) {
   const { x, y } = body.position;
   const radius = isMobile ? 8 : 20;
   if(color === null){
@@ -896,10 +935,10 @@ export function spawnParticleBurst(body, color = null, isMobile, engine, Composi
     
     // Random fade duration between 800–1200ms
     crumb.fadeDuration = 1600 + Math.random() * 800;
-    crumb.fadeInterval = setInterval(() => {
+    crumb.fadeInterval = timers.setInterval(() => {
       if(crumb.fadeTime >= crumb.fadeDuration){
         Composite.remove(engine.world, crumb);
-        clearInterval(crumb.fadeInterval);
+        timers.clearInterval(crumb.fadeInterval);
       }
       let newOpacity = (crumb.fadeDuration - crumb.fadeTime) / crumb.fadeDuration;
       crumb.render.opacity = newOpacity;

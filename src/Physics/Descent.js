@@ -4,6 +4,7 @@ import './spoondrop.css';
 import {swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, BACKGROUND_COLOR, createDefined2DVector, fruityColors, getAngleBetween, getLoop, getSpoon } from "./util/spoonHelper";
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
+import { createPausableTimerGroup } from "./util/pausableTimers";
 
 //bug fixes
 //same name chat room join, back buttons, 
@@ -15,7 +16,7 @@ const SpoonDropDescent = () => {
   const gameState = useGameState(flavor, instructions, gameKey);
     const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
             setGameOverState, setMessage, setScoreText, recordScore,
-          gameStartedRef, pausedRef, rebuildKey } = gameState;
+          gameStartedRef, rebuildKey, pauseRef, resumeRef,} = gameState;
   // const [scoreText, setScoreText] = useState(0);
   // const [message, setMessage] = useState("");
   useEffect(() => swapDocBody(), []);
@@ -41,8 +42,9 @@ const SpoonDropDescent = () => {
     let sinusoidTracker = 0;
     let closeWallSinusoidTracker = [0, 0, Math.PI/2];
     
-    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height);
-
+    const timers = createPausableTimerGroup();
+    const { engine, runner, render, start, cleanup } = createMatterEngine(timers, canvasRef, width, height);
+    
     var gameWidth = width*4/5;
     var leftMargin = (width-gameWidth)/2;
     
@@ -109,7 +111,7 @@ const SpoonDropDescent = () => {
     var resettable = false;
     //create spoon
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
-      movement = setInterval(function() {
+      movement = timers.setInterval(function() {
         if(!ragdoll){
           let mousex = mouse.position.x,
           spox = curSpoon.position.x;
@@ -149,9 +151,9 @@ const SpoonDropDescent = () => {
     
     Matter.Events.on(mouseConstraint, "mouseup", function(event){
       allMovements.forEach(element => {
-        clearInterval(element);
+        timers.clearInterval(element);
       })
-      // clearInterval(movement);
+      // timers.clearInterval(movement);
     });
     Matter.Events.on(engine, "beforeUpdate", function(event){
       stepPulsingLoops();
@@ -179,14 +181,14 @@ const SpoonDropDescent = () => {
         resettable = true;
         //Body.setStatic(curSpoon, true);
         ragdoll = true;
-        clearInterval(spawnwalls);
+        timers.clearInterval(spawnwalls);
         if( document.getElementById('descenttut') !== null){
           document.getElementById("descenttut").innerHTML = "";
         }
         if( document.getElementById('dropper') !== null){
           document.getElementById("dropper").innerHTML = "";
         }
-        setTimeout(() => {
+        timers.setTimeout(() => {
           setGameOverState(true); // Show game over screen
           gameStartedRef.current = false;
         }, 1100)
@@ -225,9 +227,9 @@ const SpoonDropDescent = () => {
         gameStartedRef.current = true;
         document.getElementById('descenttut').innerHTML = "";
 
-        spawnwalls = setInterval(function() {
+        spawnwalls = timers.setInterval(function() {
           if( document.getElementById('dropper') === null){
-            clearInterval(spawnwalls);
+            timers.clearInterval(spawnwalls);
           }
           else if(wallTracker%(obstacleSetNumber*speed) === 0){
             speedChange++;
@@ -247,7 +249,7 @@ const SpoonDropDescent = () => {
           deleteStaleObstacles();
           setAllSpeeds();
           if( document.getElementById('dropper') === null){
-            clearInterval(spawnwalls);
+            timers.clearInterval(spawnwalls);
           }
           else{
             document.getElementById('dropper').innerHTML = points + "m fallen"
@@ -594,7 +596,7 @@ const SpoonDropDescent = () => {
       if(wallTracker%wallFrequency === 0 && !safetyMargin){
         let loopSpawnX = gameWidth*Math.random() + leftMargin;
         let loopSpawnY = height + size*2.5;
-        let count = getRandomInt(4) + 3;
+        let count = getRandomInt(2)*2 + 3;
         // let loopCluster = {xpos: loopSpawnX, ypos: loopSpawnY};
         let obstacleSize = size/5 + Math.random()*size/5
         
@@ -705,6 +707,15 @@ const SpoonDropDescent = () => {
     setMessage(startMessage);
     setScoreText("Click or tap to guide the spoon's descent.")
     restartRef.current = startRestart;
+    pauseRef.current = () => {
+      runner.enabled = false;
+      timers.pauseAll();
+      setScoreText("Score: " + points + " points")
+    };
+    resumeRef.current = () => {
+      runner.enabled = true;
+      timers.resumeAll();
+    };
     // Start Matter runner and renderer
     start();
     setGameOverState(true); // Show game over screen
@@ -712,7 +723,7 @@ const SpoonDropDescent = () => {
 
     // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef, resumeRef, pauseRef]);
 
 
 

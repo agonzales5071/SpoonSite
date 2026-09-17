@@ -3,12 +3,13 @@ import Matter from "matter-js";
 import './spoondrop.css';
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
-import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH,createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, 
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, createPlusScore, getRandomInt, getSpoon, getSpoonWithHilt, 
   getDualSidedSaber, drawHUD, createRandom2DVector, rotatePlayerToward, 
   BACKGROUND_COLOR,
   getAngleBetweenPos,
   getDistanceBetweenPos,
   createDefined2DVector} from "./util/spoonHelper";
+  import { createPausableTimerGroup } from "./util/pausableTimers";
   
 const SpoonSaberBattle = () => {
   const gameKey = "saberBattle";
@@ -21,7 +22,7 @@ const SpoonSaberBattle = () => {
   const gameState = useGameState(flavor, instructions, gameKey);
     const { canvasRef, canvasHeight, setCanvasHeight, restartRef, setPlayButtonText,
             setGameOverState, setMessage, setScoreText, recordScore,
-          gameStartedRef, pausedRef, rebuildKey } = gameState;
+          gameStartedRef, rebuildKey, pauseRef, resumeRef,} = gameState;
 
   const [playerColor, setPlayerColor] = useState(null);
   // const playerColorRef = useRef(playerColor);
@@ -43,7 +44,8 @@ const SpoonSaberBattle = () => {
     let Mouse = Matter.Mouse;
     let MouseConstraint = Matter.MouseConstraint;
     let engineOptions = {gravity: {y: 0}};
-    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height, engineOptions);
+    const timers = createPausableTimerGroup();
+    const { engine, runner, render, start, cleanup } = createMatterEngine(timers, canvasRef, width, height, engineOptions);
     // moves hud to right side of screen
     // const hudCanvas = hudRef.current;
     // if (hudCanvas) {
@@ -265,7 +267,7 @@ const SpoonSaberBattle = () => {
         Composite.add(engine.world, particle);
 
         // Auto-remove after a short time
-        setTimeout(() => Composite.remove(engine.world, particle), 200);
+        timers.setTimeout(() => Composite.remove(engine.world, particle), 200);
       }
     }
     
@@ -317,19 +319,19 @@ const SpoonSaberBattle = () => {
       
       saberPathNeeded = true;
 
-      attack.weakHitboxTimeout = setTimeout(() => {
+      attack.weakHitboxTimeout = timers.setTimeout(() => {
         attack.body.collisionFilter.mask = enemyFilter.mask;
         attack.body.collisionFilter.category = enemyFilter.category;
       }, 50);
       // Give the player a limited window to clash
-      attack.timeout = setTimeout(() => {
+      attack.timeout = timers.setTimeout(() => {
         removeAttack(attack);
       }, 300); // 300ms clash window
     }
     function removeAttack(attack) {
       if(!attack.beenPerfectHit) {scoreMult = 1; }
-      if (attack.timeout) clearTimeout(attack.timeout);
-      if (attack.weakHitboxTimeout) clearTimeout(attack.weakHitboxTimeout);
+      if (attack.timeout) timers.clearTimeout(attack.timeout);
+      if (attack.weakHitboxTimeout) timers.clearTimeout(attack.weakHitboxTimeout);
       if (attack.outer) Composite.remove(engine.world, attack.outer);
       if (attack.inner) Composite.remove(engine.world, attack.inner);
       if (attack.body) Composite.remove(engine.world, attack.body);
@@ -410,9 +412,9 @@ const SpoonSaberBattle = () => {
       const tutEl = document.getElementById("descenttut");
       if (tutEl) tutEl.innerHTML = "";
 
-      spawnEnemies = setInterval(() => {
+      spawnEnemies = timers.setInterval(() => {
         if (document.getElementById("dropper") === null || !gameStarted) {
-          clearInterval(spawnEnemies);
+          timers.clearInterval(spawnEnemies);
           return;
         }
         //detectDroppedSpoons()
@@ -523,7 +525,7 @@ const SpoonSaberBattle = () => {
       let msStep = msBetween/silNum;
       let angleStep = bodyAngleDiff/(silNum+1);
       let silCounter = 1;
-      let pathInterval = setInterval(() => {
+      let pathInterval = timers.setInterval(() => {
         let vec = createDefined2DVector(spacing*silCounter, movementAngleDiff+Math.PI/2);
         let silX = vec.x + prevAttack.initialPosition.x;
         let silY = vec.y + prevAttack.initialPosition.y;
@@ -532,12 +534,12 @@ const SpoonSaberBattle = () => {
         Composite.add(engine.world, curSilOuter);
         let curSilInner = getEnemySilhouettePart(silX, silY, prevAngle - silCounter*angleStep);
         Composite.add(engine.world, curSilInner);
-        setTimeout(()=> {
+        timers.setTimeout(()=> {
         Composite.remove(engine.world, curSilOuter);
         Composite.remove(engine.world, curSilInner);
         }, 300)
         silCounter++;
-        if(silCounter > silNum) clearInterval(pathInterval);
+        if(silCounter > silNum) timers.clearInterval(pathInterval);
       }, msStep)
 
     }
@@ -586,7 +588,7 @@ const SpoonSaberBattle = () => {
       if (tutEl) tutEl.innerHTML = "";
       const dropperEl = document.getElementById("dropper");
       if (dropperEl) dropperEl.innerHTML = "";
-      setTimeout(() => {
+      timers.setTimeout(() => {
         setGameOverState(true); // Show game over screen
       }, 1100)
       //leaderboards
@@ -602,7 +604,7 @@ const SpoonSaberBattle = () => {
             if(attack.beenPerfectHit){color = "#3df13d"}
             if(scoreMult > 2) {color = "rainbow"}
             let offset = !attack.beenHit || !attack.beenHitSecondSide ? size/10 : size/2;
-            createPlusScore(attack.initialPosition.x, attack.initialPosition.y-offset, scoreGain, engine.world, true, color);
+            createPlusScore(timers, attack.initialPosition.x, attack.initialPosition.y-offset, scoreGain, engine.world, true, color);
             spawnClashParticles(collisionPoint.x, collisionPoint.y);
             points += scoreGain;
           }
@@ -612,7 +614,7 @@ const SpoonSaberBattle = () => {
         let scoreGain = getPointsScored(attack, bodies);
         if(attack.beenPerfectHit){color = "#3df13dff"}
         if(scoreMult > 2) {color = "rainbow"}
-        createPlusScore(attack.initialPosition.x, attack.initialPosition.y-size/2, scoreGain, engine.world, true, color);
+        createPlusScore(timers, attack.initialPosition.x, attack.initialPosition.y-size/2, scoreGain, engine.world, true, color);
         spawnClashParticles(collisionPoint.x, collisionPoint.y);
         points += scoreGain;
         attack.beenHit = true;
@@ -698,13 +700,22 @@ const SpoonSaberBattle = () => {
       setPlayButtonText("Light Side")
     }
     restartRef.current = startRestart;
+    pauseRef.current = () => {
+      runner.enabled = false;
+      timers.pauseAll();
+      setScoreText("Score: " + points + " points")
+    };
+    resumeRef.current = () => {
+      runner.enabled = true;
+      timers.resumeAll();
+    };
 
     start(); //matter engine
     drawHUD(() => lives, () => gameStarted, hudRef, () => localColor);
     setGameOverState(true)
   // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef, pauseRef, resumeRef]);
   
     return (
       <GameShell gameName="SpoonSaber Battle" canvasRef={canvasRef} gameState={gameState} canvasStyle={{ borderColor: playerColor }}

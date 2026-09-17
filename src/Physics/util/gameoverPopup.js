@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 import '../spoondrop.css';
 
 const GameOver = ({
-  message, scoreText, visible, onRestart, playButtonText,
+  message, scoreText, visible, onRestart, onResume, playButtonText,
   personalBest, topScores, view, setView, isNewPB,
-  onRestartDarkSide, mobile,
+  onRestartDarkSide, mobile, paused
 }) => {
   const dateFormatOptions = { year: '2-digit', month: 'numeric', day: 'numeric' };
   const darkSideVisible = onRestartDarkSide != null && personalBest !== null;
@@ -29,7 +29,13 @@ const GameOver = ({
                 </button>
               )}
               <div id="sd-modal-message">
-                <p className="sd-message" style={topScores.length > 0 ? {} : {marginTop: '10%'}}>{message}</p>
+                {paused ? (
+                  <p className="sd-message" style={topScores.length > 0 ? {} : {marginTop: '10%'}}>Paused</p>
+                ) : (
+                  <>
+                    <p className="sd-message" style={topScores.length > 0 ? {} : {marginTop: '10%'}}>{message}</p>
+                  </>
+                )}
                 <p className="sd-score-text">{scoreText}</p>
                 {personalBest !== null && (
                   <p className="sd-personal-best">
@@ -37,13 +43,13 @@ const GameOver = ({
                   </p>
                 )}
               </div>
-              <div id="sd-modal-actions" style={{ flexDirection: darkSideVisible && mobile ? "column" : "row" }}>
-                <button type="button" className="sd-modal-action" id="restart-action" onClick={onRestart}>
+              <div id="sd-modal-actions" style={{ flexDirection: darkSideVisible && mobile && !paused ? "column" : "row" }}>
+                <button type="button" className="sd-modal-action" id="restart-action" onClick={paused ? onResume : onRestart}>
                   <div className="sd-modal-action-pattern"></div>
                   <div className="sd-modal-action-fade"></div>
-                  <span className="sd-modal-action-text inter-font">{playButtonText}</span>
+                  <span className="sd-modal-action-text inter-font">{paused ? "Resume" : playButtonText}</span>
                 </button>
-                {onRestartDarkSide && (
+                {!paused && onRestartDarkSide && (
                   <button
                     type="button"
                     className="sd-modal-action"

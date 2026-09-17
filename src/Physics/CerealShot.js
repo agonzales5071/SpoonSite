@@ -4,6 +4,7 @@ import './spoondrop.css';
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
 import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, floatAndFade, spawnFallingO } from "./util/spoonHelper";
+import { createPausableTimerGroup } from "./util/pausableTimers";
 
 const SpoonDropCerealShot = () => {
   const gameKey = "cerealShot";
@@ -17,7 +18,7 @@ const SpoonDropCerealShot = () => {
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, canvasHeight, setCanvasHeight, restartRef, setPlayButtonText,
           setGameOverState, setMessage, setScoreText, recordScore,
-          gameStartedRef, pausedRef, rebuildKey } = gameState;
+          gameStartedRef,  rebuildKey, pauseRef, resumeRef } = gameState;
   useEffect(() => swapDocBody(), []);
   
   useEffect(() => {
@@ -71,7 +72,8 @@ const SpoonDropCerealShot = () => {
     const height = Math.min(window.innerHeight, MAX_HEIGHT);
     setCanvasHeight(height);
 
-    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height);
+    const timers = createPausableTimerGroup();
+    const { engine, runner, render, start, cleanup } = createMatterEngine(timers, canvasRef, width, height);
 
     var MAX_FORCE = 0.9;
     const CATEGORY_CANNON = 0x0001;
@@ -340,7 +342,7 @@ const SpoonDropCerealShot = () => {
       return activeSpoons.some(spoonState => spoonState.spoon === body || spoonState.body === body);
     }
     function removeCereal(body) {
-      setTimeout(() => {
+      timers.setTimeout(() => {
         spawnCrumbBurst(body);
         Composite.remove(engine.world, body);
       }, 50);
@@ -535,7 +537,7 @@ const SpoonDropCerealShot = () => {
         cerealHits: 0,
       });
 
-      setTimeout(() => {
+      timers.setTimeout(() => {
         loadSpoon();
       }, 300);
 
@@ -736,7 +738,7 @@ const SpoonDropCerealShot = () => {
         collisionFilter: { mask: 0 }
       });
     
-      floatAndFade(composite, engine.world,  color, isRainbow, noFadeScoreParts)
+      floatAndFade(timers, composite, engine.world,  color, isRainbow, noFadeScoreParts)
       Matter.Composite.add(engine.world, composite);
     }
     
@@ -758,7 +760,7 @@ const SpoonDropCerealShot = () => {
       // Animate it
       let opacity = 0.8;
     
-      const interval = setInterval(() => {
+      const interval = timers.setInterval(() => {
         opacity -= 0.03;
     
         // Resize (scale) the body
@@ -768,7 +770,7 @@ const SpoonDropCerealShot = () => {
         ripple.render.opacity = opacity;
     
         if (opacity <= 0) {
-          clearInterval(interval);
+          timers.clearInterval(interval);
           Composite.remove(engine.world, ripple);
         }
       }, 50);
@@ -806,8 +808,8 @@ const SpoonDropCerealShot = () => {
       gameStarted = false;
       gameStartedRef.current = false;
       resettable = true;
-      clearInterval(dropSpoons);
-      setTimeout(() => {
+      timers.clearInterval(dropSpoons);
+      timers.setTimeout(() => {
         setGameOverState(true); // Show game over screen
       }, 1100)
     }
@@ -832,9 +834,9 @@ const SpoonDropCerealShot = () => {
         const tutEl = document.getElementById("descenttut");
         if (tutEl) tutEl.innerHTML = "";
 
-        dropSpoons = setInterval(() => {
+        dropSpoons = timers.setInterval(() => {
           if (document.getElementById("dropper") === null) {
-            clearInterval(dropSpoons);
+            timers.clearInterval(dropSpoons);
             return;
           }
           detectDroppedSpoons()
@@ -911,6 +913,16 @@ const SpoonDropCerealShot = () => {
     let startMessage = getPopupMessage(true);
     setMessage(startMessage);
     setScoreText("Tap and hold to charge cannon. Release to shoot.")
+
+    pauseRef.current = () => {
+      runner.enabled = false;
+      timers.pauseAll();
+      setScoreText("Score: " + points + " points")
+    };
+    resumeRef.current = () => {
+      runner.enabled = true;
+      timers.resumeAll();
+    };
     restartRef.current = startRestart;
 
 
@@ -921,7 +933,7 @@ const SpoonDropCerealShot = () => {
 
     // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef, pauseRef, resumeRef]);
 
   return (
     <GameShell gameName="Cereal Shot" canvasRef={canvasRef} gameState={gameState}>

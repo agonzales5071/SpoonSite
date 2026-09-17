@@ -4,6 +4,7 @@ import './spoondrop.css';
 import {swapDocBody,  useGameState, MAX_HEIGHT, MAX_WIDTH, BACKGROUND_COLOR, cosmeticFilter, createDefined2DVector, spawnParticleBurst, getShipWing, createPlusScore, enemyFilter, getAngleBetweenPos, getExclamationPoint, getLoop, getRandomInt, getSpoon, getSpoonShip, rotatePlayerToward, spoonFilter, createRandom2DVector } from "./util/spoonHelper.js";
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
+import { createPausableTimerGroup } from "./util/pausableTimers";
 
 const SpoonshipAsteroid = () => {
   const gameKey = "spaceOs";
@@ -12,7 +13,7 @@ const SpoonshipAsteroid = () => {
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
     setGameOverState, setMessage, setScoreText, recordScore,
-    gameStartedRef, pausedRef, rebuildKey } = gameState;
+    gameStartedRef, rebuildKey, pauseRef, resumeRef,} = gameState;
   useEffect(() => swapDocBody(), []);
   useEffect( () => {
     var isMobile = false;
@@ -27,7 +28,8 @@ const SpoonshipAsteroid = () => {
     let Mouse = Matter.Mouse;
     let MouseConstraint = Matter.MouseConstraint;
   
-    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height, {gravity: {y: 0}});
+    const timers = createPausableTimerGroup();
+    const { engine, runner, render, start, cleanup } = createMatterEngine(timers, canvasRef, width, height, {gravity: {y: 0}});
 
     var gameWidth = width;
     var marginV = height/6;
@@ -222,7 +224,7 @@ const SpoonshipAsteroid = () => {
                     y: p.body.velocity.y
                   };
                   Body.setVelocity(p.body, {x:0, y:0})
-                  p.cooldownTimeOut = setTimeout(() => {
+                  p.cooldownTimeOut = timers.setTimeout(() => {
                     if (projectiles.includes(p)) {
                       p.onCooldown = false;
                       Body.setVelocity(p.body, p.bufferedSpeed)
@@ -307,7 +309,7 @@ const SpoonshipAsteroid = () => {
     }
 
     function spawnCrumbBurst(body, color = null){
-      spawnParticleBurst(body, color, isMobile, engine, Composite);
+      spawnParticleBurst(timers, body, color, isMobile, engine, Composite);
     }
 
     //returns true if projectile is destroyed
@@ -326,7 +328,7 @@ const SpoonshipAsteroid = () => {
     function destroyProjectile(p){
       Composite.remove(engine.world, p.body);
       if(p.deleteTimeout){
-        clearTimeout(p.deleteTimeout);
+        timers.clearTimeout(p.deleteTimeout);
       }
       const idx = projectiles.indexOf(p);
       if(idx !== -1){
@@ -377,7 +379,7 @@ const SpoonshipAsteroid = () => {
         bufferedSpeed: 0
       };
       let lifetime = charge === "NoCharge" ? isMobile ? 750 : 1000 : 10000
-      projectile.deleteTimeout = setTimeout(() => {
+      projectile.deleteTimeout = timers.setTimeout(() => {
         destroyProjectile(projectile);
       }, lifetime);
       projectiles.push(projectile);
@@ -515,8 +517,8 @@ const SpoonshipAsteroid = () => {
     function clearPendingBlackHoles(){
       pendingBlackHoles.forEach(ph => {
         Composite.remove(engine.world, ph.body);
-        clearTimeout(ph.timeout);
-        clearInterval(ph.flashInterval)
+        timers.clearTimeout(ph.timeout);
+        timers.clearInterval(ph.flashInterval)
       });
     }
 
@@ -528,7 +530,7 @@ const SpoonshipAsteroid = () => {
       let warningBody = getExclamationPoint(x, y, size/4);
       let warningObject = {body: warningBody, timeout: null, flashInterval: null, hidden: false}
       Composite.add(engine.world, warningBody);
-      warningObject.flashInterval = setInterval(() => {
+      warningObject.flashInterval = timers.setInterval(() => {
         if(warningObject.hidden){
           Composite.add(engine.world, warningBody);
           warningObject.hidden = false;
@@ -538,9 +540,9 @@ const SpoonshipAsteroid = () => {
           warningObject.hidden = true;
         }
       }, 300);
-      warningObject.timeout = setTimeout(() => {
+      warningObject.timeout = timers.setTimeout(() => {
         pendingBlackHoles.splice(0, 1);
-        clearInterval(warningObject.flashInterval);
+        timers.clearInterval(warningObject.flashInterval);
         Composite.remove(engine.world, warningBody);
         createHoleObject(x, y);
       }, warningTime);
@@ -556,7 +558,7 @@ const SpoonshipAsteroid = () => {
         {isSensor: true, render:{fillStyle: "black"}});
       let holeObject = {body: holeBody, outline: holeOutline, shrinkBody: shrinker, particleSpawn: null, 
         lifeTimer: blackHoleDefaultTimeout, deleteInterval: null, captureReset: false, shrinking: false, shrinkInterval: null, shrinkTracker: Math.PI/2};
-      holeObject.deleteInterval = setInterval(() => {
+      holeObject.deleteInterval = timers.setInterval(() => {
         // console.log("hole life: " + holeObject.lifeTimer)
         if(captureHole === holeObject && !holeObject.captureReset){
           holeObject.captureReset = true;
@@ -569,7 +571,7 @@ const SpoonshipAsteroid = () => {
           holeObject.lifeTimer -= 1;
         }
         else{
-          clearInterval(holeObject.deleteInterval);
+          timers.clearInterval(holeObject.deleteInterval);
           blackHoleTimeout(holeObject);
         }
       }, 1000);
@@ -578,7 +580,7 @@ const SpoonshipAsteroid = () => {
       Composite.add(engine.world, holeObject.body);
       Composite.add(engine.world, holeObject.outline);
       Composite.add(engine.world, shrinker);
-      holeObject.particleSpawn = setInterval(() => {
+      holeObject.particleSpawn = timers.setInterval(() => {
         spawnGravParticles(x, y);
       }, 100);
     }
@@ -587,7 +589,7 @@ const SpoonshipAsteroid = () => {
       // h.cover.render.fillStyle = "white";
       let interval = 10;
       h.shrinking = true;
-      h.shrinkInterval = setInterval(() => {
+      h.shrinkInterval = timers.setInterval(() => {
       let newSize = Math.abs(Math.sin(h.shrinkTracker)*size);
       let scale = newSize/size;
       h.shrinkTracker += Math.PI/(10000/interval)
@@ -599,7 +601,7 @@ const SpoonshipAsteroid = () => {
     function resetShrinkCosmetics(holeObject){
       // holeObject.cover.render.fillStyle = "#FFFFFF00"
       holeObject.shrinking = false;
-      clearInterval(holeObject.shrinkInterval);
+      timers.clearInterval(holeObject.shrinkInterval);
       Composite.remove(engine.world, holeObject.shrinkBody);
       Composite.remove(engine.world, holeObject.outline);
       let shrinker = Bodies.circle(holeObject.body.position.x, holeObject.body.position.y, size/2, 
@@ -616,15 +618,15 @@ const SpoonshipAsteroid = () => {
       Composite.remove(engine.world, h.body);
       Composite.remove(engine.world, h.outline);
       Composite.remove(engine.world, h.shrinkBody);
-      clearInterval(h.particleSpawn);
-      clearInterval(h.shrinkInterval);
+      timers.clearInterval(h.particleSpawn);
+      timers.clearInterval(h.shrinkInterval);
     }
     //clears all black holes
     function eraseBlackHoles(){
       activeBlackHoles.forEach(h => {
         eraseBlackHole(h);
         if(h.deleteInterval){
-          clearInterval(h.deleteInterval)
+          timers.clearInterval(h.deleteInterval)
         }
       });
       activeBlackHoles.splice(0, activeBlackHoles.length);
@@ -697,7 +699,7 @@ const SpoonshipAsteroid = () => {
         Composite.add(engine.world, particle);
 
         // Auto-remove after a short time
-        setTimeout(() => Composite.remove(engine.world, particle), 250);
+        timers.setTimeout(() => Composite.remove(engine.world, particle), 250);
       }
     }
     function spawnAsteroid(){
@@ -732,7 +734,7 @@ const SpoonshipAsteroid = () => {
       Composite.add(engine.world, asteroid);
       Composite.add(engine.world, fadeCover);
       asteroids.push(asteroid);
-      let fadeInterval = setInterval(() => {
+      let fadeInterval = timers.setInterval(() => {
         let op = fadeCover.render.opacity;
         if(op <= 1/30){
           Composite.remove(engine.world, fadeCover);
@@ -740,7 +742,7 @@ const SpoonshipAsteroid = () => {
             pushAsteroid(asteroid);
             asteroid.isActive = true;
           }
-          clearInterval(fadeInterval);
+          timers.clearInterval(fadeInterval);
         }
         else{
           op -= 1/30;
@@ -758,7 +760,7 @@ const SpoonshipAsteroid = () => {
       child.isActive = true;
       Composite.add(engine.world, child);
       asteroids.push(child);
-      setTimeout(() => {
+      timers.setTimeout(() => {
         if(child){
           child.frictionAir = 0;
         }
@@ -820,7 +822,7 @@ const SpoonshipAsteroid = () => {
       let baseRoundTimer = 30;
       let roundTimer = baseRoundTimer;
       let startPoint = 3;
-      enemyInterval = setInterval(() => {
+      enemyInterval = timers.setInterval(() => {
         asteroidsLeft = 0;
         asteroids.forEach(asteroid => {
           let level = asteroid.level;
@@ -830,12 +832,12 @@ const SpoonshipAsteroid = () => {
         let spawnHoldPoint = roundGroupTracker%roundGroupAmount === 0;
         if(asteroids.length === 0 || 
           ((roundTimer <= 0 && !spawnHoldPoint) ||
-          spawnHoldPoint && asteroidsLeft < startPoint)){
+          (spawnHoldPoint && asteroidsLeft < startPoint))){
           //reset and enlarge spawnHoldPoint factors
           if(spawnHoldPoint){
             roundGroupTracker = 1;
             roundGroupAmount++;
-            startPoint+=2;
+            startPoint+=3;
           }
           for (let i = getRandomInt(3) + 1; i > 0; i--){
             spawnAsteroid()
@@ -877,6 +879,9 @@ const SpoonshipAsteroid = () => {
         if(playerRemoved){
           Composite.add(engine.world, playerShip)
         }
+        Body.setVelocity(playerShip, { x: 0, y: 0 });
+        Body.setAngularVelocity(playerShip, 0);
+        Body.setPosition(playerShip, { x: width/2, y: height/2 });   
         asteroids.splice(0, asteroids.length);
         projectiles.forEach(projectile => {
           Composite.remove(engine.world, projectile);
@@ -906,8 +911,8 @@ const SpoonshipAsteroid = () => {
       releasePlayer()
       setText()
       //leaderboards
-      clearInterval(enemyInterval);
-      setTimeout(() => {
+      timers.clearInterval(enemyInterval);
+      timers.setTimeout(() => {
         setGameOverState(true); // Show game over screen
       }, 1100)
     }
@@ -927,7 +932,7 @@ const SpoonshipAsteroid = () => {
         let posY = asteroidPos.y - mutlihitOffset;
         if(posX > width - size){posX = width - size}
         if(posY < size){posY = size}
-      createPlusScore(posX, posY, projectile.asteroidHits*100, engine.world, true, color, isMobile)
+      createPlusScore(timers, posX, posY, projectile.asteroidHits*100, engine.world, true, color, isMobile)
       setText()
     }
     function setText() {
@@ -978,6 +983,15 @@ const SpoonshipAsteroid = () => {
       setPlayButtonText("Restart")
     }
     restartRef.current = startRestart;
+    pauseRef.current = () => {
+      runner.enabled = false;
+      timers.pauseAll();
+      setScoreText("Score: " + points + " points")
+    };
+    resumeRef.current = () => {
+      runner.enabled = true;
+      timers.resumeAll();
+    };
 
     start();
     setGameOverState(true); // Show game over screen
@@ -987,12 +1001,9 @@ const SpoonshipAsteroid = () => {
       window.removeEventListener("keydown", handleKey);
       clearPendingBlackHoles();
       eraseBlackHoles();
-      projectiles.forEach(p => {
-        clearTimeout(p.deleteTimeout);
-      })
       
     };
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, gameStartedRef, rebuildKey]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, gameStartedRef, rebuildKey, pauseRef, resumeRef]);
 
 
 

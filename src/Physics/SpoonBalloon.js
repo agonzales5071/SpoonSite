@@ -4,6 +4,7 @@ import './spoondrop.css';
 import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, spoonFilter, getSpoonBalloon, getRandomInt, getAngleBetween, createDefined2DVector, spawnParticleBurst, enemyFilter, getFork } from "./util/spoonHelper";
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
+import { createPausableTimerGroup } from "./util/pausableTimers";
 
 const SpoonBalloon = () => {
   const gameKey = "spoonBalloon";
@@ -12,7 +13,7 @@ const SpoonBalloon = () => {
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
     setGameOverState, setMessage, setScoreText, recordScore,
-    gameStartedRef, pausedRef, rebuildKey } = gameState;
+    gameStartedRef, rebuildKey, pauseRef, resumeRef} = gameState;
   useEffect(() => swapDocBody(), []);
   useEffect( () => {
 
@@ -28,7 +29,8 @@ const SpoonBalloon = () => {
     let Mouse = Matter.Mouse;
     let MouseConstraint = Matter.MouseConstraint;
   
-    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height);
+    const timers = createPausableTimerGroup();
+    const { engine, runner, render, start, cleanup } = createMatterEngine(timers, canvasRef, width, height);
 
     const HAZARD_LABEL = "hazard";
     const PLAYER_COLOR = "silver";
@@ -113,7 +115,7 @@ const SpoonBalloon = () => {
     Matter.Events.on(mouseConstraint, "mousedown", function(event) {
       if(!isMouseDown){
         isMouseDown = true;
-        blowingTimeout = setTimeout(() => {blowing = true}, 200)  
+        blowingTimeout = timers.setTimeout(() => {blowing = true}, 200)  
       }
     });
 
@@ -128,7 +130,7 @@ const SpoonBalloon = () => {
         }
       }
       blowing = false;
-      clearTimeout(blowingTimeout);
+      timers.clearTimeout(blowingTimeout);
     });
     
     Matter.Events.on(engine, "collisionStart", function(event) {
@@ -177,7 +179,7 @@ const SpoonBalloon = () => {
          size*2/4, size*1/5, {isSensor: true, isStatic: true, render: {fillStyle: color}, chamfer: { radius: chamfer }});
       Body.rotate(hand, angle + Math.PI/2);
       Composite.add(engine.world, hand);
-      setTimeout(() => {
+      timers.setTimeout(() => {
         Composite.remove(engine.world, hand);
       }, timeout)
     }
@@ -250,7 +252,7 @@ const SpoonBalloon = () => {
       resettable = true;
       //set text
       //leaderboards
-      setTimeout(() => {
+      timers.setTimeout(() => {
         setGameOverState(true); // Show game over screen
       }, 1100)
     }
@@ -294,12 +296,21 @@ const SpoonBalloon = () => {
       setMessage("")
     }
     restartRef.current = startRestart;
+    pauseRef.current = () => {
+      runner.enabled = false;
+      timers.pauseAll();
+      setScoreText("Score: ??? points")
+    };
+    resumeRef.current = () => {
+      runner.enabled = true;
+      timers.resumeAll();
+    };
 
     start();
     setGameOverState(true); // Show game over screen
   // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef, pauseRef, resumeRef]);
 
 
 

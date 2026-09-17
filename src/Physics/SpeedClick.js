@@ -4,6 +4,7 @@ import "./spoondrop.css";
 import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, getSpoon } from './util/spoonHelper';
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
+import { createPausableTimerGroup } from "./util/pausableTimers";
 
 const SpoonDropGameSpeed = () => {
   const gameKey = "speedClick";
@@ -12,7 +13,7 @@ const SpoonDropGameSpeed = () => {
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
     setGameOverState, setMessage, setScoreText, recordScore,
-    gameStartedRef, pausedRef, rebuildKey } = gameState;
+    gameStartedRef,  rebuildKey, pauseRef, resumeRef} = gameState;
   const textElementID = "dropper";
   useEffect(() => swapDocBody(), []);
   useEffect(() => {
@@ -24,7 +25,8 @@ const SpoonDropGameSpeed = () => {
     let Mouse = Matter.Mouse;
     let MouseConstraint = Matter.MouseConstraint;
   
-    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height);
+    const timers = createPausableTimerGroup();
+    const { engine, runner, render, start, cleanup } = createMatterEngine(timers, canvasRef, width, height);
 
     var hatch = Bodies.rectangle(width/2, height*4/5, width/2, 50, {isStatic: true} ),
         sideL = Bodies.rectangle(width*3/4, height*1/20, 50, height*3/2, {isStatic: true}),
@@ -61,15 +63,16 @@ const SpoonDropGameSpeed = () => {
       //console.log("spoon count = " + spoonCount);
       //console.log("game running = " + gameRunning);
       if(!gameRunning){
-        resetGame();
+        // resetGame();
       }
       if (gameStartable){
-        gameRunning = true;
-        setGameOverState(false); // Show game over screen
+        gameStartable = false;
+        // gameRunning = true;
+        // setGameOverState(false); // Show game over screen
         gameStartedRef.current = true;
-        let timer = setInterval(function() {
+        let timer = timers.setInterval(function() {
           if(document.getElementById(textElementID) === null){
-            clearInterval(timer);
+            timers.clearInterval(timer);
           }
           else{
             seconds--;
@@ -96,7 +99,7 @@ const SpoonDropGameSpeed = () => {
                   if(countUp === spoonCount && countingUp){
                     countingUp = false;
                     clearInterval(counter);
-                    clearInterval(timer);
+                    timers.clearInterval(timer);
                     recordScore(spoonCount);
                     setScoreText(spoonCount + " spoons dropped");
                     setPlayButtonText("Restart")
@@ -170,13 +173,22 @@ const SpoonDropGameSpeed = () => {
       
 
     restartRef.current = resetGame;
+    pauseRef.current = () => {
+      runner.enabled = false;
+      timers.pauseAll();
+      setScoreText("how many spoons????")
+    };
+    resumeRef.current = () => {
+      runner.enabled = true;
+      timers.resumeAll();
+    };
 
     start();
     setGameOverState(true); // Show game over screen
     gameStartedRef.current = false;
   // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef, pauseRef, resumeRef]);
 
   
     return (

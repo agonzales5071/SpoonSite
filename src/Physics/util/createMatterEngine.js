@@ -1,6 +1,6 @@
 import Matter from 'matter-js';
 
-export function createMatterEngine(canvasRef, width, height, engineOptions = {}) {
+export function createMatterEngine(timers, canvasRef, width, height, engineOptions = {}) {
   const engine = Matter.Engine.create(engineOptions);
   const runner = Matter.Runner.create();
   const render = Matter.Render.create({
@@ -20,6 +20,7 @@ export function createMatterEngine(canvasRef, width, height, engineOptions = {})
     Matter.Composite.clear(engine.world, false);
     Matter.Engine.clear(engine);
     render.textures = {};
+    timers.clearAll();
   }
 
   return { engine, runner, render, start, cleanup };

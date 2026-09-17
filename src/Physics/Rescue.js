@@ -1,9 +1,10 @@
-import React, { useEffect,} from "react";
+import { useEffect,} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
 import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, getSpoon, getDroppingIndicator } from "./util/spoonHelper";
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
+import { createPausableTimerGroup } from "./util/pausableTimers";
 
 const SpoonDropRescue = () => {
   const gameKey = "rescue";
@@ -12,7 +13,7 @@ const SpoonDropRescue = () => {
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
     setGameOverState, setMessage, setScoreText, recordScore,
-    gameStartedRef, pausedRef, rebuildKey } = gameState;
+    gameStartedRef, rebuildKey, pauseRef, resumeRef,} = gameState;
 
   useEffect(() => swapDocBody(), []);
   useEffect(() => {
@@ -37,7 +38,8 @@ const SpoonDropRescue = () => {
     const height = Math.min(window.innerHeight, MAX_HEIGHT);
     setCanvasHeight(height);
     
-    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height);
+    const timers = createPausableTimerGroup();
+    const { engine, runner, render, start, cleanup } = createMatterEngine(timers, canvasRef, width, height);
 
     var gameWidth = width*8/10;
     var margin = width/10;
@@ -253,7 +255,7 @@ const SpoonDropRescue = () => {
       let color = spoonColors[spoonType];
       let triangleBody = getDroppingIndicator(nextDropXPos, color, isMobile);
       indicators.push(triangleBody);
-      let indicatorBlinkingInterval = setInterval(() => {
+      let indicatorBlinkingInterval = timers.setInterval(() => {
         if(indicatorShowing){
           Composite.remove(engine.world, triangleBody)
         }
@@ -273,7 +275,7 @@ const SpoonDropRescue = () => {
             Composite.remove(engine.world, oldSpoon);
           }
           Composite.add(engine.world, spoonObstacle);
-          clearInterval(indicatorBlinkingInterval);
+          timers.clearInterval(indicatorBlinkingInterval);
           spoonsInQueue.shift();
           indicators.shift();
         }
@@ -282,7 +284,7 @@ const SpoonDropRescue = () => {
     }
     function clearAllQueuedSpoons(){
       spoonsInQueue.forEach(interval => {
-        clearInterval(interval)
+        timers.clearInterval(interval)
       })
       spoonsInQueue.splice(0, spoonsInQueue.length);
       indicators.forEach(body => {
@@ -397,7 +399,7 @@ const SpoonDropRescue = () => {
       gameStarted = false;
       gameStartedRef.current = false;
       resettable = true;
-      clearInterval(dropSpoons);
+      timers.clearInterval(dropSpoons);
       let dumpForce = isMobile ? 0.1: 0.5;
       trampoline.bodies.forEach(segment => {
         const netForce = { x: 0, y: dumpForce }; // throw out the spoons
@@ -407,7 +409,7 @@ const SpoonDropRescue = () => {
       if (tutEl) tutEl.innerHTML = "";
       const dropperEl = document.getElementById("dropper");
       if (dropperEl) dropperEl.innerHTML = "";
-      setTimeout(() => {
+      timers.setTimeout(() => {
         setGameOverState(true); // Show game over screen
       }, 1100)
     }
@@ -420,9 +422,9 @@ const SpoonDropRescue = () => {
         const tutEl = document.getElementById("descenttut");
         if (tutEl) tutEl.innerHTML = "";
 
-        dropSpoons = setInterval(() => {
+        dropSpoons = timers.setInterval(() => {
           if (document.getElementById("dropper") === null) {
-            clearInterval(dropSpoons);
+            timers.clearInterval(dropSpoons);
             return;
           }
           detectDroppedSpoons()
@@ -491,12 +493,21 @@ const SpoonDropRescue = () => {
       setPlayButtonText("Restart")
     }
     restartRef.current = startRestart;
+    pauseRef.current = () => {
+      runner.enabled = false;
+      timers.pauseAll();
+      setScoreText("Score: " + points + " points")
+    };
+    resumeRef.current = () => {
+      runner.enabled = true;
+      timers.resumeAll();
+    };
 
     start();
     setGameOverState(true); // Show game over screen
     // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef, pauseRef, resumeRef]);
 
   return (
     <GameShell gameName="Rescue" canvasRef={canvasRef} gameState={gameState} />

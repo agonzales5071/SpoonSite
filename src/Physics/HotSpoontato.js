@@ -4,6 +4,7 @@ import './spoondrop.css';
 import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, drawHUD, getDroppingIndicator, getSpoon, resizeDroppingIndicator } from "./util/spoonHelper";
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
+import { createPausableTimerGroup } from "./util/pausableTimers";
 
 const SpoonDropHotSpoontato = () => {
   const gameKey = "hotSpoontato";
@@ -14,7 +15,7 @@ const SpoonDropHotSpoontato = () => {
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, canvasHeight, setCanvasHeight, restartRef, setPlayButtonText,
           setGameOverState, setMessage, setScoreText, recordScore,
-          gameStartedRef, pausedRef, rebuildKey } = gameState;
+          gameStartedRef, rebuildKey, pauseRef, resumeRef,} = gameState;
   useEffect(() => swapDocBody(), []);
   useEffect(() => {
     const {
@@ -39,8 +40,8 @@ const SpoonDropHotSpoontato = () => {
     setCanvasHeight(height);
     setCanvasWidth(width);
     
-    
-    const { engine, render, start, cleanup } = createMatterEngine(canvasRef, width, height);
+    const timers = createPausableTimerGroup();
+    const { engine, runner, render, start, cleanup } = createMatterEngine(timers, canvasRef, width, height);
 
     var margin = width/10;
     var fric = 0.03;
@@ -220,7 +221,7 @@ const SpoonDropHotSpoontato = () => {
           let triangle = getDroppingIndicator(spoon.body.position.x, spoon.body.color, isMobile);
           resizeDroppingIndicator(triangle, spoon.body.position.y);
           Composite.add(engine.world, triangle)
-          setTimeout(()=>{
+          timers.setTimeout(()=>{
             Composite.remove(engine.world, triangle);
           }, 10)
         }
@@ -319,9 +320,9 @@ const SpoonDropHotSpoontato = () => {
             targetBody.parent.beenOnScreen = true;
             bumpNeeded = true;
             netBump = true;
-            setTimeout(() => { Matter.Body.applyForce(targetBody.parent, targetBody.position, { x: 0, y:  bumperPowerY/2})
+            timers.setTimeout(() => { Matter.Body.applyForce(targetBody.parent, targetBody.position, { x: 0, y:  bumperPowerY/2})
             netBump = false; }, 1000);
-            setTimeout(() => { Matter.Body.applyForce(targetBody.parent, targetBody.position, { x: 0, y:  bumperPowerY});
+            timers.setTimeout(() => { Matter.Body.applyForce(targetBody.parent, targetBody.position, { x: 0, y:  bumperPowerY});
             }, 100);
           }
         }
@@ -337,7 +338,7 @@ const SpoonDropHotSpoontato = () => {
               return;
             }
             bumper.render.fillStyle = "#39ad5e";
-            setTimeout(() => {
+            timers.setTimeout(() => {
               bumper.render.fillStyle = "transparent";
             }, 100);
         
@@ -348,9 +349,9 @@ const SpoonDropHotSpoontato = () => {
         
             let ticks = 0;
         
-            const intervalId = setInterval(() => {
+            const intervalId = timers.setInterval(() => {
               if (ticks >= maxTicks) {
-                clearInterval(intervalId);
+                timers.clearInterval(intervalId);
                 ongoingPushes.delete(spoon.id);
                 return;
               }
@@ -378,7 +379,7 @@ const SpoonDropHotSpoontato = () => {
     Events.on(engine, "afterUpdate", () => {
       if (bumpNeeded) {
         bumpTime = 0;
-        doBumps = setInterval(() => {
+        doBumps = timers.setInterval(() => {
           if(bumpTime < 2) {
             trampoline.bodies.forEach(segment => {
               Body.applyForce(segment, segment.position, { x: 0, y: trampForce }); // stronger upward force
@@ -386,7 +387,7 @@ const SpoonDropHotSpoontato = () => {
             bumpTime++;
           }
           else {
-            clearInterval(doBumps);
+            timers.clearInterval(doBumps);
           }
         }, 50);
         bumpNeeded = false; // reset so it only fires once
@@ -399,7 +400,7 @@ const SpoonDropHotSpoontato = () => {
     }
     function clearAllQueuedSpoons(){
       spoonsInQueue.forEach(interval => {
-        clearInterval(interval)
+        timers.clearInterval(interval)
       })
       spoonsInQueue.splice(0, spoonsInQueue.length);
       indicators.forEach(body => {
@@ -420,7 +421,7 @@ const SpoonDropHotSpoontato = () => {
       let color = spoonColors[0];
       let triangleBody = getDroppingIndicator(xposSpawn, color, isMobile);
       indicators.push(triangleBody);
-      let indicatorBlinkingInterval = setInterval(() => {
+      let indicatorBlinkingInterval = timers.setInterval(() => {
         if(indicatorShowing){
           Composite.remove(engine.world, triangleBody)
         }
@@ -435,7 +436,7 @@ const SpoonDropHotSpoontato = () => {
           allSpoons.push({body: spoonObstacle, temp: startingHeat, isCooled: false});
           spoonHeatValues.push(startingHeat);
           Composite.add(engine.world, spoonObstacle);
-          clearInterval(indicatorBlinkingInterval);
+          timers.clearInterval(indicatorBlinkingInterval);
           spoonsInQueue.shift();
           indicators.shift();
         }
@@ -520,7 +521,7 @@ const SpoonDropHotSpoontato = () => {
     
       // Optional: animate upward float and fade
       let opacity = 1;
-      const floatInterval = setInterval(() => {
+      const floatInterval = timers.setInterval(() => {
         // Move upward slightly
         Matter.Body.translate(plusOneComposite, { x: 0, y: -1 });
     
@@ -531,7 +532,7 @@ const SpoonDropHotSpoontato = () => {
         });
     
         if (opacity <= 0) {
-          clearInterval(floatInterval);
+          timers.clearInterval(floatInterval);
           Matter.Composite.remove(engine.world, plusOneComposite);
         }
       }, 50);
@@ -646,7 +647,7 @@ const SpoonDropHotSpoontato = () => {
       gameStarted = false;
       gameStartedRef.current = false;
       resettable = true;
-      clearInterval(dropSpoons);
+      timers.clearInterval(dropSpoons);
       trampoline.bodies.forEach(segment => {
         const netForce = { x: 0, y: 1 }; // throw out the spoons
         Body.applyForce(segment, segment.position, netForce);
@@ -656,7 +657,7 @@ const SpoonDropHotSpoontato = () => {
       const dropperEl = document.getElementById("dropper");
       if (dropperEl) dropperEl.innerHTML = "";
       
-      setTimeout(() => {
+      timers.setTimeout(() => {
         setGameOverState(true); // Show game over screen
       }, 1100)
     }
@@ -670,9 +671,9 @@ const SpoonDropHotSpoontato = () => {
         const tutEl = document.getElementById("descenttut");
         if (tutEl) tutEl.innerHTML = "";
 
-        dropSpoons = setInterval(() => {
+        dropSpoons = timers.setInterval(() => {
           if (document.getElementById("dropper") === null) {
-            clearInterval(dropSpoons);
+            timers.clearInterval(dropSpoons);
             return;
           }
           spoonHeatDecay()
@@ -745,6 +746,15 @@ const SpoonDropHotSpoontato = () => {
       setPlayButtonText("Restart")
     }
     restartRef.current = startRestart;
+    pauseRef.current = () => {
+      runner.enabled = false;
+      timers.pauseAll();
+      setScoreText("Score: " + points + " points")
+    };
+    resumeRef.current = () => {
+      runner.enabled = true;
+      timers.resumeAll();
+    };
 
     start();
     setGameOverState(true); // Show game over screen
@@ -754,7 +764,7 @@ const SpoonDropHotSpoontato = () => {
 
     // Cleanup on unmount
     return cleanup;
-  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef]);
+  }, [canvasRef, restartRef, setCanvasHeight, setGameOverState, setMessage, setPlayButtonText, setScoreText, recordScore, rebuildKey, gameStartedRef, pauseRef, resumeRef]);
 
   return (
     <GameShell gameName="Hot Spoontato" canvasRef={canvasRef} gameState={gameState}>

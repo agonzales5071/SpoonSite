@@ -113,40 +113,59 @@
     left: calc(50% - (var(--canvas-width) / 2) + 20px); 
   }
 }
-.back-button {
-  touch-action:  auto;
+.pause-button {
+  touch-action: auto;
   position: absolute;
   left: 3%;
-  top: 3%;
-	width: 0;
-	height: 0;
-	border-top: 12px solid transparent;
-	border-right: 25px solid rgb(114, 133, 127);
-  border-left: transparent;
-	border-bottom: 12px solid transparent;
-  backface-visibility: hidden;
-  background-color: transparent;
-  padding: 0%;
-  stroke: none;
-  box-shadow: none;
-  visibility: hidden;
+  top: calc(50% - (var(--canvas-height) / 2) + 20px); 
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: rgba(0, 0, 0, 0.35);
+  border: none;
+  border-radius: 8px;
+  padding: 0;
+  cursor: pointer;
   z-index: 1;
 }
-.back-button:hover{
-  border-right: 25px solid rgb(160, 201, 188);
+.pause-button .bar {
+  width: 6px;
+  height: 18px;
+  background-color: whitesmoke;
+  border-radius: 2px;
+  margin-left: 2px;
+  margin-right: 2px;
+  z-index: 2;
+  display: inline-block;
+}
+.pause-button:hover .bar {
+  background-color: rgb(160, 201, 188);
 }
 @media only screen and (min-width: 768px) {
-  .back-button{
-    visibility: visible;
-    top: 5%;
-    border-top: 20px solid transparent;
-    border-right: 45px solid rgb(117, 153, 143);
-    border-bottom: 20px solid transparent;
+  .pause-button {
+    top: calc(50% - (var(--canvas-height) / 2) + 20px); 
+    width: 44px;
+    height: 44px;
   }
-  .back-button:hover{
-    border-right: 45px solid rgb(160, 201, 188);
+  .pause-button .bar {
+    width: 8px;
+    height: 24px;
   }
-
+}
+.resume-countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 96px;
+  font-weight: bold;
+  color: whitesmoke;
+  text-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+  z-index: 15;
+  pointer-events: none;
 }
 .power-bar {
   position: fixed;
