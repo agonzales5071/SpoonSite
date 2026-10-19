@@ -4,6 +4,7 @@ import './spoondrop.css';
 import Popup from './util/menuPopup';
 import { swapDocBody, getDigitBodies, getSpoon, BACKGROUND_COLOR, getRandomInt} from './util/spoonHelper';
 
+
 const SpoonDropMenu = () => {
     const canvasRef = useRef(null);
     const tutorialFnRef = useRef(null);
