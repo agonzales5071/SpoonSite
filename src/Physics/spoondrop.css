@@ -162,6 +162,7 @@
   transform: translate(-50%, -50%);
   font-size: 96px;
   font-weight: bold;
+  font-family: "VT323";
   color: whitesmoke;
   text-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
   z-index: 15;

@@ -780,6 +780,7 @@ const SpoonshipAsteroid = () => {
       let baseForce = isMobile ? 3 : 10;
       baseForce *= asteroid.level; 
       let force = baseForce + baseForce*Math.random()
+      force = isMobile && asteroid.level <= 2 ? 0.75*force : force;
       Body.applyForce(asteroid, asteroid.position, createDefined2DVector(force, moveAngle));
     }
 

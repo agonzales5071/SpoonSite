@@ -50,17 +50,17 @@ const SpoonDropHotSpoontato = () => {
     var size = 100; // size var for spoon
     let lives = 3;
     // Trampoline
-    var segmentCount = 11;
-    var segmentWidth = 40;
-    var segmentHeight = 30;
-    if(width < 900){
+    let segmentCount = 7;
+    var segmentWidth = size/2 + 6;
+    var segmentHeight = 20;
+
+    if (width < 900) {
       isMobile = true;
       size = width > 500 && height > 500 ? 75 : 50;
-      fric = 0.15;
-      segmentCount = 5;
-      segmentWidth = 28;
+      fric = 0.03;
+      segmentWidth = size/2 + 3;
       segmentHeight = 15;
-      margin = width/10;
+      margin = width/20;
     } 
     var gameWidth = width-2*margin;
     const startX = width / 2 - (segmentCount * segmentWidth) / 2;

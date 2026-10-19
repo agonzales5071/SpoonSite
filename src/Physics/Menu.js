@@ -10,7 +10,21 @@ const SpoonDropMenu = () => {
     const [popupVisible, setPopupVisible] = useState(true);
     const [startTutorial, setStartTutorial] = useState(false);
     const popupCheck = "menuPopupSeen";
-
+    const [rebuildKey, setRebuildKey] = useState(0);
+    useEffect(() => {
+      let resizeTimeout;
+      function handleResize() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          setRebuildKey(k => k + 1);
+        }, 200); // debounce so rapid resize/drag events don't spam rebuilds
+      }
+      window.addEventListener('resize', handleResize);
+      return () => {
+        clearTimeout(resizeTimeout);
+        window.removeEventListener('resize', handleResize);
+      };
+    }, []);
     useEffect(() => swapDocBody(), []);
 
     useEffect(() => {
@@ -40,6 +54,12 @@ const SpoonDropMenu = () => {
       let Composite = Matter.Composite;
       let Mouse = Matter.Mouse;
       let MouseConstraint = Matter.MouseConstraint;
+      const menuDisplay = document.getElementById("menudisplay");
+      Array.from(menuDisplay.children).forEach(child => {
+        if (child.id !== "menu-instructions") {
+          child.remove();
+        }
+      });
     
       let engine = Engine.create({});
       let runner = Runner.create({});
@@ -401,11 +421,10 @@ const SpoonDropMenu = () => {
       Runner.stop(runner);
       Composite.clear(engine.world, false);
       Engine.clear(engine);
-      render.canvas.remove();
       render.textures = {};
       tutorialFnRef.current = null;
     };
-  }, []);
+  }, [rebuildKey]);
   useEffect(() => {
     if (startTutorial && tutorialFnRef.current) {
       tutorialFnRef.current();

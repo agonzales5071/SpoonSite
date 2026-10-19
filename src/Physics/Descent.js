@@ -164,35 +164,7 @@ const SpoonDropDescent = () => {
     
     Matter.Events.on(engine, "collisionStart", function(event) {
       //gameover
-      if(gameStarted){
-        allWalls.forEach(element => {
-          Body.setStatic(element, true);
-        });
-        //sometimes the loop shooter is spliced out of all walls so need to set loops to static as backup
-        loops.forEach(element => {
-          Body.setStatic(element.body, true);
-        });
-
-        if(!debugVal) recordScore(points);
-        setScoreText(points + "m fallen");
-        let endMessage = getPopupMessage();
-        setMessage(endMessage);
-        gameStarted = false;
-        resettable = true;
-        //Body.setStatic(curSpoon, true);
-        ragdoll = true;
-        timers.clearInterval(spawnwalls);
-        if( document.getElementById('descenttut') !== null){
-          document.getElementById("descenttut").innerHTML = "";
-        }
-        if( document.getElementById('dropper') !== null){
-          document.getElementById("dropper").innerHTML = "";
-        }
-        timers.setTimeout(() => {
-          setGameOverState(true); // Show game over screen
-          gameStartedRef.current = false;
-        }, 1100)
-      }
+      gameOver()
         
     });
     var initialSpeed = 20;
@@ -217,6 +189,18 @@ const SpoonDropDescent = () => {
       oneType = parseInt(debugVal);
     }
     var currentObstacle = spawnDefaultWalls;
+    let offscreenTimer = 0
+    const offscreenMax = 50; //x100ms
+    function playerOffscreenCheck(){
+      let x = curSpoon.position.x;
+      if(x < -size/4 || x > width+size/4){
+        offscreenTimer++;
+      }
+      else{
+        offscreenTimer = 0;
+      }
+      return offscreenTimer > offscreenMax;
+    }
     function getRandomInt(max) {
       return Math.floor(Math.random() * max);
     }
@@ -243,6 +227,9 @@ const SpoonDropDescent = () => {
             }
             
           }
+          if(playerOffscreenCheck()){
+            gameOver(true)
+          }
           doObstacles();
           wallTracker++;
           points++;
@@ -257,6 +244,37 @@ const SpoonDropDescent = () => {
         }, 100);
       }
 
+    }
+    function gameOver(offscreenDeath=false){
+      if(gameStarted){
+        allWalls.forEach(element => {
+          Body.setStatic(element, true);
+        });
+        //sometimes the loop shooter is spliced out of all walls so need to set loops to static as backup
+        loops.forEach(element => {
+          Body.setStatic(element.body, true);
+        });
+
+        if(!debugVal) recordScore(points);
+        setScoreText(points + "m fallen");
+        let endMessage = offscreenDeath ? "Stay on the screen next time! (5s max)" : getPopupMessage();
+        setMessage(endMessage);
+        gameStarted = false;
+        resettable = true;
+        //Body.setStatic(curSpoon, true);
+        ragdoll = true;
+        timers.clearInterval(spawnwalls);
+        if( document.getElementById('descenttut') !== null){
+          document.getElementById("descenttut").innerHTML = "";
+        }
+        if( document.getElementById('dropper') !== null){
+          document.getElementById("dropper").innerHTML = "";
+        }
+        timers.setTimeout(() => {
+          setGameOverState(true); // Show game over screen
+          gameStartedRef.current = false;
+        }, 1100)
+      }
     }
     //return value between 0 and 1
     function getObstaclePercentDone(){
@@ -676,6 +694,7 @@ const SpoonDropDescent = () => {
         clearScreen();
         changeObstacle();
         points = 0;
+        offscreenTimer = 0;
         setScoreText(points);            // reset score
         wallTracker = 0;
         speed = initialSpeed;

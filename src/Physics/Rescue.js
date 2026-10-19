@@ -1,15 +1,15 @@
 import { useEffect,} from "react";
 import Matter from "matter-js";
 import './spoondrop.css';
-import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, getSpoon, getDroppingIndicator } from "./util/spoonHelper";
+import { swapDocBody, useGameState, MAX_HEIGHT, MAX_WIDTH, getSpoon, getDroppingIndicator, getFork } from "./util/spoonHelper";
 import { createMatterEngine } from "./util/createMatterEngine";
 import { GameShell } from "./util/GameShell";
 import { createPausableTimerGroup } from "./util/pausableTimers";
 
 const SpoonDropRescue = () => {
   const gameKey = "rescue";
-  const flavor = "AHHH! Spoons are falling from the skyyyyy." ;
-  const instructions = "Click or tap and drag to move the net. Catch all the spoons!";
+  const flavor = "AHHH! Utensils are falling from the skyyyyy." ;
+  const instructions = "Click or tap and drag to move the net. Catch all the spoons! (but not the forks)";
   const gameState = useGameState(flavor, instructions, gameKey);
   const { canvasRef, setCanvasHeight, restartRef, setPlayButtonText,
     setGameOverState, setMessage, setScoreText, recordScore,
@@ -49,81 +49,78 @@ const SpoonDropRescue = () => {
     var size = 100; // size var for spoon
 
     // Trampoline
-    var segmentCount = 11;
-    var segmentWidth = 40;
-    var segmentHeight = 30;
-    const startX = width / 2 - (segmentCount * segmentWidth) / 2;
+    const initialSegmentCount = 7;
+    let segmentCount = initialSegmentCount;
+    var segmentWidth = size/2 + 6;
+    var segmentHeight = 20;
+    const startX = width / 2 - (initialSegmentCount * segmentWidth) / 4;
     const startY = height * 0.8;
 
     if (width < 900) {
       isMobile = true;
       size = width > 500 && height > 500 ? 75 : 50;
       fric = 0.03;
-      segmentCount = 7;
-      segmentWidth = 28;
+      segmentWidth = size/2 + 3;
       segmentHeight = 15;
       gameWidth = width * 9/10;
       margin = width/20;
     } 
 
+    function initializeTrampoline(startX, startY, segmentCount){
+      const trampoline = Composites.stack(
+        startX,
+        startY,
+        segmentCount,
+        1,
+        0,
+        0,
+        (x, y) =>
+          Bodies.rectangle(x, y, segmentWidth, segmentHeight, {
+            restitution: restitutionValue,
+            frictionAir: fric,
+            friction: fric,
+            collisionFilter: {
+              group: 2,
+              category: 2, 
+              mask: 4
+            },
+            render: { fillStyle: "#558B2F" },
+            chamfer: { radius: 6 },
+          })
+      );
+      Composites.chain(trampoline, 0.5, 0, -0.5, 0, {
+        stiffness: 1,
+        length: 2,
+        render: { visible: false },
+      });
 
-
-    const trampoline = Composites.stack(
-      startX,
-      startY,
-      segmentCount,
-      1,
-      0,
-      0,
-      (x, y) =>
-        Bodies.rectangle(x, y, segmentWidth, segmentHeight, {
-          restitution: restitutionValue,
-          frictionAir: fric,
-          friction: fric,
-          collisionFilter: {
-            group:2,
-            category: 2, 
-            mask: 4
-          },
-          render: { fillStyle: "#558B2F" },
-          chamfer: { radius: 6 },
-        })
-    );
-
-    Composites.chain(trampoline, 0.5, 0, -0.5, 0, {
-      stiffness: 1,
-      length: 2,
-      render: { visible: false },
-    });
-
-    // Rails at ends (invisible, kinematic)
-    const leftRail = Bodies.rectangle(startX, startY, 10, 10, {
-      isStatic: false,
-      isSensor: true,
-      collisionFilter: { group: -1 },
-      render: { visible: false },
-    });
-    Body.setVelocity(leftRail, { x: 0, y: 0 });
-    leftRail.isSleeping = true;
-
-    const rightRail = Bodies.rectangle(
-      startX + segmentCount * segmentWidth,
-      startY,
-      10,
-      10,
-      {
+      // Rails at ends (invisible, kinematic)
+      const leftRail = Bodies.rectangle(startX, startY, 10, 10, {
         isStatic: false,
         isSensor: true,
         collisionFilter: { group: -1 },
         render: { visible: false },
-      }
-    );
-    Body.setVelocity(rightRail, { x: 0, y: 0 });
-    rightRail.isSleeping = true;
+      });
+      Body.setVelocity(leftRail, { x: 0, y: 0 });
+      leftRail.isSleeping = true;
 
-    Composite.add(engine.world, [leftRail, rightRail]);
+      const rightRail = Bodies.rectangle(
+        startX + segmentCount * segmentWidth,
+        startY,
+        10,
+        10,
+        {
+          isStatic: false,
+          isSensor: true,
+          collisionFilter: { group: -1 },
+          render: { visible: false },
+        }
+      );
+      Body.setVelocity(rightRail, { x: 0, y: 0 });
+      rightRail.isSleeping = true;
 
-    const leftConstraint = Constraint.create({
+      Composite.add(engine.world, [leftRail, rightRail]);
+      const leftConstraint = Constraint.create({
       bodyA: trampoline.bodies[0],
       pointA: { x: -segmentWidth / 2, y: 0 },
       bodyB: leftRail,
@@ -143,13 +140,16 @@ const SpoonDropRescue = () => {
       render: { visible: false },
     });
 
-    trampoline.bodies.forEach((body, index) => {
-      body.label = index;
-      console.log(index)
-    })
+    trampoline.bodies.forEach((body, index) => { body.label = index; });
 
     Composite.add(engine.world, [leftConstraint, rightConstraint]);
     Composite.add(engine.world, trampoline);
+
+      return { trampoline, leftRail, rightRail, leftConstraint, rightConstraint };
+    }
+    let trampoline, leftRail, rightRail, leftConstraint, rightConstraint;
+    ({ trampoline, leftRail, rightRail, leftConstraint, rightConstraint } = initializeTrampoline(startX, startY, segmentCount));
+  
 
     // Mouse and dragging trampoline horizontally with damping
     const mouse = Mouse.create(render.canvas);
@@ -224,12 +224,35 @@ const SpoonDropRescue = () => {
       Body.setVelocity(rightSegment, Vector.create(rightSegment.velocity.x, 0));
     });
     Events.on(engine, "collisionStart", function(event) {
+      
       const pairs = event.pairs;
       for (const pair of pairs) {
-        checkPointIncrement(pair)
+        if(gameStarted){
+          checkPointIncrement(pair)
+          checkForkCaught(pair);
+        }
       }
     });
-    
+    const MIN_SEGMENTS = 2;
+
+    function isEndSegment(body){
+      return body === trampoline.bodies[0] || body === trampoline.bodies[trampoline.bodies.length - 1];
+    }
+    function teardownTrampoline(){
+      Composite.remove(engine.world, trampoline, true);
+      Composite.remove(engine.world, leftRail);
+      Composite.remove(engine.world, rightRail);
+      Composite.remove(engine.world, leftConstraint);
+      Composite.remove(engine.world, rightConstraint);
+    }
+    function shrinkTrampoline(){
+      const currentCenterX = (leftRail.position.x + rightRail.position.x) / 2;
+      teardownTrampoline();
+      segmentCount--;
+      const newStartX = currentCenterX - (segmentCount * segmentWidth) / 2;
+      ({ trampoline, leftRail, rightRail, leftConstraint, rightConstraint } = initializeTrampoline(newStartX, startY, segmentCount));
+    }
+
     // accounts for spoons when game is over
     var deadSpoons = [];
 
@@ -245,13 +268,15 @@ const SpoonDropRescue = () => {
     function getRandomInt(max) {
       return Math.floor(Math.random() * max);
     }
-
+    const initialSpoonTimeout = 15000;
+    let spoonTimeout = initialSpoonTimeout;
     function spawnFallingSpoon() {
       let obstacleSize = size * 0.800 + size * Math.random() * 0.4; //slight variation to spawn size
       let indicatorShowing = false;
       let nextDropXPos = gameWidth * Math.random() + margin; 
       let indicatorTimeTracker = 10;
-      let spoonType = getRandomInt(5);
+      let spoonType = getRandomInt(spoonColors.length-1);
+      if(Math.random() > 0.96) spoonType = spoonColors.length-1; //only sometimes get the special floaty spoon
       let color = spoonColors[spoonType];
       let triangleBody = getDroppingIndicator(nextDropXPos, color, isMobile);
       indicators.push(triangleBody);
@@ -266,14 +291,12 @@ const SpoonDropRescue = () => {
         indicatorTimeTracker--;
         if(indicatorTimeTracker<=0){
           let spoonObstacle = getFallingSpoon(obstacleSize, nextDropXPos, spoonType);
-          
+          spoonObstacle.deleteTimeout = timers.setTimeout(() => {
+            removeSpoon(spoonObstacle)
+          }, spoonTimeout);
           spoonObstacle.counted = false;
           allSpoons.push(spoonObstacle);
-          //remove old spoons so there arent too many in the net
-          if (allSpoons.length > 4) {//max number of spoons allowed in game
-            const oldSpoon = allSpoons.shift(); // remove first (oldest) spoon
-            Composite.remove(engine.world, oldSpoon);
-          }
+          
           Composite.add(engine.world, spoonObstacle);
           timers.clearInterval(indicatorBlinkingInterval);
           spoonsInQueue.shift();
@@ -294,9 +317,10 @@ const SpoonDropRescue = () => {
     }
 
     //slight variation on density of spoon based on color
-    const spoonColors = ["#2f6f8b", "#6f2f8b","#ad3f1a", "#a1ad1a", "#ad1a1a"];
-    const spoonGrav = [0.0011, 0.0012, 0.0008, 0.0009, 0.001];
-
+    const spoonColors = ["#2f6f8b", "#6f2f8b","#ad3f1a", "#a1ad1a", "#ad1a1a", "#FFFFFF"];
+    const spoonGrav = [0.0011, 0.0012, 0.0008, 0.0009, 0.001, 0.00001];
+    const initialForkProbability = 0.1;
+    let forkProbability = initialForkProbability; //starting fork probability
     //returns a spoon to fall from top of screen
     function getFallingSpoon(obstacleSize, xposSpawn, spoonType){
       
@@ -307,7 +331,11 @@ const SpoonDropRescue = () => {
           category: 4,
           mask: 2,
         }
-      let spoonObstacle = getSpoon(obstacleSize, xposSpawn, -100, collisionFilter, color );
+      let forkInstead = Math.random() < forkProbability;
+      forkProbability = forkProbability >= 0.5 ? forkProbability : forkProbability + .01; //increment probability of fork by 1 percent
+      let spoonObstacle = forkInstead ? 
+      getFork(xposSpawn, -100, obstacleSize*.8, color, isMobile, "fork", collisionFilter, false, false, spoonDensity/10)
+      : getSpoon(obstacleSize, xposSpawn, -100, collisionFilter, color );
       
       spoonObstacle.parts.forEach(part => {
         part.restitution = restitutionValue;
@@ -331,35 +359,89 @@ const SpoonDropRescue = () => {
 
     function detectDroppedSpoons(){
       let droppedSpoons = false;
-      allSpoons.forEach((element) => {
-        if (element.position.y > height + 100) {
+      for (let i = allSpoons.length - 1; i >= 0; i--) {
+        const element = allSpoons[i];
+        if (element.position.y > height + 100 && element.label !== "fork") {
           droppedSpoons = true;
-          Composite.remove(engine.world, element);
+          removeSpoon(element); // splices out whatever index `element` is currently at
         }
-      });
+      }
       if(droppedSpoons && gameStarted){
         gameOver();
-         //deal with spoons so they can fly up and then get deleted
-        allSpoons.forEach((element) => {
-          deadSpoons.push(element);
-        });
-        allSpoons.splice(0, allSpoons.length);
+        
+      }
+    }
+    function removeSpoon(spoon){
+      Composite.remove(engine.world, spoon);
+      const index = allSpoons.indexOf(spoon);
+      if (index !== -1) {
+        allSpoons.splice(index, 1);
+      }
+      if (spoon.deleteTimeout != null) {
+        timers.clearTimeout(spoon.deleteTimeout);
+        spoon.deleteTimeout = null;
       }
     }
     function checkPointIncrement(collisionPair){
       const { bodyA, bodyB } = collisionPair;
       //bodyA is trampoline segment bodyB is spoon
-      if(bodyA.label > 0 && bodyA.label < segmentCount-1){
-        if(bodyB.parent.counted === false){
+      let forkCollision = bodyA.label === "fork" || bodyB.label === "fork";
+      if(!forkCollision){
+        if(!isEndSegment(bodyA) && bodyB.parent.counted === false){
           points++;
           bodyB.parent.counted = true;
         }
-      }
-      //bodyA is spoon bodyB is trampoline
-      if(bodyB.label > 0 && bodyB.label < segmentCount-1){
-        if(bodyA.parent.counted === false){
+        if(!isEndSegment(bodyB) && bodyA.parent.counted === false){
           points++;
           bodyA.parent.counted = true;
+        }
+      }
+    }
+    function checkForkCaught(collisionPair){
+      const { bodyA, bodyB } = collisionPair;
+      let forkCollision = bodyA.label === "fork" || bodyB.label === "fork";
+      if(forkCollision){
+        let forkPart = bodyA.label === "fork" ? bodyA : bodyB;
+        let fork = forkPart;
+        if (fork.parent.caught) return;
+        let trampBotY = null;
+        let trampTopY = null;
+        let leftX = null;
+        let rightX = null;
+        trampoline.bodies.forEach((body, index) => {
+          if(index === 0){
+            trampTopY = body.position.y;
+            leftX = body.position.x;
+          }
+          if(index === Math.floor(trampoline.bodies.length/2)) trampBotY = body.position.y;
+          if(index === trampoline.bodies.length-1) rightX = body.position.x;
+        })
+        let forked = true;
+        let partX = forkPart.position.x;
+        let partY = forkPart.position.y;
+        if(!(partX > leftX && partX < rightX && partY < trampBotY && partY > trampTopY)){
+          forked = false;
+        }
+        if(forked && gameStarted){
+          fork.parent.caught = true;
+          Composite.remove(engine.world, fork);
+          if (trampoline.bodies.length <= MIN_SEGMENTS) {
+            gameOver();
+          } else {
+            allSpoons.forEach((element) => {
+              if (element.position.y > height/2) {
+                if(element.label === "fork"){
+                  timers.setTimeout(()=> {
+                    Composite.remove(engine.world, element);
+                  }, 200)
+                }
+                else{
+                  Composite.remove(engine.world, element);
+                }
+              }
+            });
+            shrinkTrampoline();
+          }
         }
       }
     }
@@ -373,8 +455,14 @@ const SpoonDropRescue = () => {
         points = 0;
         setScoreText(points);            // reset score
         resettable = false;
+        segmentCount = initialSegmentCount;
+        forkProbability = initialForkProbability;
+        
         tracker = 0;
         speed = initialSpeed;
+        allSpoons.forEach(spoon => {
+          Composite.remove(engine.world, spoon)
+        })
         //removes spoons from previous game if applicable
         if(deadSpoons.length > 0){
           deadSpoons.forEach((element) => {
@@ -389,22 +477,26 @@ const SpoonDropRescue = () => {
         startGame();
       }
     }
-    //TODO: add more messages
+    //TODO: add more messages & fix death animation
     function gameOver() {
       recordScore(points);
+      allSpoons.forEach((element) => {
+          deadSpoons.push(element);
+        });
+      allSpoons.splice(0, allSpoons.length);
       setScoreText(points + " spoons saved");
       let endMessage = getPopupMessage()
       setMessage(endMessage);
       clearAllQueuedSpoons();
-      gameStarted = false;
-      gameStartedRef.current = false;
-      resettable = true;
-      timers.clearInterval(dropSpoons);
       let dumpForce = isMobile ? 0.1: 0.5;
       trampoline.bodies.forEach(segment => {
         const netForce = { x: 0, y: dumpForce }; // throw out the spoons
         Body.applyForce(segment, segment.position, netForce);
       });
+      gameStarted = false;
+      gameStartedRef.current = false;
+      resettable = true;
+      timers.clearInterval(dropSpoons);
       const tutEl = document.getElementById("descenttut");
       if (tutEl) tutEl.innerHTML = "";
       const dropperEl = document.getElementById("dropper");
@@ -419,6 +511,8 @@ const SpoonDropRescue = () => {
         setGameOverState(false); // Show game over screen
         gameStarted = true;
         gameStartedRef.current = true;
+        teardownTrampoline();
+        ({ trampoline, leftRail, rightRail, leftConstraint, rightConstraint } = initializeTrampoline(startX, startY, segmentCount));
         const tutEl = document.getElementById("descenttut");
         if (tutEl) tutEl.innerHTML = "";
 
